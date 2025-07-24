@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kisan Mitra - Farm Finance Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --primary-dark: #388E3C;
+            --secondary: #FF9800;
+            --danger: #F44336;
+            --warning: #FFC107;
+            --info: #2196F3;
+            --light: #f8f9fa;
+            --dark: #212529;
+        }
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        .header i {
+            font-size: 32px;
+        }
+        .nav-tabs {
+            display: flex;
+            background-color: var(--light);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .nav-tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-right: 1px solid #ddd;
+        }
+        .nav-tab:last-child {
+            border-right: none;
+        }
+        .nav-tab.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        .nav-tab i {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        .form-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: none;
+        }
+        .form-section.active {
+            display: block;
+        }
+        .section-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--primary);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .icon-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .icon-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 90px;
+            height: 90px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            padding: 5px;
+        }
+        .icon-option:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+        .icon-option.selected {
+            background-color: #e8f5e9;
+            border-color: var(--primary);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .icon-option i {
+            font-size: 28px;
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+        .icon-option.selected i {
+            color: var(--primary-dark);
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        .input-group i {
+            color: var(--primary);
+            font-size: 20px;
+            width: 30px;
+            text-align: center;
+        }
+        select, input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 0;
+        }
+        .slider-container i {
+            font-size: 20px;
+            color: var(--primary);
+        }
+        .slider-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            flex: 1;
+            height: 8px;
+            -webkit-appearance: none;
+            background: #ddd;
+            border-radius: 5px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: all 0.3s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+        .hidden {
+            display: none;
+        }
+        .summary-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .summary-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        .profit-loss {
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        .profit {
+            background-color: #e8f5e9;
+            color: var(--primary-dark);
+        }
+        .loss {
+            background-color: #ffebee;
+            color: var(--danger);
+        }
+        .profit-loss i {
+            font-size: 40px;
+        }
+        .breakdown-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .breakdown-table th, .breakdown-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        .breakdown-table th {
+            background-color: var(--light);
+            font-weight: 600;
+        }
+        .breakdown-table tr:hover {
+            background-color: #f9f9f9;
+        }
+        .positive {
+            color: var(--primary-dark);
+        }
+        .negative {
+            color: var(--danger);
+        }
+        .crop-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--primary);
+        }
+        .crop-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .crop-name {
+            font-weight: bold;
+            font-size: 18px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .crop-name i {
+            font-size: 24px;
+        }
+        .crop-profit {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .info-card {
+            background-color: #e3f2fd;
+            border-left: 4px solid var(--info);
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .info-card i {
+            font-size: 24px;
+            color: var(--info);
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .tooltip i {
+            color: var(--info);
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+            font-weight: normal;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        .crop-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #e8f5e9;
+            border-radius: 50%;
+            color: var(--primary);
+            font-size: 20px;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            .nav-tab {
+                padding: 10px 5px;
+                font-size: 14px;
+            }
+            .nav-tab i {
+                font-size: 20px;
+            }
+            .icon-option {
+                width: 80px;
+                height: 80px;
+                font-size: 14px;
+            }
+            .chart-container {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <i class="fas fa-tractor"></i>
+            <h1>Kisan Mitra - Farm Finance Tracker</h1>
+        </div>
+
+        <div class="nav-tabs">
+            <div class="nav-tab active" data-tab="profile">
+                <i class="fas fa-user"></i>
+                <div>Profile</div>
+            </div>
+            <div class="nav-tab" data-tab="agriculture">
+                <i class="fas fa-tractor"></i>
+                <div>Agriculture</div>
+            </div>
+            <div class="nav-tab" data-tab="income">
+                <i class="fas fa-money-bill-wave"></i>
+                <div>Income</div>
+            </div>
+            <div class="nav-tab" data-tab="summary">
+                <i class="fas fa-chart-pie"></i>
+                <div>Summary</div>
+            </div>
+        </div>
+
+        <!-- Profile Section -->
+        <div class="form-section active" id="profile-section">
+            <div class="section-title">
+                <i class="fas fa-user"></i> Farmer Profile
+            </div>
+            
+            <div class="info-card">
+                <i class="fas fa-info-circle"></i>
+                <div>Please fill your basic details to get personalized farm finance tracking</div>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-phone"></i> Phone Number</label>
+                <div class="input-group">
+                    <i class="fas fa-mobile-alt"></i>
+                    <input type="tel" id="phone" placeholder="Enter 10-digit mobile number" pattern="[0-9]{10}" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-map-marker-alt"></i> Location Details</label>
+                <div class="input-group">
+                    <i class="fas fa-landmark"></i>
+                    <select id="state" required>
+                        <option value="">Select State</option>
+                        <option value="AP">Andhra Pradesh</option>
+                        <option value="TS">Telangana</option>
+                        <option value="KA">Karnataka</option>
+                        <option value="TN">Tamil Nadu</option>
+                        <option value="MH">Maharashtra</option>
+                        <option value="UP">Uttar Pradesh</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-city"></i>
+                    <select id="district" required disabled>
+                        <option value="">Select District</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <select id="mandal" required disabled>
+                        <option value="">Select Mandal</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-home"></i>
+                    <select id="village" required disabled>
+                        <option value="">Select Village</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-briefcase"></i> Primary Occupation</label>
+                <div class="icon-selector">
+                    <div class="icon-option" data-occupation="agriculture">
+                        <i class="fas fa-tractor"></i>
+                        <div>Agriculture</div>
+                    </div>
+                    <div class="icon-option" data-occupation="aquaculture">
+                        <i class="fas fa-fish"></i>
+                        <div>Aquaculture</div>
+                    </div>
+                    <div class="icon-option" data-occupation="livestock">
+                        <i class="fas fa-paw"></i>
+                        <div>Livestock</div>
+                    </div>
+                </div>
+                <input type="hidden" id="primaryOccupation" required>
+            </div>
+            
+            <button class="btn" id="saveProfile">
+                <i class="fas fa-save"></i> Save Profile & Continue
+            </button>
+        </div>
+
+        <!-- Agriculture Section -->
+        <div class="form-section" id="agriculture-section">
+            <div class="section-title">
+                <i class="fas fa-tractor"></i> Agriculture Details
+            </div>
+            
+            <div class="info-card">
+                <i class="fas fa-info-circle"></i>
+                <div>Enter details about your agricultural activities for accurate financial tracking</div>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-map"></i> Land Type & Area</label>
+                <div class="icon-selector">
+                    <div class="icon-option" data-land="own">
+                        <i class="fas fa-house-user"></i>
+                        <div>Own Land</div>
+                        <div class="slider-container hidden">
+                            <i class="fas fa-ruler-combined"></i>
+                            <input type="range" min="1" max="50" value="5" class="land-slider" data-type="own">
+                            <span class="slider-value">5</span> Acres
+                        </div>
+                    </div>
+                    <div class="icon-option" data-land="leased">
+                        <i class="fas fa-handshake"></i>
+                        <div>Leased Land</div>
+                        <div class="slider-container hidden">
+                            <i class="fas fa-ruler-combined"></i>
+                            <input type="range" min="1" max="50" value="5" class="land-slider" data-type="leased">
+                            <span class="slider-value">5</span> Acres
+                        </div>
+                    </div>
+                    <div class="icon-option" data-land="both">
+                        <i class="fas fa-landmark"></i>
+                        <div>Both</div>
+                        <div class="slider-container hidden">
+                            <i class="fas fa-ruler-combined"></i>
+                            <input type="range" min="1" max="50" value="5" class="land-slider" data-type="both">
+                            <span class="slider-value">5</span> Acres
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="landType" required>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-seedling"></i> Crops Cultivated</label>
+                <div class="icon-selector">
+                    <div class="icon-option" data-crop="cotton">
+                        <i class="fas fa-cloud"></i>
+                        <div>Cotton</div>
+                    </div>
+                    <div class="icon-option" data-crop="chilli">
+                        <i class="fas fa-pepper-hot"></i>
+                        <div>Chilli</div>
+                    </div>
+                    <div class="icon-option" data-crop="maize">
+                        <i class="fas fa-corn"></i>
+                        <div>Maize</div>
+                    </div>
+                    <div class="icon-option" data-crop="paddy">
+                        <i class="fas fa-rice"></i>
+                        <div>Paddy</div>
+                    </div>
+                    <div class="icon-option" data-crop="sugarcane">
+                        <i class="fas fa-candy-cane"></i>
+                        <div>Sugarcane</div>
+                    </div>
+                    <div class="icon-option" data-crop="groundnut">
+                        <i class="fas fa-peanut"></i>
+                        <div>Groundnut</div>
+                    </div>
+                </div>
+                <input type="hidden" id="selectedCrops" required>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-money-bill-wave"></i> Costs</label>
+                <div class="input-group">
+                    <i class="fas fa-pills"></i>
+                    <select id="fertilizerCost" required>
+                        <option value="">Fertilizers Cost Range</option>
+                        <option value="500-1000">₹500-₹1,000</option>
+                        <option value="1000-3000">₹1,000-₹3,000</option>
+                        <option value="3000-5000">₹3,000-₹5,000</option>
+                        <option value="5000-10000">₹5,000-₹10,000</option>
+                    </select>
+                    <div class="tooltip">
+                        <i class="fas fa-question-circle"></i>
+                        <span class="tooltiptext">Includes all fertilizers like Urea, DAP, NPK, etc. used per acre</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-biohazard"></i>
+                    <select id="pesticideCost" required>
+                        <option value="">Pesticides Cost Range</option>
+                        <option value="500-1000">₹500-₹1,000</option>
+                        <option value="1000-2000">₹1,000-₹2,000</option>
+                        <option value="2000-5000">₹2,000-₹5,000</option>
+                    </select>
+                    <div class="tooltip">
+                        <i class="fas fa-question-circle"></i>
+                        <span class="tooltiptext">Includes insecticides, herbicides, fungicides used per acre</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-users"></i>
+                    <select id="laborCost" required>
+                        <option value="">Labor Cost Range</option>
+                        <option value="1000-5000">₹1,000-₹5,000</option>
+                        <option value="5000-10000">₹5,000-₹10,000</option>
+                        <option value="10000-20000">₹10,000-₹20,000</option>
+                    </select>
+                    <div class="tooltip">
+                        <i class="fas fa-question-circle"></i>
+                        <span class="tooltiptext">Includes all labor costs for sowing, weeding, harvesting</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-tractor"></i>
+                    <select id="equipmentCost">
+                        <option value="">Equipment Cost (Optional)</option>
+                        <option value="1000-3000">₹1,000-₹3,000</option>
+                        <option value="3000-5000">₹3,000-₹5,000</option>
+                        <option value="5000-10000">₹5,000-₹10,000</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-tint"></i>
+                    <select id="irrigationCost">
+                        <option value="">Irrigation Cost (Optional)</option>
+                        <option value="500-1000">₹500-₹1,000</option>
+                        <option value="1000-3000">₹1,000-₹3,000</option>
+                        <option value="3000-5000">₹3,000-₹5,000</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-coins"></i> Revenue</label>
+                <div class="input-group">
+                    <i class="fas fa-weight-hanging"></i>
+                    <select id="cropYield" required>
+                        <option value="">Select Yield (Quintal/Acre)</option>
+                        <option value="5-10">5-10</option>
+                        <option value="10-15">10-15</option>
+                        <option value="15-20">15-20</option>
+                        <option value="20+">20+</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-tags"></i>
+                    <select id="cropPrice" required>
+                        <option value="">Select Market Price (₹/Quintal)</option>
+                        <option value="1000-2000">₹1,000-₹2,000</option>
+                        <option value="2000-3000">₹2,000-₹3,000</option>
+                        <option value="3000-5000">₹3,000-₹5,000</option>
+                        <option value="5000+">₹5,000+</option>
+                    </select>
+                    <div class="tooltip">
+                        <i class="fas fa-question-circle"></i>
+                        <span class="tooltiptext">Current market price for your crop per quintal</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn" id="saveAgriculture">
+                <i class="fas fa-save"></i> Save Agriculture Data & Continue
+            </button>
+        </div>
+
+        <!-- Income Section -->
+        <div class="form-section" id="income-section">
+            <div class="section-title">
+                <i class="fas fa-money-bill-wave"></i> Secondary Income Sources
+            </div>
+            
+            <div class="info-card">
+                <i class="fas fa-info-circle"></i>
+                <div>Track all additional income sources to get complete financial picture</div>
+            </div>
+            
+            <div class="form-group">
+                <label><i class="fas fa-industry"></i> Select Income Sources</label>
+                <div class="icon-selector">
+                    <div class="icon-option" data-income="livestock">
+                        <i class="fas fa-cow"></i>
+                        <div>Livestock</div>
+                    </div>
+                    <div class="icon-option" data-income="tractor">
+                        <i class="fas fa-tractor"></i>
+                        <div>Tractor</div>
+                    </div>
+                    <div class="icon-option" data-income="labor">
+                        <i class="fas fa-hammer"></i>
+                        <div>Farm Labor</div>
+                    </div>
+                    <div class="icon-option" data-income="dairy">
+                        <i class="fas fa-egg"></i>
+                        <div>Dairy</div>
+                    </div>
+                    <div class="icon-option" data-income="poultry">
+                        <i class="fas fa-kiwi-bird"></i>
+                        <div>Poultry</div>
+                    </div>
+                </div>
+                <input type="hidden" id="incomeSources">
+            </div>
+            
+            <!-- Livestock Details -->
+            <div id="livestock-details" class="hidden">
+                <div class="section-title">
+                    <i class="fas fa-paw"></i> Livestock Details
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-kiwi-bird"></i> Livestock Type</label>
+                    <div class="icon-selector">
+                        <div class="icon-option" data-livestock="cow">
+                            <i class="fas fa-cow"></i>
+                            <div>Cow</div>
+                        </div>
+                        <div class="icon-option" data-livestock="buffalo">
+                            <i class="fas fa-buffalo"></i>
+                            <div>Buffalo</div>
+                        </div>
+                        <div class="icon-option" data-livestock="sheep">
+                            <i class="fas fa-sheep"></i>
+                            <div>Sheep</div>
+                        </div>
+                        <div class="icon-option" data-livestock="goat">
+                            <i class="fas fa-goat"></i>
+                            <div>Goat</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="livestockType">
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-money-bill-wave"></i> Costs</label>
+                    <div class="input-group">
+                        <i class="fas fa-utensils"></i>
+                        <select id="feedCost">
+                            <option value="">Feed Cost (Monthly)</option>
+                            <option value="500-1000">₹500-₹1,000</option>
+                            <option value="1000-2000">₹1,000-₹2,000</option>
+                            <option value="2000-5000">₹2,000-₹5,000</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-syringe"></i>
+                        <select id="medicineCost">
+                            <option value="">Medicine Cost (Monthly)</option>
+                            <option value="200-500">₹200-₹500</option>
+                            <option value="500-1000">₹500-₹1,000</option>
+                            <option value="1000-2000">₹1,000-₹2,000</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-coins"></i> Income</label>
+                    <div class="input-group">
+                        <i class="fas fa-wine-bottle"></i>
+                        <select id="milkIncome">
+                            <option value="">Milk Income (Monthly)</option>
+                            <option value="1000-3000">₹1,000-₹3,000</option>
+                            <option value="3000-5000">₹3,000-₹5,000</option>
+                            <option value="5000-10000">₹5,000-₹10,000</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-drumstick-bite"></i>
+                        <select id="meatIncome">
+                            <option value="">Meat/Eggs Income</option>
+                            <option value="500-1000">₹500-₹1,000</option>
+                            <option value="1000-3000">₹1,000-₹3,000</option>
+                            <option value="3000-5000">₹3,000-₹5,000</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tractor Details -->
+            <div id="tractor-details" class="hidden">
+                <div class="section-title">
+                    <i class="fas fa-tractor"></i> Tractor Details
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-money-bill-wave"></i> Costs</label>
+                    <div class="input-group">
+                        <i class="fas fa-tools"></i>
+                        <select id="maintenanceCost">
+                            <option value="">Maintenance (Monthly)</option>
+                            <option value="1000-3000">₹1,000-₹3,000</option>
+                            <option value="3000-5000">₹3,000-₹5,000</option>
+                            <option value="5000+">₹5,000+</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-gas-pump"></i>
+                        <select id="fuelCost">
+                            <option value="">Fuel Cost (Monthly)</option>
+                            <option value="2000-5000">₹2,000-₹5,000</option>
+                            <option value="5000-10000">₹5,000-₹10,000</option>
+                            <option value="10000+">₹10,000+</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-coins"></i> Income</label>
+                    <div class="input-group">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <select id="acresWorked">
+                            <option value="">Acres Worked (Monthly)</option>
+                            <option value="10-20">10-20</option>
+                            <option value="20-50">20-50</option>
+                            <option value="50-100">50-100</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-rupee-sign"></i>
+                        <select id="ratePerAcre">
+                            <option value="">Rate per Acre</option>
+                            <option value="500-1000">₹500-₹1,000</option>
+                            <option value="1000-1500">₹1,000-₹1,500</option>
+                            <option value="1500-2000">₹1,500-₹2,000</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="btn" id="saveIncome">
+                <i class="fas fa-save"></i> Save Income Data & Continue
+            </button>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="form-section" id="summary-section">
+            <div class="section-title">
+                <i class="fas fa-chart-pie"></i> Financial Summary
+            </div>
+            
+            <div class="info-card">
+                <i class="fas fa-info-circle"></i>
+                <div>Comprehensive financial analysis of your farm operations</div>
+            </div>
+            
+            <!-- Profit/Loss Summary -->
+            <div id="net-summary-container" class="summary-card">
+                <div class="summary-title">
+                    <i class="fas fa-calculator"></i> Net Profit/Loss
+                </div>
+                <div id="net-summary" class="profit-loss">
+                    <i class="fas fa-coins"></i>
+                    <div id="net-amount">₹0</div>
+                    <div id="net-status">No data available</div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="profitLossChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Agriculture Breakdown -->
+            <div class="summary-card">
+                <div class="summary-title">
+                    <i class="fas fa-tractor"></i> Agriculture Breakdown
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="cropRevenueChart"></canvas>
+                </div>
+                
+                <div id="crop-breakdown">
+                    <!-- Dynamic crop cards will be inserted here -->
+                </div>
+                
+                <table class="breakdown-table">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-list"></i> Category</th>
+                            <th><i class="fas fa-arrow-up"></i> Revenue</th>
+                            <th><i class="fas fa-arrow-down"></i> Cost</th>
+                            <th><i class="fas fa-balance-scale"></i> Profit/Loss</th>
+                        </tr>
+                    </thead>
+                    <tbody id="agri-breakdown">
+                        <!-- Dynamic rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Income Breakdown -->
+            <div class="summary-card">
+                <div class="summary-title">
+                    <i class="fas fa-money-bill-wave"></i> Income Breakdown
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="incomeSourcesChart"></canvas>
+                </div>
+                
+                <table class="breakdown-table">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-list"></i> Source</th>
+                            <th><i class="fas fa-arrow-up"></i> Income</th>
+                            <th><i class="fas fa-arrow-down"></i> Cost</th>
+                            <th><i class="fas fa-balance-scale"></i> Net</th>
+                        </tr>
+                    </thead>
+                    <tbody id="income-breakdown">
+                        <!-- Dynamic rows will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Cost Distribution -->
+            <div class="summary-card">
+                <div class="summary-title">
+                    <i class="fas fa-money-bill-alt"></i> Cost Distribution
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="costDistributionChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Recommendations -->
+            <div class="summary-card">
+                <div class="summary-title">
+                    <i class="fas fa-lightbulb"></i> Recommendations
+                </div>
+                <div id="recommendations">
+                    <p><i class="fas fa-check-circle positive"></i> Complete your profile to get personalized suggestions</p>
+                    <p><i class="fas fa-check-circle positive"></i> Track all income sources for better financial planning</p>
+                    <p><i class="fas fa-check-circle positive"></i> Regularly update your crop details for accurate analysis</p>
+                </div>
+            </div>
+            
+            <button class="btn" id="finishBtn">
+                <i class="fas fa-check"></i> Finish & Save Record
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Tab Navigation
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-section`).classList.add('active');
+            });
+        });
+
+        // Location Data
+        const stateDistricts = {
+            'AP': ['Anantapur', 'Chittoor', 'East Godavari', 'Guntur', 'Krishna', 'Kurnool', 'Nellore', 'Prakasam', 'Srikakulam', 'Visakhapatnam', 'Vizianagaram', 'West Godavari', 'YSR Kadapa'],
+            'TS': ['Adilabad', 'Hyderabad', 'Karimnagar', 'Khammam', 'Mahbubnagar', 'Medak', 'Nalgonda', 'Nizamabad', 'Rangareddy', 'Warangal'],
+            'KA': ['Bangalore', 'Belgaum', 'Bellary', 'Bidar', 'Bijapur', 'Chamarajanagar', 'Chikmagalur', 'Chitradurga', 'Davanagere', 'Dharwad'],
+            'TN': ['Ariyalur', 'Chennai', 'Coimbatore', 'Cuddalore', 'Dharmapuri', 'Dindigul', 'Erode', 'Kanchipuram', 'Karur', 'Krishnagiri'],
+            'MH': ['Ahmednagar', 'Akola', 'Amravati', 'Aurangabad', 'Beed', 'Bhandara', 'Buldhana', 'Chandrapur', 'Dhule', 'Gadchiroli'],
+            'UP': ['Agra', 'Aligarh', 'Allahabad', 'Ambedkar Nagar', 'Amethi', 'Amroha', 'Auraiya', 'Ayodhya', 'Azamgarh', 'Baghpat']
+        };
+
+        const districtMandals = {
+            'Anantapur': ['Anantapur', 'Dharmavaram', 'Guntakal', 'Hindupur', 'Kadiri', 'Kalyandurg', 'Penukonda', 'Tadipatri'],
+            'Chittoor': ['Chittoor', 'Madanapalle', 'Palamaner', 'Punganur', 'Srikalahasti', 'Tirupati'],
+            'Hyderabad': ['Ameerpet', 'Charminar', 'Himayatnagar', 'Khairatabad', 'Secunderabad', 'Serilingampally'],
+            'Karimnagar': ['Huzurabad', 'Jagtial', 'Karimnagar', 'Manthani', 'Peddapalli', 'Sircilla'],
+            'Bangalore': ['Anekal', 'Bangalore North', 'Bangalore South', 'Devanahalli', 'Hoskote', 'Nelamangala'],
+            'Coimbatore': ['Coimbatore North', 'Coimbatore South', 'Mettupalayam', 'Pollachi', 'Sulur', 'Valparai'],
+            'Agra': ['Agra', 'Fatehpur Sikri', 'Khairagarh', 'Kiraoli', 'Sikandra'],
+            'Pune': ['Haveli', 'Indapur', 'Junnar', 'Khed', 'Mawal', 'Mulshi', 'Pune City']
+        };
+
+        const mandalVillages = {
+            'Anantapur': ['B.K. Samudram', 'Bathalapalle', 'Bukkarayasamudram', 'Kundurpi', 'Putlur', 'Yadiki'],
+            'Chittoor': ['Bangarupalem', 'Gangavaram', 'Kuppam', 'Palamaner', 'Punganur', 'Sodam'],
+            'Ameerpet': ['Ameerpet', 'Erragadda', 'KPHB', 'Punjagutta', 'Sanathnagar', 'SR Nagar'],
+            'Huzurabad': ['Huzurabad', 'Jammikunta', 'Kamalapur', 'Kothapalli', 'Veenavanka', 'Vemulawada'],
+            'Agra': ['Fatehabad', 'Jagner', 'Kheragarh', 'Saiyan', 'Shamsabad'],
+            'Pune City': ['Aundh', 'Baner', 'Kalyani Nagar', 'Koregaon Park', 'Shivajinagar']
+        };
+
+        // Initialize location dropdowns
+        document.getElementById('state').addEventListener('change', function() {
+            const districtSelect = document.getElementById('district');
+            districtSelect.innerHTML = '<option value="">Select District</option>';
+            districtSelect.disabled = !this.value;
+            
+            if (this.value) {
+                stateDistricts[this.value].forEach(district => {
+                    const option = document.createElement('option');
+                    option.value = district;
+                    option.textContent = district;
+                    districtSelect.appendChild(option);
+                });
+            }
+            
+            // Reset dependent fields
+            document.getElementById('mandal').innerHTML = '<option value="">Select Mandal</option>';
+            document.getElementById('mandal').disabled = true;
+            document.getElementById('village').innerHTML = '<option value="">Select Village</option>';
+            document.getElementById('village').disabled = true;
+        });
+
+        document.getElementById('district').addEventListener('change', function() {
+            const mandalSelect = document.getElementById('mandal');
+            mandalSelect.innerHTML = '<option value="">Select Mandal</option>';
+            mandalSelect.disabled = !this.value;
+            
+            if (this.value && districtMandals[this.value]) {
+                districtMandals[this.value].forEach(mandal => {
+                    const option = document.createElement('option');
+                    option.value = mandal;
+                    option.textContent = mandal;
+                    mandalSelect.appendChild(option);
+                });
+            }
+            
+            // Reset dependent field
+            document.getElementById('village').innerHTML = '<option value="">Select Village</option>';
+            document.getElementById('village').disabled = true;
+        });
+
+        document.getElementById('mandal').addEventListener('change', function() {
+            const villageSelect = document.getElementById('village');
+            villageSelect.innerHTML = '<option value="">Select Village</option>';
+            villageSelect.disabled = !this.value;
+            
+            if (this.value && mandalVillages[this.value]) {
+                mandalVillages[this.value].forEach(village => {
+                    const option = document.createElement('option');
+                    option.value = village;
+                    option.textContent = village;
+                    villageSelect.appendChild(option);
+                });
+            }
+        });
+
+        // Occupation Selection
+        document.querySelectorAll('[data-occupation]').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('[data-occupation]').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                document.getElementById('primaryOccupation').value = this.dataset.occupation;
+            });
+        });
+
+        // Land Type Selection
+        document.querySelectorAll('[data-land]').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('[data-land]').forEach(opt => {
+                    opt.classList.remove('selected');
+                    opt.querySelector('.slider-container').classList.add('hidden');
+                });
+                
+                this.classList.add('selected');
+                this.querySelector('.slider-container').classList.remove('hidden');
+                document.getElementById('landType').value = this.dataset.land;
+            });
+        });
+
+        // Land Sliders
+        document.querySelectorAll('.land-slider').forEach(slider => {
+            slider.addEventListener('input', function() {
+                this.nextElementSibling.textContent = this.value;
+            });
+        });
+
+        // Crop Selection
+        document.querySelectorAll('[data-crop]').forEach(option => {
+            option.addEventListener('click', function() {
+                this.classList.toggle('selected');
+                updateSelectedCrops();
+            });
+        });
+
+        function updateSelectedCrops() {
+            const selected = [];
+            document.querySelectorAll('[data-crop].selected').forEach(crop => {
+                selected.push(crop.dataset.crop);
+            });
+            document.getElementById('selectedCrops').value = selected.join(',');
+        }
+
+        // Income Source Selection
+        document.querySelectorAll('[data-income]').forEach(option => {
+            option.addEventListener('click', function() {
+                this.classList.toggle('selected');
+                updateIncomeSources();
+                
+                // Show/hide details sections
+                if (this.dataset.income === 'livestock') {
+                    document.getElementById('livestock-details').classList.toggle('hidden');
+                }
+                if (this.dataset.income === 'tractor') {
+                    document.getElementById('tractor-details').classList.toggle('hidden');
+                }
+            });
+        });
+
+        function updateIncomeSources() {
+            const selected = [];
+            document.querySelectorAll('[data-income].selected').forEach(source => {
+                selected.push(source.dataset.income);
+            });
+            document.getElementById('incomeSources').value = selected.join(',');
+        }
+
+        // Livestock Selection
+        document.querySelectorAll('[data-livestock]').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('[data-livestock]').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                document.getElementById('livestockType').value = this.dataset.livestock;
+            });
+        });
+
+        // Save Buttons
+        document.getElementById('saveProfile').addEventListener('click', function() {
+            if (!validateProfile()) return;
+            document.querySelector('[data-tab="agriculture"]').click();
+        });
+
+        document.getElementById('saveAgriculture').addEventListener('click', function() {
+            if (!validateAgriculture()) return;
+            document.querySelector('[data-tab="income"]').click();
+        });
+
+        document.getElementById('saveIncome').addEventListener('click', function() {
+            generateSummary();
+            document.querySelector('[data-tab="summary"]').click();
+        });
+
+        // Form Validation
+        function validateProfile() {
+            const phone = document.getElementById('phone').value;
+            const state = document.getElementById('state').value;
+            const district = document.getElementById('district').value;
+            const occupation = document.getElementById('primaryOccupation').value;
+            
+            if (!phone || phone.length !== 10) {
+                alert('Please enter a valid 10-digit phone number');
+                return false;
+            }
+            
+            if (!state) {
+                alert('Please select your state');
+                return false;
+            }
+            
+            if (!district) {
+                alert('Please select your district');
+                return false;
+            }
+            
+            if (!occupation) {
+                alert('Please select your primary occupation');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        function validateAgriculture() {
+            const landType = document.getElementById('landType').value;
+            const crops = document.getElementById('selectedCrops').value;
+            const fertilizer = document.getElementById('fertilizerCost').value;
+            const pesticide = document.getElementById('pesticideCost').value;
+            const labor = document.getElementById('laborCost').value;
+            const yield = document.getElementById('cropYield').value;
+            const price = document.getElementById('cropPrice').value;
+            
+            if (!landType) {
+                alert('Please select your land type');
+                return false;
+            }
+            
+            if (!crops) {
+                alert('Please select at least one crop');
+                return false;
+            }
+            
+            if (!fertilizer) {
+                alert('Please select fertilizer cost range');
+                return false;
+            }
+            
+            if (!pesticide) {
+                alert('Please select pesticide cost range');
+                return false;
+            }
+            
+            if (!labor) {
+                alert('Please select labor cost range');
+                return false;
+            }
+            
+            if (!yield) {
+                alert('Please select expected crop yield');
+                return false;
+            }
+            
+            if (!price) {
+                alert('Please select expected crop price');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Generate Enhanced Summary with Visualizations
+        function generateSummary() {
+            // Calculate agriculture data
+            const landType = document.getElementById('landType').value || 'Not specified';
+            const crops = document.getElementById('selectedCrops').value.split(',') || [];
+            const fertilizerCost = getRangeValue(document.getElementById('fertilizerCost').value);
+            const pesticideCost = getRangeValue(document.getElementById('pesticideCost').value);
+            const laborCost = getRangeValue(document.getElementById('laborCost').value);
+            const equipmentCost = getRangeValue(document.getElementById('equipmentCost').value);
+            const irrigationCost = getRangeValue(document.getElementById('irrigationCost').value);
+            
+            // Calculate crop revenue
+            const cropYield = getRangeValue(document.getElementById('cropYield').value);
+            const cropPrice = getRangeValue(document.getElementById('cropPrice').value);
+            const landArea = parseInt(document.querySelector('.land-slider').value) || 1;
+            const cropRevenue = cropYield.mid * cropPrice.mid * landArea;
+            
+            // Calculate livestock data if selected
+            let livestockIncome = 0;
+            let livestockCost = 0;
+            if (document.getElementById('incomeSources').value.includes('livestock')) {
+                livestockCost = getRangeValue(document.getElementById('feedCost').value).mid + 
+                               getRangeValue(document.getElementById('medicineCost').value).mid;
+                livestockIncome = getRangeValue(document.getElementById('milkIncome').value).mid + 
+                                  getRangeValue(document.getElementById('meatIncome').value).mid;
+            }
+            
+            // Calculate tractor data if selected
+            let tractorIncome = 0;
+            let tractorCost = 0;
+            if (document.getElementById('incomeSources').value.includes('tractor')) {
+                tractorCost = getRangeValue(document.getElementById('maintenanceCost').value).mid + 
+                            getRangeValue(document.getElementById('fuelCost').value).mid;
+                const acresWorked = getRangeValue(document.getElementById('acresWorked').value).mid;
+                const ratePerAcre = getRangeValue(document.getElementById('ratePerAcre').value).mid;
+                tractorIncome = acresWorked * ratePerAcre;
+            }
+            
+            // Calculate totals
+            const totalAgriCost = fertilizerCost.mid + pesticideCost.mid + laborCost.mid + 
+                                 equipmentCost.mid + irrigationCost.mid;
+            const totalIncome = cropRevenue + livestockIncome + tractorIncome;
+            const totalCost = totalAgriCost + livestockCost + tractorCost;
+            const netProfit = totalIncome - totalCost;
+            
+            // Display Net Profit/Loss
+            const netSummary = document.getElementById('net-summary');
+            const netAmount = document.getElementById('net-amount');
+            const netStatus = document.getElementById('net-status');
+            
+            netAmount.textContent = `₹${Math.abs(netProfit).toLocaleString()}`;
+            netStatus.textContent = netProfit >= 0 ? 'Profit' : 'Loss';
+            
+            netSummary.className = `profit-loss ${netProfit >= 0 ? 'profit' : 'loss'}`;
+            netSummary.querySelector('i').className = netProfit >= 0 ? 'fas fa-smile' : 'fas fa-frown';
+            
+            // Update recommendations
+            updateRecommendations(netProfit, totalIncome, totalCost);
+            
+            // Create charts
+            createProfitLossChart(totalIncome, totalCost);
+            createCropRevenueChart(crops, cropRevenue, totalAgriCost);
+            createIncomeSourcesChart(livestockIncome, tractorIncome);
+            createCostDistributionChart(
+                fertilizerCost.mid, 
+                pesticideCost.mid, 
+                laborCost.mid, 
+                livestockCost, 
+                tractorCost,
+                equipmentCost.mid,
+                irrigationCost.mid
+            );
+            
+            // Create agriculture breakdown
+            createAgricultureBreakdown(crops, fertilizerCost.mid, pesticideCost.mid, laborCost.mid, cropRevenue, equipmentCost.mid, irrigationCost.mid);
+            
+            // Create income breakdown
+            createIncomeBreakdown(livestockIncome, livestockCost, tractorIncome, tractorCost);
+        }
+        
+        function getRangeValue(rangeStr) {
+            if (!rangeStr) return { min: 0, max: 0, mid: 0 };
+            const parts = rangeStr.split('-');
+            const min = parseInt(parts[0].replace(/[^0-9]/g, '')) || 0;
+            const max = parseInt(parts[1]?.replace(/[^0-9]/g, '')) || min;
+            return { min, max, mid: (min + max) / 2 };
+        }
+        
+        function updateRecommendations(netProfit, income, costs) {
+            const recommendations = document.getElementById('recommendations');
+            recommendations.innerHTML = '';
+            
+            if (netProfit >= 0) {
+                recommendations.innerHTML += `
+                    <p><i class="fas fa-check-circle positive"></i> Your farm is profitable! Consider reinvesting in better equipment</p>
+                `;
+            } else {
+                recommendations.innerHTML += `
+                    <p><i class="fas fa-exclamation-triangle negative"></i> Your farm is running at a loss. Review high cost areas below</p>
+                `;
+            }
+            
+            if (costs > income * 0.7) {
+                recommendations.innerHTML += `
+                    <p><i class="fas fa-exclamation-triangle negative"></i> Your costs are high (${(costs/income*100).toFixed(0)}% of income). Consider cost-cutting measures</p>
+                `;
+            }
+            
+            const livestockSelected = document.getElementById('incomeSources').value.includes('livestock');
+            const tractorSelected = document.getElementById('incomeSources').value.includes('tractor');
+            
+            if (!livestockSelected && !tractorSelected) {
+                recommendations.innerHTML += `
+                    <p><i class="fas fa-lightbulb warning"></i> Consider adding livestock or tractor services for additional income</p>
+                `;
+            }
+            
+            if (document.getElementById('selectedCrops').value.split(',').length === 1) {
+                recommendations.innerHTML += `
+                    <p><i class="fas fa-lightbulb warning"></i> Diversify your crops to reduce risk and potentially increase income</p>
+                `;
+            }
+            
+            recommendations.innerHTML += `
+                <p><i class="fas fa-check-circle positive"></i> Track regularly to identify seasonal patterns and optimize operations</p>
+            `;
+        }
+        
+        function createProfitLossChart(income, cost) {
+            const ctx = document.getElementById('profitLossChart').getContext('2d');
+            
+            if (window.profitLossChart) {
+                window.profitLossChart.destroy();
+            }
+            
+            window.profitLossChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Income', 'Cost', 'Net Profit/Loss'],
+                    datasets: [{
+                        label: 'Amount (₹)',
+                        data: [income, cost, income - cost],
+                        backgroundColor: [
+                            '#4CAF50',
+                            '#F44336',
+                            income - cost >= 0 ? '#4CAF50' : '#F44336'
+                        ],
+                        borderColor: [
+                            '#388E3C',
+                            '#D32F2F',
+                            income - cost >= 0 ? '#388E3C' : '#D32F2F'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Amount (₹)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Profit & Loss Overview'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ₹${context.raw.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createCropRevenueChart(crops, revenue, cost) {
+            const ctx = document.getElementById('cropRevenueChart').getContext('2d');
+            const cropNames = crops.length ? crops.map(crop => getCropName(crop)) : ['Agriculture'];
+            
+            if (window.cropRevenueChart) {
+                window.cropRevenueChart.destroy();
+            }
+            
+            window.cropRevenueChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: [...cropNames, 'Costs'],
+                    datasets: [{
+                        data: [...Array(cropNames.length).fill(revenue / cropNames.length), cost],
+                        backgroundColor: [
+                            '#4CAF50',
+                            '#8BC34A',
+                            '#CDDC39',
+                            '#FFC107',
+                            '#FF9800',
+                            '#F44336'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Crop Revenue vs Costs'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ₹${context.raw.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createIncomeSourcesChart(livestockIncome, tractorIncome) {
+            const ctx = document.getElementById('incomeSourcesChart').getContext('2d');
+            const sources = ['Agriculture'];
+            const incomeData = [document.getElementById('cropPrice').value ? 
+                              getRangeValue(document.getElementById('cropPrice').value).mid * 
+                              getRangeValue(document.getElementById('cropYield').value).mid * 
+                              (parseInt(document.querySelector('.land-slider').value) || 1) : 0];
+            
+            if (livestockIncome > 0) {
+                sources.push('Livestock');
+                incomeData.push(livestockIncome);
+            }
+            
+            if (tractorIncome > 0) {
+                sources.push('Tractor');
+                incomeData.push(tractorIncome);
+            }
+            
+            if (window.incomeSourcesChart) {
+                window.incomeSourcesChart.destroy();
+            }
+            
+            window.incomeSourcesChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: sources,
+                    datasets: [{
+                        data: incomeData,
+                        backgroundColor: [
+                            '#4CAF50',
+                            '#FF9800',
+                            '#2196F3'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Income Sources Distribution'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const percentage = Math.round(context.raw / context.dataset.data.reduce((a, b) => a + b, 0) * 100);
+                                    return `${context.label}: ₹${context.raw.toLocaleString()} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createCostDistributionChart(fertilizer, pesticide, labor, livestock, tractor, equipment, irrigation) {
+            const ctx = document.getElementById('costDistributionChart').getContext('2d');
+            const labels = ['Fertilizer', 'Pesticide', 'Labor'];
+            const data = [fertilizer, pesticide, labor];
+            
+            if (equipment > 0) {
+                labels.push('Equipment');
+                data.push(equipment);
+            }
+            
+            if (irrigation > 0) {
+                labels.push('Irrigation');
+                data.push(irrigation);
+            }
+            
+            if (livestock > 0) {
+                labels.push('Livestock');
+                data.push(livestock);
+            }
+            
+            if (tractor > 0) {
+                labels.push('Tractor');
+                data.push(tractor);
+            }
+            
+            if (window.costDistributionChart) {
+                window.costDistributionChart.destroy();
+            }
+            
+            window.costDistributionChart = new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            '#4CAF50',
+                            '#8BC34A',
+                            '#CDDC39',
+                            '#FFC107',
+                            '#FF9800',
+                            '#2196F3',
+                            '#9C27B0'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Cost Distribution'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ₹${context.raw.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createAgricultureBreakdown(crops, fertilizerCost, pesticideCost, laborCost, revenue, equipmentCost, irrigationCost) {
+            const container = document.getElementById('agri-breakdown');
+            const cropContainer = document.getElementById('crop-breakdown');
+            container.innerHTML = '';
+            cropContainer.innerHTML = '';
+            
+            // Add cost breakdown
+            addBreakdownRow(container, 'Fertilizer', 0, fertilizerCost, -fertilizerCost);
+            addBreakdownRow(container, 'Pesticide', 0, pesticideCost, -pesticideCost);
+            addBreakdownRow(container, 'Labor', 0, laborCost, -laborCost);
+            
+            if (equipmentCost > 0) {
+                addBreakdownRow(container, 'Equipment', 0, equipmentCost, -equipmentCost);
+            }
+            
+            if (irrigationCost > 0) {
+                addBreakdownRow(container, 'Irrigation', 0, irrigationCost, -irrigationCost);
+            }
+            
+            // Add crop breakdown
+            if (crops.length > 0 && crops[0] !== '') {
+                crops.forEach(crop => {
+                    const cropRevenue = revenue / crops.length;
+                    const cropCost = (fertilizerCost + pesticideCost + laborCost + equipmentCost + irrigationCost) / crops.length;
+                    const cropProfit = cropRevenue - cropCost;
+                    
+                    // Add to table
+                    addBreakdownRow(container, getCropName(crop), cropRevenue, 0, cropProfit);
+                    
+                    // Add crop card
+                    const cropCard = document.createElement('div');
+                    cropCard.className = 'crop-card';
+                    cropCard.innerHTML = `
+                        <div class="crop-header">
+                            <div class="crop-name">
+                                <div class="crop-icon">
+                                    ${getCropIcon(crop)}
+                                </div>
+                                ${getCropName(crop)}
+                            </div>
+                            <div class="crop-profit ${cropProfit >= 0 ? 'positive' : 'negative'}">
+                                ${cropProfit >= 0 ? '₹' : '-₹'}${Math.abs(cropProfit).toLocaleString()}
+                            </div>
+                        </div>
+                        <div class="chart-container" style="height: 150px;">
+                            <canvas id="chart-${crop}"></canvas>
+                        </div>
+                    `;
+                    cropContainer.appendChild(cropCard);
+                    
+                    // Create mini chart for each crop
+                    createMiniCropChart(crop, cropRevenue, cropCost);
+                });
+            } else {
+                const totalCost = fertilizerCost + pesticideCost + laborCost + equipmentCost + irrigationCost;
+                const profit = revenue - totalCost;
+                addBreakdownRow(container, 'Agriculture', revenue, totalCost, profit);
+            }
+            
+            // Add total row
+            const totalCost = fertilizerCost + pesticideCost + laborCost + equipmentCost + irrigationCost;
+            const totalRevenue = revenue;
+            const totalProfit = totalRevenue - totalCost;
+            addBreakdownRow(container, 'TOTAL', totalRevenue, totalCost, totalProfit, true);
+        }
+        
+        function createIncomeBreakdown(livestockIncome, livestockCost, tractorIncome, tractorCost) {
+            const container = document.getElementById('income-breakdown');
+            container.innerHTML = '';
+            
+            // Add agriculture income
+            const cropRevenue = document.getElementById('cropPrice').value ? 
+                              getRangeValue(document.getElementById('cropPrice').value).mid * 
+                              getRangeValue(document.getElementById('cropYield').value).mid * 
+                              (parseInt(document.querySelector('.land-slider').value) || 1) : 0;
+            const agriCost = getRangeValue(document.getElementById('fertilizerCost').value).mid + 
+                           getRangeValue(document.getElementById('pesticideCost').value).mid + 
+                           getRangeValue(document.getElementById('laborCost').value).mid +
+                           (document.getElementById('equipmentCost').value ? 
+                            getRangeValue(document.getElementById('equipmentCost').value).mid : 0) +
+                           (document.getElementById('irrigationCost').value ? 
+                            getRangeValue(document.getElementById('irrigationCost').value).mid : 0);
+            
+            addBreakdownRow(container, 'Agriculture', cropRevenue, agriCost, cropRevenue - agriCost);
+            
+            if (livestockIncome > 0) {
+                addBreakdownRow(container, 'Livestock', livestockIncome, livestockCost, livestockIncome - livestockCost);
+            }
+            
+            if (tractorIncome > 0) {
+                addBreakdownRow(container, 'Tractor', tractorIncome, tractorCost, tractorIncome - tractorCost);
+            }
+            
+            if (livestockIncome === 0 && tractorIncome === 0) {
+                addBreakdownRow(container, 'No secondary income', 0, 0, 0);
+            }
+            
+            // Add total row
+            const totalIncome = cropRevenue + livestockIncome + tractorIncome;
+            const totalCost = agriCost + livestockCost + tractorCost;
+            const totalNet = totalIncome - totalCost;
+            addBreakdownRow(container, 'TOTAL', totalIncome, totalCost, totalNet, true);
+        }
+        
+        function addBreakdownRow(container, label, revenue, cost, net, isTotal = false) {
+            const row = document.createElement('tr');
+            if (isTotal) {
+                row.style.fontWeight = 'bold';
+                row.style.backgroundColor = '#f5f5f5';
+            }
+            
+            row.innerHTML = `
+                <td>${label}</td>
+                <td>${revenue ? '₹' + Math.round(revenue).toLocaleString() : '-'}</td>
+                <td>${cost ? '₹' + Math.round(cost).toLocaleString() : '-'}</td>
+                <td class="${net >= 0 ? 'positive' : 'negative'}">
+                    ${net ? (net >= 0 ? '₹' : '-₹') + Math.abs(Math.round(net)).toLocaleString() : '-'}
+                </td>
+            `;
+            container.appendChild(row);
+        }
+        
+        function getCropName(cropKey) {
+            const names = {
+                'cotton': 'Cotton',
+                'chilli': 'Chilli',
+                'maize': 'Maize',
+                'paddy': 'Paddy',
+                'sugarcane': 'Sugarcane',
+                'groundnut': 'Groundnut'
+            };
+            return names[cropKey] || cropKey;
+        }
+        
+        function getCropIcon(cropKey) {
+            const icons = {
+                'cotton': '<i class="fas fa-cloud"></i>',
+                'chilli': '<i class="fas fa-pepper-hot"></i>',
+                'maize': '<i class="fas fa-corn"></i>',
+                'paddy': '<i class="fas fa-rice"></i>',
+                'sugarcane': '<i class="fas fa-candy-cane"></i>',
+                'groundnut': '<i class="fas fa-peanut"></i>'
+            };
+            return icons[cropKey] || '<i class="fas fa-seedling"></i>';
+        }
+        
+        function createMiniCropChart(crop, revenue, cost) {
+            const ctx = document.getElementById(`chart-${crop}`).getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Revenue', 'Cost'],
+                    datasets: [{
+                        data: [revenue, cost],
+                        backgroundColor: [
+                            '#4CAF50',
+                            '#F44336'
+                        ],
+                        borderColor: [
+                            '#388E3C',
+                            '#D32F2F'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ₹${context.raw.toLocaleString()}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Finish Button
+        document.getElementById('finishBtn').addEventListener('click', function() {
+            alert('Farm finance record saved successfully!\n\nYou can now view your complete financial analysis.');
+            // In a real app, this would send data to a server
+            document.querySelector('[data-tab="profile"]').click();
+            document.querySelector('form').reset();
+            
+            // Reset all visualizations
+            if (window.profitLossChart) window.profitLossChart.destroy();
+            if (window.cropRevenueChart) window.cropRevenueChart.destroy();
+            if (window.incomeSourcesChart) window.incomeSourcesChart.destroy();
+            if (window.costDistributionChart) window.costDistributionChart.destroy();
+            
+            // Reset summary display
+            document.getElementById('net-summary').className = 'profit-loss';
+            document.getElementById('net-amount').textContent = '₹0';
+            document.getElementById('net-status').textContent = 'No data available';
+            document.getElementById('crop-breakdown').innerHTML = '';
+            document.getElementById('agri-breakdown').innerHTML = '';
+            document.getElementById('income-breakdown').innerHTML = '';
+            
+            // Reset recommendations
+            document.getElementById('recommendations').innerHTML = `
+                <p><i class="fas fa-check-circle positive"></i> Complete your profile to get personalized suggestions</p>
+                <p><i class="fas fa-check-circle positive"></i> Track all income sources for better financial planning</p>
+                <p><i class="fas fa-check-circle positive"></i> Regularly update your crop details for accurate analysis</p>
+            `;
+        });
+    </script>
+</body>
+</html>
