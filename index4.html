@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Finance Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        :root {
+            --primary: #3f51b5;
+            --primary-dark: #303f9f;
+            --secondary: #ff5722;
+            --success: #4caf50;
+            --danger: #f44336;
+            --warning: #ffc107;
+            --info: #2196f3;
+            --light: #f5f5f5;
+            --dark: #212121;
+            --family: #9c27b0;
+            --doctor: #e91e63;
+            --lawyer: #795548;
+            --engineer: #009688;
+            --teacher: #673ab7;
+            --business: #ff9800;
+            --farmer: #8bc34a;
+        }
+        
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header */
+        .header {
+            background-color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .header i {
+            font-size: 32px;
+            color: var(--primary);
+        }
+        
+        /* Tabs */
+        .nav-tabs {
+            display: flex;
+            background-color: var(--light);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .nav-tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-right: 1px solid #ddd;
+        }
+        
+        .nav-tab:last-child {
+            border-right: none;
+        }
+        
+        .nav-tab.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .nav-tab i {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        /* Form Sections */
+        .form-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .form-section.active {
+            display: block;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--primary);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        
+        .input-group i {
+            color: var(--primary);
+            font-size: 20px;
+            width: 30px;
+            text-align: center;
+        }
+        
+        select, input, textarea {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        .icon-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .icon-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100px;
+            height: 100px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            padding: 5px;
+        }
+        
+        .icon-option:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        .icon-option.selected {
+            background-color: #e8f5e9;
+            border-color: var(--primary);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .icon-option i {
+            font-size: 28px;
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+        
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: all 0.3s;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* Dashboard */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 20px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .time-filters {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .time-filter {
+            padding: 5px 10px;
+            border-radius: 20px;
+            background-color: var(--light);
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .time-filter.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+        
+        .family-tree {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        
+        .family-member-node {
+            text-align: center;
+            margin: 0 20px;
+            position: relative;
+        }
+        
+        .member-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin: 0 auto 10px;
+        }
+        
+        .member-name {
+            font-weight: 600;
+        }
+        
+        .member-relation {
+            font-size: 12px;
+            color: #777;
+        }
+        
+        .tree-connector {
+            position: absolute;
+            top: 30px;
+            width: 100%;
+            height: 2px;
+            background-color: #ddd;
+            z-index: -1;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .dashboard {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .nav-tab {
+                padding: 10px 5px;
+                font-size: 14px;
+            }
+            
+            .nav-tab i {
+                font-size: 20px;
+            }
+            
+            .icon-option {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <i class="fas fa-wallet"></i>
+            <h1>Family Finance Tracker</h1>
+        </div>
+
+        <div class="nav-tabs">
+            <div class="nav-tab active" data-tab="profile">
+                <i class="fas fa-user"></i>
+                <div>Profile</div>
+            </div>
+            <div class="nav-tab" data-tab="profession">
+                <i class="fas fa-briefcase"></i>
+                <div>Profession</div>
+            </div>
+            <div class="nav-tab" data-tab="family">
+                <i class="fas fa-users"></i>
+                <div>Family</div>
+            </div>
+            <div class="nav-tab" data-tab="finance">
+                <i class="fas fa-money-bill-wave"></i>
+                <div>Finances</div>
+            </div>
+            <div class="nav-tab" data-tab="dashboard">
+                <i class="fas fa-chart-pie"></i>
+                <div>Dashboard</div>
+            </div>
+        </div>
+
+        <!-- Profile Section -->
+        <div class="form-section active" id="profile-section">
+            <div class="section-title">
+                <i class="fas fa-user"></i> Personal Details
+            </div>
+            
+            <div class="form-group">
+                <label>Full Name</label>
+                <div class="input-group">
+                    <i class="fas fa-signature"></i>
+                    <input type="text" id="fullName" placeholder="Enter your full name" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Date of Birth</label>
+                <div class="input-group">
+                    <i class="fas fa-birthday-cake"></i>
+                    <input type="date" id="dob" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Gender</label>
+                <div class="icon-selector">
+                    <div class="icon-option" data-gender="male">
+                        <i class="fas fa-male"></i>
+                        <div>Male</div>
+                    </div>
+                    <div class="icon-option" data-gender="female">
+                        <i class="fas fa-female"></i>
+                        <div>Female</div>
+                    </div>
+                    <div class="icon-option" data-gender="other">
+                        <i class="fas fa-transgender"></i>
+                        <div>Other</div>
+                    </div>
+                </div>
+                <input type="hidden" id="gender" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Contact Information</label>
+                <div class="input-group">
+                    <i class="fas fa-phone"></i>
+                    <input type="tel" id="phone" placeholder="Phone number" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-envelope"></i>
+                    <input type="email" id="email" placeholder="Email address">
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <textarea id="address" placeholder="Full address"></textarea>
+                </div>
+            </div>
+            
+            <button class="btn" id="saveProfile">
+                <i class="fas fa-save"></i> Save & Continue
+            </button>
+        </div>
+
+        <!-- Profession Section -->
+        <div class="form-section" id="profession-section">
+            <div class="section-title">
+                <i class="fas fa-briefcase"></i> Professional Details
+            </div>
+            
+            <div class="form-group">
+                <label>Select Your Profession</label>
+                <div class="icon-selector">
+                    <div class="icon-option" data-profession="doctor">
+                        <i class="fas fa-user-md"></i>
+                        <div>Doctor</div>
+                    </div>
+                    <div class="icon-option" data-profession="lawyer">
+                        <i class="fas fa-gavel"></i>
+                        <div>Lawyer</div>
+                    </div>
+                    <div class="icon-option" data-profession="engineer">
+                        <i class="fas fa-cogs"></i>
+                        <div>Engineer</div>
+                    </div>
+                    <div class="icon-option" data-profession="teacher">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <div>Teacher</div>
+                    </div>
+                    <div class="icon-option" data-profession="business">
+                        <i class="fas fa-briefcase"></i>
+                        <div>Business</div>
+                    </div>
+                    <div class="icon-option" data-profession="farmer">
+                        <i class="fas fa-tractor"></i>
+                        <div>Farmer</div>
+                    </div>
+                    <div class="icon-option" data-profession="government">
+                        <i class="fas fa-landmark"></i>
+                        <div>Government</div>
+                    </div>
+                    <div class="icon-option" data-profession="freelancer">
+                        <i class="fas fa-laptop-code"></i>
+                        <div>Freelancer</div>
+                    </div>
+                </div>
+                <input type="hidden" id="profession" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Professional Details</label>
+                <div class="input-group">
+                    <i class="fas fa-id-card"></i>
+                    <input type="text" id="jobTitle" placeholder="Job title/Position">
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-building"></i>
+                    <input type="text" id="company" placeholder="Company/Organization">
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-rupee-sign"></i>
+                    <input type="number" id="income" placeholder="Monthly income">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Work Experience</label>
+                <div class="input-group">
+                    <i class="fas fa-calendar-alt"></i>
+                    <input type="number" id="experience" placeholder="Years of experience">
+                </div>
+            </div>
+            
+            <button class="btn" id="saveProfession">
+                <i class="fas fa-save"></i> Save & Continue
+            </button>
+        </div>
+
+        <!-- Family Section -->
+        <div class="form-section" id="family-section">
+            <div class="section-title">
+                <i class="fas fa-users"></i> Family Details
+            </div>
+            
+            <div class="form-group">
+                <label>Marital Status</label>
+                <div class="icon-selector">
+                    <div class="icon-option" data-status="single">
+                        <i class="fas fa-user"></i>
+                        <div>Single</div>
+                    </div>
+                    <div class="icon-option" data-status="married">
+                        <i class="fas fa-user-friends"></i>
+                        <div>Married</div>
+                    </div>
+                    <div class="icon-option" data-status="divorced">
+                        <i class="fas fa-user-times"></i>
+                        <div>Divorced</div>
+                    </div>
+                    <div class="icon-option" data-status="widowed">
+                        <i class="fas fa-user-minus"></i>
+                        <div>Widowed</div>
+                    </div>
+                </div>
+                <input type="hidden" id="maritalStatus" required>
+            </div>
+            
+            <div id="spouseDetails" class="hidden">
+                <div class="form-group">
+                    <label>Spouse Details</label>
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="spouseName" placeholder="Spouse name">
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-briefcase"></i>
+                        <input type="text" id="spouseProfession" placeholder="Spouse profession">
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-rupee-sign"></i>
+                        <input type="number" id="spouseIncome" placeholder="Spouse income">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Children</label>
+                <div id="childrenContainer">
+                    <!-- Children will be added here dynamically -->
+                </div>
+                <button type="button" class="btn" id="addChild" style="background-color: var(--success); margin-top: 10px;">
+                    <i class="fas fa-plus"></i> Add Child
+                </button>
+            </div>
+            
+            <div class="form-group">
+                <label>Other Dependents</label>
+                <div id="dependentsContainer">
+                    <!-- Dependents will be added here dynamically -->
+                </div>
+                <button type="button" class="btn" id="addDependent" style="background-color: var(--info); margin-top: 10px;">
+                    <i class="fas fa-plus"></i> Add Dependent
+                </button>
+            </div>
+            
+            <button class="btn" id="saveFamily">
+                <i class="fas fa-save"></i> Save & Continue
+            </button>
+        </div>
+
+        <!-- Finance Section -->
+        <div class="form-section" id="finance-section">
+            <div class="section-title">
+                <i class="fas fa-money-bill-wave"></i> Financial Details
+            </div>
+            
+            <div class="form-group">
+                <label>Income Sources</label>
+                <div id="incomeSourcesContainer">
+                    <!-- Income sources will be added here dynamically -->
+                </div>
+                <button type="button" class="btn" id="addIncomeSource" style="background-color: var(--success); margin-top: 10px;">
+                    <i class="fas fa-plus"></i> Add Income Source
+                </button>
+            </div>
+            
+            <div class="form-group">
+                <label>Monthly Expenses</label>
+                <div id="expensesContainer">
+                    <!-- Expenses will be added here dynamically -->
+                </div>
+                <button type="button" class="btn" id="addExpense" style="background-color: var(--danger); margin-top: 10px;">
+                    <i class="fas fa-plus"></i> Add Expense
+                </button>
+            </div>
+            
+            <div class="form-group">
+                <label>Assets & Investments</label>
+                <div id="assetsContainer">
+                    <!-- Assets will be added here dynamically -->
+                </div>
+                <button type="button" class="btn" id="addAsset" style="background-color: var(--warning); margin-top: 10px;">
+                    <i class="fas fa-plus"></i> Add Asset
+                </button>
+            </div>
+            
+            <div class="form-group">
+                <label>Liabilities & Loans</label>
+                <div id="loansContainer">
+                    <!-- Loans will be added here dynamically -->
+                </div>
+                <button type="button" class="btn" id="addLoan" style="background-color: var(--secondary); margin-top: 10px;">
+                    <i class="fas fa-plus"></i> Add Loan
+                </button>
+            </div>
+            
+            <button class="btn" id="saveFinance">
+                <i class="fas fa-save"></i> Save & Continue
+            </button>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div class="form-section" id="dashboard-section">
+            <div class="section-title">
+                <i class="fas fa-chart-pie"></i> Financial Dashboard
+            </div>
+            
+            <div class="time-filters">
+                <div class="time-filter active" data-period="3m">3 Months</div>
+                <div class="time-filter" data-period="6m">6 Months</div>
+                <div class="time-filter" data-period="1y">1 Year</div>
+                <div class="time-filter" data-period="5y">5 Years</div>
+                <div class="time-filter" data-period="all">All Time</div>
+            </div>
+            
+            <!-- Family Tree -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-tree"></i> Family Tree
+                    </div>
+                </div>
+                <div class="family-tree" id="familyTree">
+                    <!-- Family tree will be generated here -->
+                </div>
+            </div>
+            
+            <!-- Financial Overview -->
+            <div class="dashboard">
+                <div class="card" style="grid-column: span 6;">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-chart-line"></i> Income vs Expenses
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="incomeExpenseChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card" style="grid-column: span 6;">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-chart-pie"></i> Expense Breakdown
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="expenseBreakdownChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card" style="grid-column: span 4;">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-piggy-bank"></i> Savings Progress
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="savingsChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card" style="grid-column: span 4;">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-chart-bar"></i> Asset Allocation
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="assetsChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card" style="grid-column: span 4;">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-hand-holding-usd"></i> Debt Overview
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="debtChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card" style="grid-column: span 12;">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-exchange-alt"></i> Recent Transactions
+                        </div>
+                    </div>
+                    <div id="recentTransactions">
+                        <!-- Transactions will be listed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Local Storage Management
+        const saveData = (key, data) => {
+            localStorage.setItem(key, JSON.stringify(data));
+        };
+
+        const getData = (key) => {
+            return JSON.parse(localStorage.getItem(key)) || null;
+        };
+
+        // Tab Navigation
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(`${tab.dataset.tab}-section`).classList.add('active');
+            });
+        });
+
+        // Profile Section
+        document.querySelectorAll('[data-gender]').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('[data-gender]').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                document.getElementById('gender').value = this.dataset.gender;
+            });
+        });
+
+        document.getElementById('saveProfile').addEventListener('click', function() {
+            const profileData = {
+                fullName: document.getElementById('fullName').value,
+                dob: document.getElementById('dob').value,
+                gender: document.getElementById('gender').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                address: document.getElementById('address').value
+            };
+            
+            saveData('profile', profileData);
+            document.querySelector('[data-tab="profession"]').click();
+        });
+
+        // Profession Section
+        document.querySelectorAll('[data-profession]').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('[data-profession]').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                document.getElementById('profession').value = this.dataset.profession;
+            });
+        });
+
+        document.getElementById('saveProfession').addEventListener('click', function() {
+            const professionData = {
+                profession: document.getElementById('profession').value,
+                jobTitle: document.getElementById('jobTitle').value,
+                company: document.getElementById('company').value,
+                income: document.getElementById('income').value,
+                experience: document.getElementById('experience').value
+            };
+            
+            saveData('profession', professionData);
+            document.querySelector('[data-tab="family"]').click();
+        });
+
+        // Family Section
+        document.querySelectorAll('[data-status]').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('[data-status]').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                document.getElementById('maritalStatus').value = this.dataset.status;
+                
+                if (this.dataset.status === 'married') {
+                    document.getElementById('spouseDetails').classList.remove('hidden');
+                } else {
+                    document.getElementById('spouseDetails').classList.add('hidden');
+                }
+            });
+        });
+
+        // Add Child
+        document.getElementById('addChild').addEventListener('click', function() {
+            const childId = Date.now();
+            const childHTML = `
+                <div class="input-group" data-id="${childId}">
+                    <i class="fas fa-child"></i>
+                    <input type="text" placeholder="Child name">
+                    <input type="number" placeholder="Age" style="width: 80px;">
+                    <select style="width: 120px;">
+                        <option value="">Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                    <button class="remove-btn" type="button" style="background: none; border: none; cursor: pointer;">
+                        <i class="fas fa-times" style="color: var(--danger);"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('childrenContainer').insertAdjacentHTML('beforeend', childHTML);
+            
+            // Add remove functionality
+            document.querySelector(`[data-id="${childId}"] .remove-btn`).addEventListener('click', function() {
+                this.parentElement.remove();
+            });
+        });
+
+        // Add Dependent
+        document.getElementById('addDependent').addEventListener('click', function() {
+            const dependentId = Date.now();
+            const dependentHTML = `
+                <div class="input-group" data-id="${dependentId}">
+                    <i class="fas fa-user-friends"></i>
+                    <input type="text" placeholder="Dependent name">
+                    <input type="text" placeholder="Relationship">
+                    <input type="number" placeholder="Age" style="width: 80px;">
+                    <button class="remove-btn" type="button" style="background: none; border: none; cursor: pointer;">
+                        <i class="fas fa-times" style="color: var(--danger);"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('dependentsContainer').insertAdjacentHTML('beforeend', dependentHTML);
+            
+            // Add remove functionality
+            document.querySelector(`[data-id="${dependentId}"] .remove-btn`).addEventListener('click', function() {
+                this.parentElement.remove();
+            });
+        });
+
+        document.getElementById('saveFamily').addEventListener('click', function() {
+            // Collect family data
+            const familyData = {
+                maritalStatus: document.getElementById('maritalStatus').value,
+                spouse: {
+                    name: document.getElementById('spouseName').value,
+                    profession: document.getElementById('spouseProfession').value,
+                    income: document.getElementById('spouseIncome').value
+                },
+                children: [],
+                dependents: []
+            };
+            
+            // Collect children
+            document.querySelectorAll('#childrenContainer .input-group').forEach(child => {
+                const inputs = child.querySelectorAll('input, select');
+                familyData.children.push({
+                    name: inputs[0].value,
+                    age: inputs[1].value,
+                    gender: inputs[2].value
+                });
+            });
+            
+            // Collect dependents
+            document.querySelectorAll('#dependentsContainer .input-group').forEach(dependent => {
+                const inputs = dependent.querySelectorAll('input');
+                familyData.dependents.push({
+                    name: inputs[0].value,
+                    relationship: inputs[1].value,
+                    age: inputs[2].value
+                });
+            });
+            
+            saveData('family', familyData);
+            document.querySelector('[data-tab="finance"]').click();
+        });
+
+        // Finance Section
+        // Similar implementation for income sources, expenses, assets, loans
+        // ...
+
+        document.getElementById('saveFinance').addEventListener('click', function() {
+            // Collect financial data
+            const financeData = {
+                incomeSources: [],
+                expenses: [],
+                assets: [],
+                loans: []
+            };
+            
+            // In a real app, we would collect all the financial data here
+            saveData('finance', financeData);
+            document.querySelector('[data-tab="dashboard"]').click();
+            generateDashboard();
+        });
+
+        // Dashboard Generation
+        function generateDashboard() {
+            // Generate family tree
+            const profile = getData('profile');
+            const family = getData('family');
+            
+            let familyTreeHTML = '';
+            
+            if (profile && family) {
+                // Main user
+                familyTreeHTML += `
+                    <div class="family-member-node">
+                        <div class="member-avatar" style="background-color: var(--primary);">
+                            ${profile.fullName.split(' ').map(n => n[0]).join('')}
+                        </div>
+                        <div class="member-name">${profile.fullName}</div>
+                        <div class="member-relation">You</div>
+                    </div>
+                `;
+                
+                // Spouse
+                if (family.maritalStatus === 'married' && family.spouse.name) {
+                    familyTreeHTML += `
+                        <div class="tree-connector"></div>
+                        <div class="family-member-node">
+                            <div class="member-avatar" style="background-color: var(--family);">
+                                ${family.spouse.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div class="member-name">${family.spouse.name}</div>
+                            <div class="member-relation">Spouse</div>
+                        </div>
+                    `;
+                }
+                
+                // Children
+                if (family.children.length > 0) {
+                    familyTreeHTML += `<div style="display: flex; justify-content: center; margin-top: 20px;">`;
+                    family.children.forEach(child => {
+                        familyTreeHTML += `
+                            <div class="family-member-node" style="margin: 0 10px;">
+                                <div class="member-avatar" style="background-color: ${child.gender === 'male' ? '#2196F3' : '#E91E63'};">
+                                    ${child.name.split(' ').map(n => n[0]).join('')}
+                                </div>
+                                <div class="member-name">${child.name}</div>
+                                <div class="member-relation">Child (${child.age})</div>
+                            </div>
+                        `;
+                    });
+                    familyTreeHTML += `</div>`;
+                }
+            }
+            
+            document.getElementById('familyTree').innerHTML = familyTreeHTML;
+            
+            // Generate charts
+            generateCharts();
+        }
+
+        function generateCharts() {
+            // Income vs Expenses Chart
+            const incomeExpenseCtx = document.getElementById('incomeExpenseChart').getContext('2d');
+            new Chart(incomeExpenseCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [
+                        {
+                            label: 'Income',
+                            data: [50000, 60000, 70000, 80000, 90000, 100000],
+                            backgroundColor: '#4CAF50'
+                        },
+                        {
+                            label: 'Expenses',
+                            data: [40000, 45000, 50000, 55000, 60000, 65000],
+                            backgroundColor: '#F44336'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Expense Breakdown Chart
+            const expenseBreakdownCtx = document.getElementById('expenseBreakdownChart').getContext('2d');
+            new Chart(expenseBreakdownCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Housing', 'Food', 'Transport', 'Utilities', 'Education', 'Entertainment'],
+                    datasets: [{
+                        data: [15000, 12000, 8000, 7000, 10000, 3000],
+                        backgroundColor: [
+                            '#3F51B5',
+                            '#FF9800',
+                            '#009688',
+                            '#E91E63',
+                            '#673AB7',
+                            '#795548'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Other charts would be generated similarly
+        }
+
+        // Time Filter Selection
+        document.querySelectorAll('.time-filter').forEach(filter => {
+            filter.addEventListener('click', function() {
+                document.querySelectorAll('.time-filter').forEach(f => f.classList.remove('active'));
+                this.classList.add('active');
+                
+                // In a real app, we would update the dashboard data based on the selected time period
+                console.log(`Time period selected: ${this.dataset.period}`);
+            });
+        });
+
+        // Initialize with saved data
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedProfile = getData('profile');
+            if (savedProfile) {
+                document.getElementById('fullName').value = savedProfile.fullName || '';
+                document.getElementById('dob').value = savedProfile.dob || '';
+                document.getElementById('gender').value = savedProfile.gender || '';
+                document.getElementById('phone').value = savedProfile.phone || '';
+                document.getElementById('email').value = savedProfile.email || '';
+                document.getElementById('address').value = savedProfile.address || '';
+                
+                // Select gender if saved
+                if (savedProfile.gender) {
+                    document.querySelector(`[data-gender="${savedProfile.gender}"]`).classList.add('selected');
+                }
+            }
+            
+            const savedProfession = getData('profession');
+            if (savedProfession) {
+                document.getElementById('profession').value = savedProfession.profession || '';
+                document.getElementById('jobTitle').value = savedProfession.jobTitle || '';
+                document.getElementById('company').value = savedProfession.company || '';
+                document.getElementById('income').value = savedProfession.income || '';
+                document.getElementById('experience').value = savedProfession.experience || '';
+                
+                // Select profession if saved
+                if (savedProfession.profession) {
+                    document.querySelector(`[data-profession="${savedProfession.profession}"]`).classList.add('selected');
+                }
+            }
+            
+            const savedFamily = getData('family');
+            if (savedFamily) {
+                document.getElementById('maritalStatus').value = savedFamily.maritalStatus || '';
+                
+                // Select marital status if saved
+                if (savedFamily.maritalStatus) {
+                    document.querySelector(`[data-status="${savedFamily.maritalStatus}"]`).classList.add('selected');
+                    
+                    // Show spouse details if married
+                    if (savedFamily.maritalStatus === 'married') {
+                        document.getElementById('spouseDetails').classList.remove('hidden');
+                        document.getElementById('spouseName').value = savedFamily.spouse.name || '';
+                        document.getElementById('spouseProfession').value = savedFamily.spouse.profession || '';
+                        document.getElementById('spouseIncome').value = savedFamily.spouse.income || '';
+                    }
+                }
+                
+                // Add children if any
+                if (savedFamily.children && savedFamily.children.length > 0) {
+                    savedFamily.children.forEach(child => {
+                        const childId = Date.now();
+                        document.getElementById('childrenContainer').insertAdjacentHTML('beforeend', `
+                            <div class="input-group" data-id="${childId}">
+                                <i class="fas fa-child"></i>
+                                <input type="text" placeholder="Child name" value="${child.name || ''}">
+                                <input type="number" placeholder="Age" style="width: 80px;" value="${child.age || ''}">
+                                <select style="width: 120px;">
+                                    <option value="">Gender</option>
+                                    <option value="male" ${child.gender === 'male' ? 'selected' : ''}>Male</option>
+                                    <option value="female" ${child.gender === 'female' ? 'selected' : ''}>Female</option>
+                                </select>
+                                <button class="remove-btn" type="button" style="background: none; border: none; cursor: pointer;">
+                                    <i class="fas fa-times" style="color: var(--danger);"></i>
+                                </button>
+                            </div>
+                        `);
+                        
+                        // Add remove functionality
+                        document.querySelector(`[data-id="${childId}"] .remove-btn`).addEventListener('click', function() {
+                            this.parentElement.remove();
+                        });
+                    });
+                }
+                
+                // Add dependents if any
+                if (savedFamily.dependents && savedFamily.dependents.length > 0) {
+                    savedFamily.dependents.forEach(dependent => {
+                        const dependentId = Date.now();
+                        document.getElementById('dependentsContainer').insertAdjacentHTML('beforeend', `
+                            <div class="input-group" data-id="${dependentId}">
+                                <i class="fas fa-user-friends"></i>
+                                <input type="text" placeholder="Dependent name" value="${dependent.name || ''}">
+                                <input type="text" placeholder="Relationship" value="${dependent.relationship || ''}">
+                                <input type="number" placeholder="Age" style="width: 80px;" value="${dependent.age || ''}">
+                                <button class="remove-btn" type="button" style="background: none; border: none; cursor: pointer;">
+                                    <i class="fas fa-times" style="color: var(--danger);"></i>
+                                </button>
+                            </div>
+                        `);
+                        
+                        // Add remove functionality
+                        document.querySelector(`[data-id="${dependentId}"] .remove-btn`).addEventListener('click', function() {
+                            this.parentElement.remove();
+                        });
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>
