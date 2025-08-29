@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmPro - OTP Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase App and Auth -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #4caf50;
+            --primary-dark: #1b5e20;
+            --secondary: #ffa000;
+            --secondary-light: #ffc107;
+            --secondary-dark: #ff6f00;
+            --text-light: #f5f5f5;
+            --text-dark: #333;
+            --bg-light: #f8f9fa;
+            --bg-dark: #2c3e50;
+            --success: #388e3c;
+            --warning: #f57c00;
+            --danger: #d32f2f;
+            --gray: #78909c;
+            --border-radius: 10px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(to right, var(--primary), var(--primary-light));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .logo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+        }
+
+        .logo h1 {
+            font-weight: 700;
+            font-size: 1.8rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-group .form-control {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            width: 100%;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background-color: var(--secondary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-dark);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .otp-input-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 1.5rem 0;
+        }
+
+        .otp-input {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 1.5rem;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            transition: var(--transition);
+        }
+
+        .otp-input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.2);
+        }
+
+        .countdown {
+            text-align: center;
+            margin: 1rem 0;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .resend-link {
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .resend-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .resend-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background-color: #ffebee;
+            color: var(--danger);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 1rem 0;
+            text-align: center;
+            display: none;
+        }
+
+        .success-message {
+            background-color: #e8f5e9;
+            color: var(--success);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 1rem 0;
+            text-align: center;
+            display: none;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            background-color: var(--bg-light);
+            color: var(--gray);
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                border-radius: 0;
+            }
+            
+            .otp-input {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+                <h1>FarmPro</h1>
+            </div>
+            <p>Login with OTP to access your farming dashboard</p>
+        </div>
+
+        <div class="form-container">
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+
+            <!-- Step 1: Phone Number Input -->
+            <div class="step active" id="step1">
+                <div class="form-group">
+                    <label for="phoneNumber">Phone Number</label>
+                    <div class="input-group">
+                        <select class="form-control" style="max-width: 80px;">
+                            <option>+91</option>
+                            <option>+1</option>
+                            <option>+44</option>
+                        </select>
+                        <input type="tel" class="form-control" id="phoneNumber" placeholder="9876543210">
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="sendOtpBtn">Send OTP</button>
+            </div>
+
+            <!-- Step 2: OTP Verification -->
+            <div class="step" id="step2">
+                <p style="text-align: center; margin-bottom: 1.5rem;">Enter the 6-digit OTP sent to <span id="phoneNumberDisplay" style="font-weight: 600;"></span></p>
+                
+                <div class="otp-input-container">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]">
+                </div>
+
+                <div class="countdown" id="countdown">02:00</div>
+                
+                <div class="resend-link">
+                    Didn't receive OTP? <a href="#" id="resendOtp">Resend OTP</a>
+                </div>
+                
+                <button class="btn btn-primary" id="verifyOtpBtn">Verify & Login</button>
+                <button class="btn btn-outline" id="changeNumberBtn" style="margin-top: 10px;">Change Phone Number</button>
+            </div>
+
+            <!-- Step 3: Registration Form -->
+            <div class="step" id="step3">
+                <h2 style="text-align: center; margin-bottom: 1.5rem; color: var(--primary);">Complete Your Registration</h2>
+                
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" class="form-control" id="firstName" placeholder="Enter your first name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" class="form-control" id="lastName" placeholder="Enter your last name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="cropType">Primary Crop</label>
+                    <select class="form-control" id="cropType">
+                        <option value="">Select your primary crop</option>
+                        <option value="paddy">Paddy</option>
+                        <option value="cotton">Cotton</option>
+                        <option value="maize">Maize</option>
+                        <option value="chickpea">Chickpea</option>
+                        <option value="chilli">Chilli</option>
+                        <option value="tobacco">Tobacco</option>
+                        <option value="red-chickpea">Red Chickpea (Desi)</option>
+                        <option value="black-gram">Black Gram</option>
+                        <option value="green-gram">Green Gram</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-primary" id="completeRegistrationBtn">Complete Registration</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>By continuing, you agree to our Terms of Service and Privacy Policy</p>
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCdfgtj1gvZ-bkomW1V40h-4tyUPHy_peo",
+            authDomain: "jama-3f427.firebaseapp.com",
+            projectId: "jama-3f427",
+            storageBucket: "jama-3f427.firebasestorage.app",
+            messagingSenderId: "897112470741",
+            appId: "1:897112470741:web:ee6388f0faae459fcb1e5c",
+            measurementId: "G-NN1BRV0QKS"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // DOM Elements
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+        const phoneNumberInput = document.getElementById('phoneNumber');
+        const phoneNumberDisplay = document.getElementById('phoneNumberDisplay');
+        const sendOtpBtn = document.getElementById('sendOtpBtn');
+        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        const resendOtpLink = document.getElementById('resendOtp');
+        const changeNumberBtn = document.getElementById('changeNumberBtn');
+        const completeRegistrationBtn = document.getElementById('completeRegistrationBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const otpInputs = document.querySelectorAll('.otp-input');
+        const countdown = document.getElementById('countdown');
+
+        // Global variables
+        let confirmationResult = null;
+        let countdownTimer = null;
+        let timeLeft = 120; // 2 minutes in seconds
+
+        // Event Listeners
+        sendOtpBtn.addEventListener('click', sendOtp);
+        verifyOtpBtn.addEventListener('click', verifyOtp);
+        resendOtpLink.addEventListener('click', resendOtp);
+        changeNumberBtn.addEventListener('click', changeNumber);
+        completeRegistrationBtn.addEventListener('click', completeRegistration);
+
+        // OTP input navigation
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', () => {
+                if (input.value.length === 1 && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+            
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && input.value === '' && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+        });
+
+        // Functions
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+            
+            // Hide error after 5 seconds
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+            
+            // Hide success after 5 seconds
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function changeStep(currentStep, nextStep) {
+            currentStep.classList.remove('active');
+            nextStep.classList.add('active');
+        }
+
+        function startCountdown() {
+            clearInterval(countdownTimer);
+            timeLeft = 120;
+            updateCountdown();
+            
+            countdownTimer = setInterval(() => {
+                timeLeft--;
+                updateCountdown();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdownTimer);
+                }
+            }, 1000);
+        }
+
+        function updateCountdown() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            countdown.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeLeft <= 0) {
+                countdown.textContent = "OTP expired";
+                countdown.style.color = var('--danger');
+            }
+        }
+
+        function sendOtp() {
+            const phoneNumber = phoneNumberInput.value.trim();
+            
+            if (!phoneNumber) {
+                showError('Please enter your phone number');
+                return;
+            }
+            
+            if (!/^\d{10}$/.test(phoneNumber)) {
+                showError('Please enter a valid 10-digit phone number');
+                return;
+            }
+            
+            const fullPhoneNumber = '+91' + phoneNumber;
+            
+            // Show loading state
+            sendOtpBtn.textContent = 'Sending...';
+            sendOtpBtn.disabled = true;
+            
+            // Firebase phone authentication
+            auth.signInWithPhoneNumber(fullPhoneNumber, window.recaptchaVerifier)
+                .then((result) => {
+                    confirmationResult = result;
+                    phoneNumberDisplay.textContent = '+91 ' + phoneNumber;
+                    changeStep(step1, step2);
+                    startCountdown();
+                    showSuccess('OTP sent successfully!');
+                })
+                .catch((error) => {
+                    console.error('Error sending OTP:', error);
+                    showError('Failed to send OTP. Please try again.');
+                })
+                .finally(() => {
+                    sendOtpBtn.textContent = 'Send OTP';
+                    sendOtpBtn.disabled = false;
+                });
+        }
+
+        function verifyOtp() {
+            let otp = '';
+            otpInputs.forEach(input => {
+                otp += input.value;
+            });
+            
+            if (otp.length !== 6) {
+                showError('Please enter the complete 6-digit OTP');
+                return;
+            }
+            
+            // Show loading state
+            verifyOtpBtn.textContent = 'Verifying...';
+            verifyOtpBtn.disabled = true;
+            
+            confirmationResult.confirm(otp)
+                .then((result) => {
+                    // User signed in successfully
+                    const user = result.user;
+                    
+                    // Check if user is new (first time registration)
+                    if (user && user.metadata.creationTime === user.metadata.lastSignInTime) {
+                        // New user - show registration form
+                        changeStep(step2, step3);
+                    } else {
+                        // Existing user - redirect to dashboard (simulated here)
+                        showSuccess('Login successful! Redirecting to dashboard...');
+                        simulateLoginRedirect();
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error verifying OTP:', error);
+                    showError('Invalid OTP. Please try again.');
+                })
+                .finally(() => {
+                    verifyOtpBtn.textContent = 'Verify & Login';
+                    verifyOtpBtn.disabled = false;
+                });
+        }
+
+        function resendOtp(e) {
+            e.preventDefault();
+            
+            if (timeLeft > 0) {
+                showError(`Please wait ${timeLeft} seconds before requesting a new OTP`);
+                return;
+            }
+            
+            sendOtp();
+        }
+
+        function changeNumber() {
+            changeStep(step2, step1);
+            clearInterval(countdownTimer);
+        }
+
+        function completeRegistration() {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const cropType = document.getElementById('cropType').value;
+            
+            if (!firstName || !lastName || !cropType) {
+                showError('Please fill all the fields');
+                return;
+            }
+            
+            // In a real app, you would save this data to your database
+            showSuccess('Registration completed! Redirecting to dashboard...');
+            simulateLoginRedirect();
+        }
+
+        function simulateLoginRedirect() {
+            // Simulate redirect to dashboard
+            setTimeout(() => {
+                alert('Login successful! You would now be redirected to the farmer dashboard.');
+                // In a real app: window.location.href = 'dashboard.html';
+            }, 2000);
+        }
+
+        // Initialize reCAPTCHA verifier
+        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('sendOtpBtn', {
+            size: 'invisible',
+            callback: () => {
+                // reCAPTCHA solved, allow signInWithPhoneNumber
+            }
+        });
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', () => {
+            // Any initialization code can go here
+        });
+    </script>
+</body>
+</html>
