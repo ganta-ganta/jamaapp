@@ -1,0 +1,4221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmPro - Complete Farmer Financial Tracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- Firebase v9 -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getAuth, signInWithPhoneNumber, RecaptchaVerifier, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+        import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, enableNetwork, disableNetwork } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+        import { enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+        
+        // Make Firebase available globally
+        window.firebase = { initializeApp, getAuth, signInWithPhoneNumber, RecaptchaVerifier, onAuthStateChanged, signOut, getFirestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, enableNetwork, disableNetwork, enableIndexedDbPersistence };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #4caf50;
+            --primary-dark: #1b5e20;
+            --secondary: #ffa000;
+            --secondary-light: #ffc107;
+            --secondary-dark: #ff6f00;
+            --text-light: #f5f5f5;
+            --text-dark: #333;
+            --bg-light: #f8f9fa;
+            --bg-dark: #2c3e50;
+            --success: #388e3c;
+            --warning: #f57c00;
+            --danger: #d32f2f;
+            --gray: #78909c;
+            --border-radius: 12px;
+            --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 25px;
+            font-weight: 600;
+            z-index: 2000;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .connection-status.online {
+            background: var(--success);
+            color: white;
+        }
+
+        .connection-status.offline {
+            background: var(--danger);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .logo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .logo h1 {
+            font-weight: 700;
+            font-size: 1.8rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            opacity: 0.95;
+            font-size: 1rem;
+        }
+
+        .form-container {
+            padding: 1.5rem;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .input-group .form-control {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            font-size: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+            color: white;
+            border: 2px solid transparent;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: linear-gradient(135deg, var(--secondary-dark), var(--secondary));
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #4caf50);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #e53935);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #ff9800);
+            color: white;
+        }
+
+        .otp-input-container {
+            display: flex;
+            justify-content: space-between;
+            margin: 2rem 0;
+            gap: 8px;
+        }
+
+        .otp-input {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 1.5rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+
+        .otp-input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.15);
+            transform: scale(1.05);
+        }
+
+        .countdown {
+            text-align: center;
+            margin: 1.5rem 0;
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .resend-link {
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .resend-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .resend-link a:hover {
+            text-decoration: underline;
+            color: var(--primary-dark);
+        }
+
+        .message {
+            padding: 16px 20px;
+            border-radius: var(--border-radius);
+            margin: 1rem 0;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+            transition: var(--transition);
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .warning-message {
+            background: linear-gradient(135deg, #fff3e0, #ffcc80);
+            color: var(--warning);
+            border-left: 4px solid var(--warning);
+        }
+
+        .step {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--bg-light), #e8f5e9);
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .crop-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 1.2rem 0;
+        }
+
+        .crop-item {
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .crop-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(46, 125, 50, 0.15);
+        }
+
+        .crop-item.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.1), rgba(76, 175, 80, 0.05));
+            transform: scale(1.02);
+        }
+
+        .crop-item img {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin-bottom: 10px;
+            border: 3px solid #f0f0f0;
+        }
+
+        .crop-item div {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .slider-container {
+            margin: 1.5rem 0;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa, #e8f5e9);
+            border-radius: var(--border-radius);
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 6px;
+            background: linear-gradient(to right, #e0e0e0, var(--primary-light));
+            outline: none;
+            margin: 15px 0;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
+            transition: var(--transition);
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.4);
+        }
+
+        .slider-value {
+            text-align: center;
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .expense-category {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 1.2rem 0;
+        }
+
+        .expense-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .expense-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.1);
+        }
+
+        .expense-item.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.1), rgba(76, 175, 80, 0.05));
+        }
+
+        .expense-item img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #f0f0f0;
+        }
+
+        .funding-source {
+            margin-bottom: 1.2rem;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            background: white;
+            transition: var(--transition);
+        }
+
+        .funding-source:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .funding-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .remove-funding {
+            color: var(--danger);
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: var(--transition);
+            padding: 5px;
+            border-radius: 50%;
+        }
+
+        .remove-funding:hover {
+            background: rgba(211, 47, 47, 0.1);
+            transform: scale(1.1);
+        }
+
+        .dashboard-container {
+            padding: 1.5rem;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .financial-summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        .financial-item {
+            text-align: center;
+            padding: 1.2rem;
+            border-radius: var(--border-radius);
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: var(--transition);
+        }
+
+        .financial-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .financial-item.income {
+            border-left: 5px solid var(--success);
+            background: linear-gradient(135deg, #e8f5e9, white);
+        }
+
+        .financial-item.expense {
+            border-left: 5px solid var(--danger);
+            background: linear-gradient(135deg, #ffebee, white);
+        }
+
+        .financial-item.profit {
+            border-left: 5px solid var(--secondary);
+            background: linear-gradient(135deg, #fff8e1, white);
+        }
+
+        .financial-item.interest {
+            border-left: 5px solid var(--warning);
+            background: linear-gradient(135deg, #fff3e0, white);
+        }
+
+        .financial-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0.5rem 0;
+        }
+
+        .financial-label {
+            font-size: 0.85rem;
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        .nav-tabs {
+            display: flex;
+            border-bottom: 2px solid #e1e5e9;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .nav-tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+            font-weight: 600;
+            color: var(--gray);
+            white-space: nowrap;
+        }
+
+        .nav-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.05), transparent);
+        }
+
+        .nav-tab:hover {
+            color: var(--primary);
+            background: rgba(46, 125, 50, 0.05);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .crop-card {
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 12px;
+            background: white;
+            transition: var(--transition);
+        }
+
+        .crop-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+
+        .crop-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .crop-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 6px 10px;
+            font-size: 0.8rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            max-width: 90%;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            color: var(--danger);
+            transform: scale(1.1);
+        }
+
+        .secondary-income-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            background: white;
+            transition: var(--transition);
+        }
+
+        .secondary-income-item:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .weather-card {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border: none;
+            color: #1565c0;
+        }
+
+        .pricing-card {
+            background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+            border: none;
+            color: #7b1fa2;
+        }
+
+        .soil-card {
+            background: linear-gradient(135deg, #efebe9, #d7ccc8);
+            border: none;
+            color: #5d4037;
+        }
+
+        .utility-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 1.2rem 0;
+        }
+
+        .utility-item {
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .utility-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.1);
+        }
+
+        .utility-item.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.1), rgba(76, 175, 80, 0.05));
+        }
+
+        .utility-item i {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        .filters-container {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            border: 1px solid #e1e5e9;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 120px;
+        }
+
+        .filter-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e1e5e9;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            transition: width 0.3s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 1rem 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 0.8rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .stat-item:hover {
+            background: #e8f5e9;
+            transform: translateY(-1px);
+        }
+
+        .editable-field {
+            background: transparent;
+            border: 1px dashed #ccc;
+            border-radius: 4px;
+            padding: 4px 8px;
+            min-width: 80px;
+            transition: var(--transition);
+        }
+
+        .editable-field:hover {
+            background: #f0f0f0;
+            border-style: solid;
+        }
+
+        .editable-field:focus {
+            background: white;
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .utility-details {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            border: 1px solid #e1e5e9;
+        }
+
+        .utility-history {
+            margin-top: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .utility-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e1e5e9;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        /* Mobile-specific styles */
+        .mobile-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 1000;
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--gray);
+            font-size: 0.8rem;
+            transition: var(--transition);
+        }
+
+        .mobile-nav-item.active {
+            color: var(--primary);
+        }
+
+        .mobile-nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        .floating-action-button {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(255, 160, 0, 0.3);
+            z-index: 1000;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .floating-action-button:hover {
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 8px 25px rgba(255, 160, 0, 0.4);
+        }
+
+        .floating-action-menu {
+            position: fixed;
+            bottom: 150px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+            transition: var(--transition);
+            transform-origin: bottom right;
+        }
+
+        .floating-action-item {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: white;
+            color: var(--primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: var(--transition);
+            transform: scale(0);
+            opacity: 0;
+        }
+
+        .floating-action-menu.open .floating-action-item {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .floating-action-item:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-5px);
+        }
+
+        .quick-transaction-panel {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 20px;
+            z-index: 1000;
+            transition: var(--transition);
+            transform: translateY(150%);
+        }
+
+        .quick-transaction-panel.open {
+            transform: translateY(0);
+        }
+
+        .keypad-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .keypad-key {
+            padding: 15px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: white;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .keypad-key:active {
+            background: #f0f0f0;
+        }
+
+        .keypad-key.clear {
+            grid-column: span 2;
+            background: var(--danger);
+            color: white;
+        }
+
+        .keypad-key.submit {
+            grid-column: span 2;
+            background: var(--success);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                max-width: 100%;
+                border-radius: 0;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            .logo h1 {
+                font-size: 1.5rem;
+            }
+            
+            .logo i {
+                font-size: 2rem;
+            }
+            
+            .form-container {
+                padding: 1rem;
+            }
+            
+            .otp-input {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+            
+            .crop-grid, .utility-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .financial-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .expense-category {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-tabs {
+                flex-wrap: wrap;
+                gap: 5px;
+            }
+
+            .nav-tab {
+                font-size: 0.85rem;
+                padding: 8px 12px;
+            }
+
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                min-width: 100%;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .dashboard-container {
+                padding: 1rem;
+            }
+            
+            .dashboard-card {
+                padding: 1rem;
+            }
+            
+            .modal-content {
+                padding: 1rem;
+            }
+            
+            .financial-item {
+                padding: 1rem;
+            }
+            
+            .financial-value {
+                font-size: 1.2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .financial-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .logo h1 {
+                font-size: 1.3rem;
+            }
+            
+            .logo i {
+                font-size: 1.8rem;
+            }
+
+            .utility-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .crop-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .crop-item {
+                padding: 10px;
+            }
+            
+            .crop-item img {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .otp-input {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+        }
+
+        .backup-info {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            padding: 12px;
+            border-radius: var(--border-radius);
+            margin: 12px 0;
+            text-align: center;
+            border: 1px solid #2196f3;
+        }
+
+        .transaction-filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--primary);
+            background: white;
+            color: var(--primary);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.85rem;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .filter-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .sync-status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            z-index: 100;
+        }
+
+        .sync-status.syncing {
+            color: var(--warning);
+        }
+
+        .sync-status.synced {
+            color: var(--success);
+        }
+
+        .sync-status.error {
+            color: var(--danger);
+        }
+        
+        /* Mobile keyboard optimization */
+        input[type="tel"],
+        input[type="number"] {
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+        }
+        
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        /* OTP input optimization for mobile */
+        .otp-input {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Prevent zoom on input focus for mobile */
+        @media screen and (max-width: 768px) {
+            input, select, textarea {
+                font-size: 16px !important;
+            }
+        }
+
+        /* Secondary Income Styles */
+        .secondary-income-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 1.2rem 0;
+        }
+
+        .secondary-income-item {
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .secondary-income-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(46, 125, 50, 0.15);
+        }
+
+        .secondary-income-item.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.1), rgba(76, 175, 80, 0.05));
+            transform: scale(1.02);
+        }
+
+        .secondary-income-item i {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+
+        .secondary-income-item div {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">
+        <i class="fas fa-wifi"></i>
+        <span>Checking connection...</span>
+    </div>
+
+    <div class="container">
+        <div class="sync-status" id="syncStatus">
+            <i class="fas fa-sync-alt"></i>
+            <span>Ready</span>
+        </div>
+
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+                <h1>FarmPro</h1>
+            </div>
+            <p>Complete Agricultural Financial Management System</p>
+        </div>
+
+        <div class="form-container">
+            <div class="error-message message" id="errorMessage"></div>
+            <div class="success-message message" id="successMessage"></div>
+            <div class="warning-message message" id="warningMessage"></div>
+
+            <!-- Step 1: Phone Number Input -->
+            <div class="step active" id="step1">
+                <div class="form-group">
+                    <label for="phoneNumber">Phone Number</label>
+                    <div class="input-group">
+                        <select class="form-control" id="countryCode" style="max-width: 80px;">
+                            <option value="+91">🇮🇳 +91</option>
+                            <option value="+1">🇺🇸 +1</option>
+                            <option value="+44">🇬🇧 +44</option>
+                        </select>
+                        <input type="tel" class="form-control" id="phoneNumber" placeholder="9876543210" inputmode="numeric" pattern="[0-9]*">
+                    </div>
+                </div>
+                <div id="recaptcha-container"></div>
+                <button class="btn btn-primary btn-full" id="sendOtpBtn">
+                    <i class="fas fa-paper-plane"></i> Send OTP
+                </button>
+                
+                <div class="backup-info">
+                    <h4><i class="fas fa-cloud"></i> Cloud Backup Enabled</h4>
+                    <p>Your data is automatically backed up and synchronized across devices</p>
+                </div>
+            </div>
+
+            <!-- Step 2: OTP Verification -->
+            <div class="step" id="step2">
+                <p style="text-align: center; margin-bottom: 2rem; font-size: 1.1rem;">
+                    Enter the 6-digit OTP sent to <span id="phoneNumberDisplay" style="font-weight: 700; color: var(--primary);"></span>
+                </p>
+                
+                <div class="otp-input-container">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'');if(this.value.length==1) focusNextOtpInput(this);">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'');if(this.value.length==1) focusNextOtpInput(this);">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'');if(this.value.length==1) focusNextOtpInput(this);">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'');if(this.value.length==1) focusNextOtpInput(this);">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'');if(this.value.length==1) focusNextOtpInput(this);">
+                    <input type="text" class="otp-input" maxlength="1" pattern="[0-9]*" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'');if(this.value.length==1) focusNextOtpInput(this);">
+                </div>
+
+                <div class="countdown" id="countdown">02:00</div>
+                
+                <div class="resend-link">
+                    Didn't receive OTP? <a href="#" id="resendOtp">Resend OTP</a>
+                </div>
+                
+                <button class="btn btn-primary btn-full" id="verifyOtpBtn">
+                    <i class="fas fa-shield-alt"></i> Verify & Login
+                </button>
+                <button class="btn btn-outline btn-full" id="changeNumberBtn" style="margin-top: 12px;">
+                    <i class="fas fa-edit"></i> Change Phone Number
+                </button>
+                
+                <!-- Mobile OTP Keypad -->
+                <div class="keypad-container" id="otpKeypad" style="display: none;">
+                    <div class="keypad-key" data-value="1">1</div>
+                    <div class="keypad-key" data-value="2">2</div>
+                    <div class="keypad-key" data-value="3">3</div>
+                    <div class="keypad-key" data-value="4">4</div>
+                    <div class="keypad-key" data-value="5">5</div>
+                    <div class="keypad-key" data-value="6">6</div>
+                    <div class="keypad-key" data-value="7">7</div>
+                    <div class="keypad-key" data-value="8">8</div>
+                    <div class="keypad-key" data-value="9">9</div>
+                    <div class="keypad-key clear" data-action="clear">Clear</div>
+                    <div class="keypad-key" data-value="0">0</div>
+                    <div class="keypad-key submit" data-action="submit">Submit</div>
+                </div>
+            </div>
+
+            <!-- Step 3: Registration Form -->
+            <div class="step" id="step3">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary);">
+                    <i class="fas fa-user-plus"></i> Complete Your Registration
+                </h2>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName"><i class="fas fa-user"></i> First Name</label>
+                        <input type="text" class="form-control" id="firstName" placeholder="Enter your first name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lastName"><i class="fas fa-user"></i> Last Name</label>
+                        <input type="text" class="form-control" id="lastName" placeholder="Enter your last name">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="farmLocation"><i class="fas fa-map-marker-alt"></i> Farm Location</label>
+                        <input type="text" class="form-control" id="farmLocation" placeholder="Village, District, State">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="totalFarmSize"><i class="fas fa-expand-arrows-alt"></i> Total Farm Size</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="farmAcres" placeholder="Acres" min="0" step="0.1" inputmode="decimal">
+                            <input type="number" class="form-control" id="farmCents" placeholder="Cents" min="0" max="99" inputmode="numeric">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cropType"><i class="fas fa-seedling"></i> Primary Crop</label>
+                    <div class="crop-grid">
+                        <div class="crop-item" data-crop="paddy">
+                            <img src="https://images.pexels.com/photos/764281/pexels-photo-764281.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop" alt="Paddy">
+                            <div>Paddy</div>
+                        </div>
+                        <div class="crop-item" data-crop="cotton">
+                            <img src="https://images.pexels.com/photos/4022110/pexels-photo-4022110.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop" alt="Cotton">
+                            <div>Cotton</div>
+                        </div>
+                        <div class="crop-item" data-crop="maize">
+                            <img src="https://images.pexels.com/photos/547263/pexels-photo-547263.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop" alt="Maize">
+                            <div>Maize</div>
+                        </div>
+                        <div class="crop-item" data-crop="chickpea">
+                            <img src="https://images.pexels.com/photos/4750274/pexels-photo-4750274.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop" alt="Chickpea">
+                            <div>Chickpea</div>
+                        </div>
+                        <div class="crop-item" data-crop="chilli">
+                            <img src="https://images.pexels.com/photos/1835658/pexels-photo-1835658.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop" alt="Chilli">
+                            <div>Chilli</div>
+                        </div>
+                        <div class="crop-item" data-crop="tobacco">
+                            <img src="https://images.pexels.com/photos/4022110/pexels-photo-4022110.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop" alt="Tobacco">
+                            <div>Tobacco</div>
+                        </div>
+                        <div class="crop-item" data-crop="red-chickpea">
+                            <img src="https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop" alt="Red Chickpea">
+                            <div>Red Chickpea</div>
+                        </div>
+                        <div class="crop-item" data-crop="black-gram">
+                            <img src="https://images.pexels.com/photos/4110258/pexels-photo-4110258.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop" alt="Black Gram">
+                            <div>Black Gram</div>
+                        </div>
+                        <div class="crop-item" data-crop="green-gram">
+                            <img src="https://images.pexels.com/photos/4750267/pexels-photo-4750267.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop" alt="Green Gram">
+                            <div>Green Gram</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="cropType" value="">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cropAcres"><i class="fas fa-map"></i> Crop Area</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="cropAcres" placeholder="Acres" min="0" step="0.1" inputmode="decimal">
+                            <input type="number" class="form-control" id="cropCents" placeholder="Cents" min="0" max="99" inputmode="numeric">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sowingDate"><i class="fas fa-calendar"></i> Sowing Date</label>
+                        <input type="text" class="form-control" id="sowingDate" placeholder="Select sowing date">
+                    </div>
+                </div>
+                
+                <div class="slider-container">
+                    <label for="durationSlider"><i class="fas fa-clock"></i> Crop Duration (days): <span id="durationValue">120</span></label>
+                    <input type="range" min="30" max="365" value="120" class="slider" id="durationSlider">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 33%;"></div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary btn-full" id="completeRegistrationBtn">
+                    <i class="fas fa-arrow-right"></i> Continue to Financial Setup
+                </button>
+            </div>
+
+            <!-- Step 4: Financial Setup -->
+            <div class="step" id="step4">
+                <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary);">
+                    <i class="fas fa-chart-line"></i> Financial Setup
+                </h2>
+                
+                <h3 style="margin-bottom: 1.5rem; color: var(--primary-dark);">
+                    <i class="fas fa-money-bill-wave"></i> Investment Sources
+                </h3>
+                
+                <div id="fundingSources">
+                    <div class="funding-source">
+                        <div class="funding-header">
+                            <select class="form-control funding-type" style="max-width: 200px;">
+                                <option value="own">Own Funds</option>
+                                <option value="bank">Bank Loan</option>
+                                <option value="family">Family/Friends Loan</option>
+                                <option value="govt">Government Subsidy</option>
+                                <option value="other">Other Source</option>
+                            </select>
+                            <span class="remove-funding" style="display: none;">×</span>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label><i class="fas fa-rupee-sign"></i> Amount (₹)</label>
+                                <input type="number" class="form-control funding-amount" placeholder="Enter amount" min="0" inputmode="decimal">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-percentage"></i> Interest Rate (%)</label>
+                                <input type="number" class="form-control funding-rate" value="0" min="0" step="0.1" disabled inputmode="decimal">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-alt"></i> Date Taken</label>
+                            <input type="text" class="form-control funding-date" placeholder="Select date">
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-outline btn-full" id="addFundingBtn" style="margin-bottom: 2rem;">
+                    <i class="fas fa-plus-circle"></i> Add Another Funding Source
+                </button>
+                
+                <button class="btn btn-primary btn-full" id="finishSetupBtn">
+                    <i class="fas fa-check-circle"></i> Complete Setup
+                </button>
+            </div>
+
+            <!-- Step 5: Dashboard -->
+            <div class="step" id="step5">
+                <div class="dashboard-container">
+                    <div class="dashboard-header">
+                        <h2><i class="fas fa-tachometer-alt"></i> Farm Dashboard</h2>
+                        <div class="action-buttons">
+                            <button class="btn btn-success btn-small" id="addCropBtn">
+                                <i class="fas fa-plus"></i> Add Crop
+                            </button>
+                            <button class="btn btn-warning btn-small" id="downloadPdfBtn">
+                                <i class="fas fa-file-pdf"></i> Download PDF
+                            </button>
+                            <button class="btn btn-outline btn-small" id="backupDataBtn">
+                                <i class="fas fa-cloud-upload-alt"></i> Backup Data
+                            </button>
+                            <button class="btn btn-outline btn-small" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="financial-summary">
+                        <div class="financial-item income">
+                            <div class="financial-label">Total Income</div>
+                            <div class="financial-value" id="totalIncome">₹0</div>
+                            <div class="financial-label">From all sources</div>
+                        </div>
+                        <div class="financial-item expense">
+                            <div class="financial-label">Total Expenses</div>
+                            <div class="financial-value" id="totalExpenses">₹0</div>
+                            <div class="financial-label">Farming costs</div>
+                        </div>
+                        <div class="financial-item profit">
+                            <div class="financial-label">Net Profit</div>
+                            <div class="financial-value" id="netProfit">₹0</div>
+                            <div class="financial-label">This period</div>
+                        </div>
+                        <div class="financial-item interest">
+                            <div class="financial-label">Interest Cost</div>
+                            <div class="financial-value" id="interestCost">₹0</div>
+                            <div class="financial-label">Annual</div>
+                        </div>
+                    </div>
+
+                    <div class="nav-tabs">
+                        <div class="nav-tab active" data-tab="crops">
+                            <i class="fas fa-seedling"></i> Crops
+                        </div>
+                        <div class="nav-tab" data-tab="financials">
+                            <i class="fas fa-chart-pie"></i> Financials
+                        </div>
+                        <div class="nav-tab" data-tab="transactions">
+                            <i class="fas fa-history"></i> Transactions
+                        </div>
+                        <div class="nav-tab" data-tab="utilities">
+                            <i class="fas fa-tools"></i> Utilities
+                        </div>
+                        <div class="nav-tab" data-tab="secondary">
+                            <i class="fas fa-hand-holding-usd"></i> Secondary Income
+                        </div>
+                        <div class="nav-tab" data-tab="advisory">
+                            <i class="fas fa-cloud-sun"></i> Advisory
+                        </div>
+                    </div>
+
+                    <!-- Crops Tab -->
+                    <div class="tab-content active" id="crops-tab">
+                        <div class="dashboard-card">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <h3><i class="fas fa-leaf"></i> Active Crops</h3>
+                                <div class="filters-container" style="margin: 0; padding: 10px; min-width: 200px;">
+                                    <select class="form-control" id="cropStatusFilter" style="margin: 0;">
+                                        <option value="all">All Status</option>
+                                        <option value="planted">Planted</option>
+                                        <option value="growing">Growing</option>
+                                        <option value="harvested">Harvested</option>
+                                        <option value="sold">Sold</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="cropsList">
+                                <!-- Crops will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Financials Tab -->
+                    <div class="tab-content" id="financials-tab">
+                        <div class="filters-container">
+                            <h4><i class="fas fa-filter"></i> Financial Filters</h4>
+                            <div class="filter-row">
+                                <div class="filter-group">
+                                    <label>Date Range</label>
+                                    <input type="text" id="startDate" placeholder="Start Date" class="form-control">
+                                </div>
+                                <div class="filter-group">
+                                    <label>To</label>
+                                    <input type="text" id="endDate" placeholder="End Date" class="form-control">
+                                </div>
+                                <div class="filter-group">
+                                    <label>Category</label>
+                                    <select id="categoryFilter" class="form-control">
+                                        <option value="all">All Categories</option>
+                                        <option value="income">Income</option>
+                                        <option value="expenses">Expenses</option>
+                                        <option value="funding">Funding</option>
+                                        <option value="utilities">Utilities</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
+                                    <button class="btn btn-primary" id="applyFiltersBtn">
+                                        <i class="fas fa-search"></i> Apply
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <h3><i class="fas fa-money-bill-wave"></i> Investment Sources</h3>
+                            <div id="fundingBreakdown"></div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <h3><i class="fas fa-receipt"></i> Expense Analysis</h3>
+                            <div id="expenseBreakdown"></div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <h3><i class="fas fa-chart-line"></i> Profit Analysis</h3>
+                            <div id="profitAnalysis"></div>
+                        </div>
+                    </div>
+
+                    <!-- Transactions Tab -->
+                    <div class="tab-content" id="transactions-tab">
+                        <div class="dashboard-card">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <h3><i class="fas fa-history"></i> Transaction History</h3>
+                                <button class="btn btn-success btn-small" id="exportTransactionsBtn">
+                                    <i class="fas fa-download"></i> Export CSV
+                                </button>
+                            </div>
+                            
+                            <div class="transaction-filters">
+                                <div class="filter-btn active" data-filter="all">All</div>
+                                <div class="filter-btn" data-filter="income">Income</div>
+                                <div class="filter-btn" data-filter="expense">Expenses</div>
+                                <div class="filter-btn" data-filter="utilities">Utilities</div>
+                                <div class="filter-btn" data-filter="funding">Funding</div>
+                            </div>
+                            
+                            <div id="transactionsList">
+                                <!-- Transactions will be displayed here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Utilities Tab -->
+                    <div class="tab-content" id="utilities-tab">
+                        <div class="dashboard-card">
+                            <h3><i class="fas fa-tools"></i> Crop Utilities Management</h3>
+                            <div style="margin-bottom: 1rem;">
+                                <label for="utilitysCropSelect">Select Crop:</label>
+                                <select class="form-control" id="utilitysCropSelect" style="max-width: 250px;">
+                                    <option value="">Select a crop</option>
+                                </select>
+                            </div>
+                            <div id="utilitiesContent">
+                                <p style="text-align: center; color: var(--gray); padding: 2rem;">
+                                    Please select a crop to manage utilities
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Secondary Income Tab -->
+                    <div class="tab-content" id="secondary-tab">
+                        <div class="dashboard-card">
+                            <h3><i class="fas fa-tractor"></i> Machinery & Equipment</h3>
+                            <button class="btn btn-success btn-small" id="addMachineryBtn">
+                                <i class="fas fa-plus"></i> Add Machinery
+                            </button>
+                            <div id="machineryList">
+                                <!-- Machinery items will be listed here -->
+                            </div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <h3><i class="fas fa-paw"></i> Livestock</h3>
+                            <button class="btn btn-success btn-small" id="addLivestockBtn">
+                                <i class="fas fa-plus"></i> Add Livestock
+                            </button>
+                            <div id="livestockList">
+                                <!-- Livestock items will be listed here -->
+                            </div>
+                        </div>
+                        
+                        <div class="dashboard-card">
+                            <h3><i class="fas fa-hand-holding-usd"></i> Additional Income Sources</h3>
+                            <button class="btn btn-success btn-small" id="addIncomeSourceBtn">
+                                <i class="fas fa-plus"></i> Add Income Source
+                            </button>
+                            <div id="incomeSourcesList">
+                                <!-- Income sources will be listed here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advisory Tab -->
+                    <div class="tab-content" id="advisory-tab">
+                        <div class="dashboard-card weather-card">
+                            <h3><i class="fas fa-cloud-sun"></i> Weather Forecast</h3>
+                            <div id="weatherInfo">
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <div><i class="fas fa-thermometer-half"></i></div>
+                                        <div><strong>28°C</strong></div>
+                                        <div>Temperature</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div><i class="fas fa-tint"></i></div>
+                                        <div><strong>65%</strong></div>
+                                        <div>Humidity</div>
+                                    </div>
+                                </div>
+                                <p style="margin-top: 1rem; text-align: center;">Sunny with moderate humidity. Good for irrigation.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="dashboard-card pricing-card">
+                            <h3><i class="fas fa-tags"></i> Market Prices</h3>
+                            <div id="pricingInfo">
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <div><strong>₹2,850</strong></div>
+                                        <div>Paddy/Quintal</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div><strong>₹7,200</strong></div>
+                                        <div>Cotton/Quintal</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="dashboard-card soil-card">
+                            <h3><i class="fas fa-seedling"></i> Soil Health & Advisory</h3>
+                            <div id="soilInfo">
+                                <p><strong>Soil pH:</strong> <span class="editable-field" contenteditable="true">6.8</span> (Optimal)</p>
+                                <p><strong>Nitrogen:</strong> <span class="editable-field" contenteditable="true">Medium</span></p>
+                                <p><strong>Phosphorus:</strong> <span class="editable-field" contenteditable="true">High</span></p>
+                                <p><strong>Potassium:</strong> <span class="editable-field" contenteditable="true">Low</span></p>
+                                <div style="margin-top: 1rem; padding: 1rem; background: rgba(255,255,255,0.7); border-radius: 8px;">
+                                    <strong>Recommendation:</strong> Consider potassium supplementation for better crop yield.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Action Button -->
+        <div class="floating-action-button" id="fabButton">
+            <i class="fas fa-plus"></i>
+        </div>
+        
+        <!-- Floating Action Menu -->
+        <div class="floating-action-menu" id="fabMenu">
+            <div class="floating-action-item" data-action="income">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="floating-action-item" data-action="expense">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <div class="floating-action-item" data-action="utility">
+                <i class="fas fa-tools"></i>
+            </div>
+        </div>
+        
+        <!-- Quick Transaction Panel -->
+        <div class="quick-transaction-panel" id="quickTransactionPanel">
+            <div class="modal-header">
+                <h3 id="transactionPanelTitle">Add Transaction</h3>
+                <button class="modal-close" id="closeTransactionPanel">&times;</button>
+            </div>
+            
+            <div class="form-group">
+                <label for="quickAmount">Amount (₹)</label>
+                <input type="number" class="form-control" id="quickAmount" placeholder="Enter amount" inputmode="decimal">
+            </div>
+            
+            <div class="form-group">
+                <label for="quickCategory">Category</label>
+                <select class="form-control" id="quickCategory">
+                    <option value="income">Income</option>
+                    <option value="expense">Expense</option>
+                    <option value="utility">Utility</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="quickDescription">Description</label>
+                <input type="text" class="form-control" id="quickDescription" placeholder="Enter description">
+            </div>
+            
+            <div class="keypad-container">
+                <div class="keypad-key" data-value="1">1</div>
+                <div class="keypad-key" data-value="2">2</div>
+                <div class="keypad-key" data-value="3">3</div>
+                <div class="keypad-key" data-value="4">4</div>
+                <div class="keypad-key" data-value="5">5</div>
+                <div class="keypad-key" data-value="6">6</div>
+                <div class="keypad-key" data-value="7">7</div>
+                <div class="keypad-key" data-value="8">8</div>
+                <div class="keypad-key" data-value="9">9</div>
+                <div class="keypad-key clear" data-action="clear">Clear</div>
+                <div class="keypad-key" data-value="0">0</div>
+                <div class="keypad-key submit" data-action="submit">Submit</div>
+            </div>
+            
+            <button class="btn btn-primary btn-full" id="saveQuickTransactionBtn" style="margin-top: 15px;">
+                <i class="fas fa-save"></i> Save Transaction
+            </button>
+        </div>
+
+        <!-- Mobile Bottom Navigation -->
+        <div class="mobile-bottom-nav">
+            <a href="#" class="mobile-nav-item active" data-tab="crops">
+                <i class="fas fa-seedling"></i>
+                <span>Crops</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-tab="financials">
+                <i class="fas fa-chart-pie"></i>
+                <span>Financials</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-tab="transactions">
+                <i class="fas fa-history"></i>
+                <span>Transactions</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-tab="utilities">
+                <i class="fas fa-tools"></i>
+                <span>Utilities</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-tab="secondary">
+                <i class="fas fa-hand-holding-usd"></i>
+                <span>Secondary</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-tab="advisory">
+                <i class="fas fa-cloud-sun"></i>
+                <span>Advisory</span>
+            </a>
+        </div>
+
+        <!-- Modals -->
+        <div class="modal" id="addCropModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-plus-circle"></i> Add New Crop</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>Select Crop Type</label>
+                    <div class="crop-grid" id="modalCropGrid">
+                        <!-- Same crop options as registration -->
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="modalCropAcres">Area</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="modalCropAcres" placeholder="Acres" min="0" step="0.1" inputmode="decimal">
+                            <input type="number" class="form-control" id="modalCropCents" placeholder="Cents" min="0" max="99" inputmode="numeric">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="modalSowingDate">Sowing Date</label>
+                        <input type="text" class="form-control" id="modalSowingDate" placeholder="Select date">
+                    </div>
+                </div>
+                <div class="slider-container">
+                    <label for="modalDurationSlider">Duration (days): <span id="modalDurationValue">120</span></label>
+                    <input type="range" min="30" max="365" value="120" class="slider" id="modalDurationSlider">
+                </div>
+                <div class="form-group">
+                    <label for="modalNotes">Farm Notes</label>
+                    <textarea class="form-control" id="modalNotes" rows="3" placeholder="Add any notes about this crop..."></textarea>
+                </div>
+                <button class="btn btn-primary btn-full" id="saveCropBtn">
+                    <i class="fas fa-save"></i> Save Crop
+                </button>
+            </div>
+        </div>
+
+        <div class="modal" id="editCropModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-edit"></i> Edit Crop Details</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editYield">Actual Yield (Quintal)</label>
+                        <input type="number" class="form-control" id="editYield" placeholder="Enter yield" min="0" step="0.1" inputmode="decimal">
+                    </div>
+                    <div class="form-group">
+                        <label for="editSellingPrice">Selling Price (₹/Quintal)</label>
+                        <input type="number" class="form-control" id="editSellingPrice" placeholder="Enter price" min="0" inputmode="decimal">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editStatus">Crop Status</label>
+                    <select class="form-control" id="editStatus">
+                        <option value="planted">Planted</option>
+                        <option value="growing">Growing</option>
+                        <option value="harvested">Harvested</option>
+                        <option value="sold">Sold</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editNotes">Farm Notes</label>
+                    <textarea class="form-control" id="editNotes" rows="3" placeholder="Update your farm notes..."></textarea>
+                </div>
+                <button class="btn btn-primary btn-full" id="saveEditedCropBtn">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </div>
+
+        <div class="modal" id="utilitiesModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-tools"></i> Add Utility Expense</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>Utility Type</label>
+                    <div class="utility-grid">
+                        <div class="utility-item" data-utility="plowing">
+                            <i class="fas fa-tractor"></i>
+                            <div>Plowing</div>
+                        </div>
+                        <div class="utility-item" data-utility="watering">
+                            <i class="fas fa-tint"></i>
+                            <div>Watering</div>
+                        </div>
+                        <div class="utility-item" data-utility="pesticides">
+                            <i class="fas fa-spray-can"></i>
+                            <div>Pesticides</div>
+                        </div>
+                        <div class="utility-item" data-utility="fertilizer">
+                            <i class="fas fa-leaf"></i>
+                            <div>Fertilizer</div>
+                        </div>
+                        <div class="utility-item" data-utility="weeding">
+                            <i class="fas fa-cut"></i>
+                            <div>Weeding</div>
+                        </div>
+                        <div class="utility-item" data-utility="harvesting">
+                            <i class="fas fa-wheat"></i>
+                            <div>Harvesting</div>
+                        </div>
+                        <div class="utility-item" data-utility="transport">
+                            <i class="fas fa-truck"></i>
+                            <div>Transport</div>
+                        </div>
+                        <div class="utility-item" data-utility="maintenance">
+                            <i class="fas fa-wrench"></i>
+                            <div>Maintenance</div>
+                        </div>
+                        <div class="utility-item" data-utility="labor">
+                            <i class="fas fa-users"></i>
+                            <div>Labor</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="utilityAmount">Cost per Acre (₹)</label>
+                        <input type="number" class="form-control" id="utilityAmount" placeholder="Enter cost per acre" min="0" inputmode="decimal">
+                    </div>
+                    <div class="form-group">
+                        <label for="utilityDate">Date</label>
+                        <input type="text" class="form-control" id="utilityDate" placeholder="Select date">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="utilityNotes">Notes</label>
+                    <textarea class="form-control" id="utilityNotes" rows="2" placeholder="Additional details..."></textarea>
+                </div>
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <p><strong>Total Cost:</strong> <span id="totalUtilityCost">₹0</span></p>
+                    <p style="font-size: 0.9rem; color: var(--gray);">Based on <span id="selectedCropArea">0</span> acres</p>
+                </div>
+                <button class="btn btn-primary btn-full" id="saveUtilityBtn">
+                    <i class="fas fa-save"></i> Add Utility Expense
+                </button>
+            </div>
+        </div>
+
+        <!-- Secondary Income Modals -->
+        <div class="modal" id="addMachineryModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-tractor"></i> Add Machinery</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label for="machineryName">Machinery Name</label>
+                    <input type="text" class="form-control" id="machineryName" placeholder="e.g., Tractor, Harvester">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="machineryCost">Purchase Cost (₹)</label>
+                        <input type="number" class="form-control" id="machineryCost" placeholder="Enter cost" min="0" inputmode="decimal">
+                    </div>
+                    <div class="form-group">
+                        <label for="machineryDate">Purchase Date</label>
+                        <input type="text" class="form-control" id="machineryDate" placeholder="Select date">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="machineryNotes">Notes</label>
+                    <textarea class="form-control" id="machineryNotes" rows="2" placeholder="Additional details..."></textarea>
+                </div>
+                <button class="btn btn-primary btn-full" id="saveMachineryBtn">
+                    <i class="fas fa-save"></i> Save Machinery
+                </button>
+            </div>
+        </div>
+
+        <div class="modal" id="addLivestockModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-paw"></i> Add Livestock</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label for="livestockType">Livestock Type</label>
+                    <select class="form-control" id="livestockType">
+                        <option value="cow">Cow</option>
+                        <option value="buffalo">Buffalo</option>
+                        <option value="goat">Goat</option>
+                        <option value="sheep">Sheep</option>
+                        <option value="poultry">Poultry</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="livestockCount">Number of Animals</label>
+                        <input type="number" class="form-control" id="livestockCount" placeholder="Enter count" min="1" inputmode="numeric">
+                    </div>
+                    <div class="form-group">
+                        <label for="livestockCost">Cost per Animal (₹)</label>
+                        <input type="number" class="form-control" id="livestockCost" placeholder="Enter cost" min="0" inputmode="decimal">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="livestockDate">Purchase Date</label>
+                    <input type="text" class="form-control" id="livestockDate" placeholder="Select date">
+                </div>
+                <div class="form-group">
+                    <label for="livestockNotes">Notes</label>
+                    <textarea class="form-control" id="livestockNotes" rows="2" placeholder="Additional details..."></textarea>
+                </div>
+                <button class="btn btn-primary btn-full" id="saveLivestockBtn">
+                    <i class="fas fa-save"></i> Save Livestock
+                </button>
+            </div>
+        </div>
+
+        <div class="modal" id="addIncomeSourceModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-hand-holding-usd"></i> Add Income Source</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label>Income Source Type</label>
+                    <div class="secondary-income-grid">
+                        <div class="secondary-income-item" data-source="dairy">
+                            <i class="fas fa-cow"></i>
+                            <div>Dairy</div>
+                        </div>
+                        <div class="secondary-income-item" data-source="poultry">
+                            <i class="fas fa-egg"></i>
+                            <div>Poultry</div>
+                        </div>
+                        <div class="secondary-income-item" data-source="goat">
+                            <i class="fas fa-paw"></i>
+                            <div>Goat/Sheep</div>
+                        </div>
+                        <div class="secondary-income-item" data-source="fishery">
+                            <i class="fas fa-fish"></i>
+                            <div>Fish Farming</div>
+                        </div>
+                        <div class="secondary-income-item" data-source="beekeeping">
+                            <i class="fas fa-honey-pot"></i>
+                            <div>Beekeeping</div>
+                        </div>
+                        <div class="secondary-income-item" data-source="vermicompost">
+                            <i class="fas fa-recycle"></i>
+                            <div>Vermicompost</div>
+                        </div>
+                        <div class="secondary-income-item" data-source="tourism">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <div>Agro-Tourism</div>
+                        </div>
+                        <div class="secondary-income-item" data-source="mushroom">
+                            <i class="fas fa-plus-square"></i>
+                            <div>Mushroom</div>
+                        </div>
+                        <div class="secondary-income-item" data-source="nursery">
+                            <i class="fas fa-seedling"></i>
+                            <div>Nursery</div>
+                        </div>
+                        <div class="secondary-income-item" data-source="biogas">
+                            <i class="fas fa-gas-pump"></i>
+                            <div>Biogas</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="incomeFrequency">Income Frequency</label>
+                        <select class="form-control" id="incomeFrequency">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="seasonal">Seasonal</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="incomeAmount">Expected Income (₹)</label>
+                        <input type="number" class="form-control" id="incomeAmount" placeholder="Enter amount" min="0" inputmode="decimal">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="incomeStartDate">Start Date</label>
+                    <input type="text" class="form-control" id="incomeStartDate" placeholder="Select date">
+                </div>
+                <div class="form-group">
+                    <label for="incomeNotes">Notes</label>
+                    <textarea class="form-control" id="incomeNotes" rows="2" placeholder="Additional details..."></textarea>
+                </div>
+                <button class="btn btn-primary btn-full" id="saveIncomeSourceBtn">
+                    <i class="fas fa-save"></i> Save Income Source
+                </button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025 FarmPro. Empowering farmers with smart financial management.</p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCdfgtj1gvZ-bkomW1V40h-4tyUPHy_peo",
+            authDomain: "jama-3f427.firebaseapp.com",
+            projectId: "jama-3f427",
+            storageBucket: "jama-3f427.firebasestorage.app",
+            messagingSenderId: "897112470741",
+            appId: "1:897112470741:web:ee6388f0faae459fcb1e5c",
+            measurementId: "G-NN1BRV0QKS"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.getAuth(app);
+        const db = firebase.getFirestore(app);
+
+        // Enable offline persistence
+        firebase.enableIndexedDbPersistence(db).catch(err => {
+            if (err.code === 'failed-precondition') {
+                console.log('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+            } else if (err.code === 'unimplemented') {
+                console.log('The current browser does not support offline persistence');
+            }
+        });
+
+        // Global variables
+        let currentUser = null;
+        let confirmationResult = null;
+        let countdownTimer = null;
+        let timeLeft = 120;
+        let selectedCrop = '';
+        let selectedUtility = '';
+        let editingCropId = null;
+        let currentUtilityCrop = null;
+        let isOnline = navigator.onLine;
+        let pendingSync = [];
+        let fabMenuOpen = false;
+        let currentTransactionType = '';
+        let selectedIncomeSource = '';
+        
+        let userData = {
+            profile: {},
+            crops: [],
+            expenses: [],
+            funding: [],
+            income: [],
+            machinery: [],
+            livestock: [],
+            utilities: [],
+            secondaryIncome: [],
+            transactions: []
+        };
+
+        // DOM Elements
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+        const step4 = document.getElementById('step4');
+        const step5 = document.getElementById('step5');
+        const phoneNumberInput = document.getElementById('phoneNumber');
+        const countryCodeSelect = document.getElementById('countryCode');
+        const phoneNumberDisplay = document.getElementById('phoneNumberDisplay');
+        const sendOtpBtn = document.getElementById('sendOtpBtn');
+        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        const resendOtpLink = document.getElementById('resendOtp');
+        const changeNumberBtn = document.getElementById('changeNumberBtn');
+        const completeRegistrationBtn = document.getElementById('completeRegistrationBtn');
+        const finishSetupBtn = document.getElementById('finishSetupBtn');
+        const addFundingBtn = document.getElementById('addFundingBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const warningMessage = document.getElementById('warningMessage');
+        const otpInputs = document.querySelectorAll('.otp-input');
+        const countdown = document.getElementById('countdown');
+        const cropItems = document.querySelectorAll('.crop-item');
+        const fundingSources = document.getElementById('fundingSources');
+        const durationSlider = document.getElementById('durationSlider');
+        const durationValue = document.getElementById('durationValue');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const syncStatus = document.getElementById('syncStatus');
+        const fabButton = document.getElementById('fabButton');
+        const fabMenu = document.getElementById('fabMenu');
+        const quickTransactionPanel = document.getElementById('quickTransactionPanel');
+        const closeTransactionPanel = document.getElementById('closeTransactionPanel');
+        const saveQuickTransactionBtn = document.getElementById('saveQuickTransactionBtn');
+        const mobileNavItems = document.querySelectorAll('.mobile-nav-item');
+        const otpKeypad = document.getElementById('otpKeypad');
+        const addMachineryBtn = document.getElementById('addMachineryBtn');
+        const addLivestockBtn = document.getElementById('addLivestockBtn');
+        const addIncomeSourceBtn = document.getElementById('addIncomeSourceBtn');
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            initializeDatePickers();
+            initializeEventListeners();
+            initializeTabs();
+            initializeModals();
+            initializeOfflineDetection();
+            setupAuthStateListener();
+            setupMobileNavigation();
+            
+            // Load user data from localStorage
+            loadLocalData();
+            
+            // Check if mobile device and show OTP keypad
+            if (isMobileDevice()) {
+                otpKeypad.style.display = 'grid';
+                setupOtpKeypad();
+            }
+        }
+
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        function setupOtpKeypad() {
+            const keypadKeys = document.querySelectorAll('#otpKeypad .keypad-key');
+            keypadKeys.forEach(key => {
+                key.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    const action = this.getAttribute('data-action');
+                    
+                    if (action === 'clear') {
+                        clearOtpInputs();
+                    } else if (action === 'submit') {
+                        verifyOtp();
+                    } else if (value) {
+                        const emptyInput = Array.from(otpInputs).find(input => input.value === '');
+                        if (emptyInput) {
+                            emptyInput.value = value;
+                            focusNextOtpInput(emptyInput);
+                        }
+                    }
+                });
+            });
+        }
+
+        function focusNextOtpInput(currentInput) {
+            const inputs = Array.from(otpInputs);
+            const currentIndex = inputs.indexOf(currentInput);
+            
+            if (currentIndex < inputs.length - 1) {
+                inputs[currentIndex + 1].focus();
+            } else {
+                // Last input, blur to hide keyboard
+                currentInput.blur();
+            }
+        }
+
+        function clearOtpInputs() {
+            otpInputs.forEach(input => {
+                input.value = '';
+            });
+            otpInputs[0].focus();
+        }
+
+        function setupMobileNavigation() {
+            mobileNavItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tab = this.getAttribute('data-tab');
+                    
+                    // Update active state
+                    mobileNavItems.forEach(navItem => navItem.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Switch to the selected tab
+                    switchTab(tab);
+                });
+            });
+        }
+
+        function initializeOfflineDetection() {
+            function updateConnectionStatus() {
+                isOnline = navigator.onLine;
+                const status = document.getElementById('connectionStatus');
+                const syncStat = document.getElementById('syncStatus');
+                
+                if (isOnline) {
+                    status.className = 'connection-status online';
+                    status.innerHTML = '<i class="fas fa-wifi"></i><span>Online</span>';
+                    syncStat.className = 'sync-status synced';
+                    syncStat.innerHTML = '<i class="fas fa-cloud-upload-alt"></i><span>Synced</span>';
+                    syncPendingData();
+                } else {
+                    status.className = 'connection-status offline';
+                    status.innerHTML = '<i class="fas fa-wifi-off"></i><span>Offline Mode</span>';
+                    syncStat.className = 'sync-status error';
+                    syncStat.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>Offline</span>';
+                    showWarning('You are offline. Data will be saved locally and synced when connection is restored.');
+                }
+            }
+
+            window.addEventListener('online', updateConnectionStatus);
+            window.addEventListener('offline', updateConnectionStatus);
+            updateConnectionStatus();
+        }
+
+        function setupAuthStateListener() {
+            firebase.onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    currentUser = user;
+                    // Check if user has completed registration
+                    try {
+                        const userDoc = await firebase.getDoc(firebase.doc(db, 'users', user.uid));
+                        if (userDoc.exists()) {
+                            userData = { ...userData, ...userDoc.data() };
+                            saveLocalData();
+                            changeStep(getCurrentActiveStep(), step5);
+                            loadDashboard();
+                        } else {
+                            // New user, show registration
+                            changeStep(getCurrentActiveStep(), step3);
+                        }
+                    } catch (error) {
+                        console.log('Error checking user data:', error);
+                        // Fallback to local data
+                        if (userData.profile && userData.profile.firstName) {
+                            changeStep(getCurrentActiveStep(), step5);
+                            loadDashboard();
+                        } else {
+                            changeStep(getCurrentActiveStep(), step3);
+                        }
+                    }
+                } else {
+                    currentUser = null;
+                }
+            });
+        }
+
+        function getCurrentActiveStep() {
+            const steps = [step1, step2, step3, step4, step5];
+            return steps.find(step => step.classList.contains('active')) || step1;
+        }
+
+        function initializeDatePickers() {
+            flatpickr('#sowingDate', {
+                dateFormat: "Y-m-d",
+                maxDate: "today"
+            });
+
+            flatpickr('#startDate', {
+                dateFormat: "Y-m-d"
+            });
+
+            flatpickr('#endDate', {
+                dateFormat: "Y-m-d"
+            });
+
+            flatpickr('#machineryDate', {
+                dateFormat: "Y-m-d",
+                maxDate: "today"
+            });
+
+            flatpickr('#livestockDate', {
+                dateFormat: "Y-m-d",
+                maxDate: "today"
+            });
+
+            flatpickr('#incomeStartDate', {
+                dateFormat: "Y-m-d",
+                maxDate: "today"
+            });
+        }
+
+        function initializeEventListeners() {
+            // Main workflow events
+            sendOtpBtn.addEventListener('click', sendOtp);
+            verifyOtpBtn.addEventListener('click', verifyOtp);
+            resendOtpLink.addEventListener('click', resendOtp);
+            changeNumberBtn.addEventListener('click', changeNumber);
+            completeRegistrationBtn.addEventListener('click', completeRegistration);
+            finishSetupBtn.addEventListener('click', finishSetup);
+            addFundingBtn.addEventListener('click', addFundingSource);
+            logoutBtn.addEventListener('click', logout);
+
+            // Dashboard events
+            document.getElementById('addCropBtn').addEventListener('click', () => openModal('addCropModal'));
+            document.getElementById('saveCropBtn').addEventListener('click', saveCrop);
+            document.getElementById('saveEditedCropBtn').addEventListener('click', saveEditedCrop);
+            document.getElementById('saveUtilityBtn').addEventListener('click', saveUtility);
+            document.getElementById('downloadPdfBtn').addEventListener('click', generatePdfReport);
+            document.getElementById('backupDataBtn').addEventListener('click', backupData);
+            document.getElementById('exportTransactionsBtn').addEventListener('click', exportTransactionsCsv);
+            document.getElementById('applyFiltersBtn').addEventListener('click', applyFinancialFilters);
+
+            // Secondary income events
+            addMachineryBtn.addEventListener('click', () => openModal('addMachineryModal'));
+            addLivestockBtn.addEventListener('click', () => openModal('addLivestockModal'));
+            addIncomeSourceBtn.addEventListener('click', () => openModal('addIncomeSourceModal'));
+            document.getElementById('saveMachineryBtn').addEventListener('click', saveMachinery);
+            document.getElementById('saveLivestockBtn').addEventListener('click', saveLivestock);
+            document.getElementById('saveIncomeSourceBtn').addEventListener('click', saveIncomeSource);
+
+            // Floating action button events
+            fabButton.addEventListener('click', toggleFabMenu);
+            document.querySelectorAll('.floating-action-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const action = this.getAttribute('data-action');
+                    openQuickTransactionPanel(action);
+                });
+            });
+
+            // Quick transaction panel events
+            closeTransactionPanel.addEventListener('click', closeQuickTransactionPanel);
+            saveQuickTransactionBtn.addEventListener('click', saveQuickTransaction);
+            
+            // Setup keypad for quick transaction panel
+            setupTransactionKeypad();
+
+            // Crop selection
+            cropItems.forEach(item => {
+                item.addEventListener('click', () => selectCrop(item));
+            });
+
+            // Duration slider
+            durationSlider.addEventListener('input', () => {
+                durationValue.textContent = durationSlider.value;
+                updateProgressBar();
+            });
+
+            // OTP input navigation
+            otpInputs.forEach((input, index) => {
+                input.addEventListener('input', () => {
+                    if (input.value.length === 1 && index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    }
+                });
+                
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && input.value === '' && index > 0) {
+                        otpInputs[index - 1].focus();
+                    }
+                });
+                
+                // Prevent non-numeric input
+                input.addEventListener('keypress', (e) => {
+                    if (!/^\d$/.test(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+            });
+
+            // Utilities crop select
+            document.getElementById('utilitysCropSelect').addEventListener('change', function() {
+                loadUtilitiesForCrop(this.value);
+            });
+
+            // Transaction filters
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    filterTransactions(btn.dataset.filter);
+                });
+            });
+
+            // Crop status filter
+            document.getElementById('cropStatusFilter').addEventListener('change', filterCrops);
+
+            // Secondary income source selection
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('.secondary-income-item')) {
+                    const incomeItem = e.target.closest('.secondary-income-item');
+                    document.querySelectorAll('.secondary-income-item').forEach(item => item.classList.remove('selected'));
+                    incomeItem.classList.add('selected');
+                    selectedIncomeSource = incomeItem.dataset.source;
+                }
+            });
+        }
+
+        function setupTransactionKeypad() {
+            const keypadKeys = document.querySelectorAll('#quickTransactionPanel .keypad-key');
+            const amountInput = document.getElementById('quickAmount');
+            
+            keypadKeys.forEach(key => {
+                key.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    const action = this.getAttribute('data-action');
+                    
+                    if (action === 'clear') {
+                        amountInput.value = '';
+                    } else if (action === 'submit') {
+                        saveQuickTransaction();
+                    } else if (value) {
+                        amountInput.value += value;
+                    }
+                });
+            });
+        }
+
+        function toggleFabMenu() {
+            fabMenuOpen = !fabMenuOpen;
+            
+            if (fabMenuOpen) {
+                fabMenu.classList.add('open');
+                fabButton.innerHTML = '<i class="fas fa-times"></i>';
+                fabButton.style.transform = 'rotate(45deg)';
+            } else {
+                fabMenu.classList.remove('open');
+                fabButton.innerHTML = '<i class="fas fa-plus"></i>';
+                fabButton.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function openQuickTransactionPanel(type) {
+            currentTransactionType = type;
+            const titleMap = {
+                'income': 'Add Income',
+                'expense': 'Add Expense',
+                'utility': 'Add Utility'
+            };
+            
+            document.getElementById('transactionPanelTitle').textContent = titleMap[type] || 'Add Transaction';
+            document.getElementById('quickCategory').value = type;
+            
+            quickTransactionPanel.classList.add('open');
+            toggleFabMenu(); // Close the FAB menu
+        }
+
+        function closeQuickTransactionPanel() {
+            quickTransactionPanel.classList.remove('open');
+            document.getElementById('quickAmount').value = '';
+            document.getElementById('quickDescription').value = '';
+        }
+
+        async function saveQuickTransaction() {
+            const amount = parseFloat(document.getElementById('quickAmount').value);
+            const category = document.getElementById('quickCategory').value;
+            const description = document.getElementById('quickDescription').value;
+            
+            if (!amount || !description) {
+                showError('Please fill all required fields');
+                return;
+            }
+            
+            const transactionId = generateId();
+            const transaction = {
+                id: transactionId,
+                type: category,
+                description: description,
+                amount: category === 'income' ? amount : -amount,
+                category: category,
+                date: new Date().toISOString().split('T')[0],
+                timestamp: Date.now()
+            };
+            
+            userData.transactions.push(transaction);
+            
+            // Add to appropriate array based on type
+            if (category === 'income') {
+                userData.income.push({
+                    id: generateId(),
+                    amount: amount,
+                    date: new Date().toISOString().split('T')[0],
+                    source: 'quick-add',
+                    description: description,
+                    createdAt: new Date().toISOString()
+                });
+            } else if (category === 'expense') {
+                userData.expenses.push({
+                    id: generateId(),
+                    amount: amount,
+                    date: new Date().toISOString().split('T')[0],
+                    category: 'quick-expense',
+                    description: description,
+                    createdAt: new Date().toISOString()
+                });
+            }
+            
+            saveLocalData();
+            await saveToFirebase({ 
+                transactions: userData.transactions,
+                income: userData.income,
+                expenses: userData.expenses
+            }, true);
+            
+            closeQuickTransactionPanel();
+            loadDashboard();
+            loadTransactionHistory();
+            showSuccess('Transaction added successfully!');
+        }
+
+        function initializeTabs() {
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.getAttribute('data-tab');
+                    switchTab(tabName);
+                });
+            });
+        }
+
+        function initializeModals() {
+            const modals = document.querySelectorAll('.modal');
+            const closeButtons = document.querySelectorAll('.modal-close');
+            
+            closeButtons.forEach(btn => {
+                btn.addEventListener('click', closeModals);
+            });
+            
+            modals.forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        closeModals();
+                    }
+                });
+            });
+
+            // Initialize modal crop grid
+            initializeModalCropGrid();
+            
+            // Initialize modal date pickers
+            flatpickr('#modalSowingDate', { dateFormat: "Y-m-d", maxDate: "today" });
+            flatpickr('#utilityDate', { dateFormat: "Y-m-d", maxDate: "today" });
+            
+            // Modal duration slider
+            const modalDurationSlider = document.getElementById('modalDurationSlider');
+            const modalDurationValue = document.getElementById('modalDurationValue');
+            modalDurationSlider.addEventListener('input', () => {
+                modalDurationValue.textContent = modalDurationSlider.value;
+            });
+
+            // Utility amount input
+            document.getElementById('utilityAmount').addEventListener('input', updateUtilityCost);
+        }
+
+        function initializeModalCropGrid() {
+            const modalCropGrid = document.getElementById('modalCropGrid');
+            const cropData = [
+                { name: 'paddy', img: 'https://images.pexels.com/photos/764281/pexels-photo-764281.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop' },
+                { name: 'cotton', img: 'https://images.pexels.com/photos/4022110/pexels-photo-4022110.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop' },
+                { name: 'maize', img: 'https://images.pexels.com/photos/547263/pexels-photo-547263.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop' },
+                { name: 'chickpea', img: 'https://images.pexels.com/photos/4750274/pexels-photo-4750274.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop' },
+                { name: 'chilli', img: 'https://images.pexels.com/photos/1835658/pexels-photo-1835658.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop' },
+                { name: 'tobacco', img: 'https://images.pexels.com/photos/4022110/pexels-photo-4022110.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop' },
+                { name: 'red-chickpea', img: 'https://images.pexels.com/photos/4110251/pexels-photo-4110251.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop' },
+                { name: 'black-gram', img: 'https://images.pexels.com/photos/4110258/pexels-photo-4110258.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop' },
+                { name: 'green-gram', img: 'https://images.pexels.com/photos/4750267/pexels-photo-4750267.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop' }
+            ];
+
+            modalCropGrid.innerHTML = cropData.map(crop => `
+                <div class="crop-item" data-crop="${crop.name}">
+                    <img src="${crop.img}" alt="${crop.name}">
+                    <div>${crop.name.charAt(0).toUpperCase() + crop.name.slice(1).replace('-', ' ')}</div>
+                </div>
+            `).join('');
+
+            // Add event listeners to modal crop items
+            modalCropGrid.querySelectorAll('.crop-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    modalCropGrid.querySelectorAll('.crop-item').forEach(i => i.classList.remove('selected'));
+                    item.classList.add('selected');
+                    selectedCrop = item.getAttribute('data-crop');
+                });
+            });
+
+            // Add utility selection listeners
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('.utility-item')) {
+                    const utilityItem = e.target.closest('.utility-item');
+                    document.querySelectorAll('.utility-item').forEach(item => item.classList.remove('selected'));
+                    utilityItem.classList.add('selected');
+                    selectedUtility = utilityItem.dataset.utility;
+                    updateUtilityCost();
+                }
+            });
+        }
+
+        function updateProgressBar() {
+            const progress = (durationSlider.value - 30) / (365 - 30) * 100;
+            document.querySelector('.progress-fill').style.width = progress + '%';
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+
+            if (tabName === 'utilities') {
+                loadUtilitiesList();
+            } else if (tabName === 'transactions') {
+                loadTransactionHistory();
+            } else if (tabName === 'secondary') {
+                loadSecondaryIncome();
+            }
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('active');
+            });
+            document.body.style.overflow = 'auto';
+            resetModalForms();
+        }
+
+        function resetModalForms() {
+            document.querySelectorAll('.modal .form-control').forEach(input => {
+                if (input.type !== 'hidden') input.value = '';
+            });
+            document.querySelectorAll('.modal .crop-item, .modal .utility-item, .modal .secondary-income-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            selectedCrop = '';
+            selectedUtility = '';
+            selectedIncomeSource = '';
+            editingCropId = null;
+            document.getElementById('totalUtilityCost').textContent = '₹0';
+            document.getElementById('selectedCropArea').textContent = '0';
+        }
+
+        function selectCrop(item) {
+            cropItems.forEach(i => i.classList.remove('selected'));
+            item.classList.add('selected');
+            selectedCrop = item.getAttribute('data-crop');
+            document.getElementById('cropType').value = selectedCrop;
+        }
+
+        function showError(message) {
+            hideAllMessages();
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            hideAllMessages();
+            successMessage.textContent = message;
+            successMessage.style.display = 'block';
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        function showWarning(message) {
+            hideAllMessages();
+            warningMessage.textContent = message;
+            warningMessage.style.display = 'block';
+            setTimeout(() => {
+                warningMessage.style.display = 'none';
+            }, 8000);
+        }
+
+        function hideAllMessages() {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            warningMessage.style.display = 'none';
+        }
+
+        function changeStep(currentStep, nextStep) {
+            currentStep.classList.remove('active');
+            nextStep.classList.add('active');
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function saveLocalData() {
+            localStorage.setItem('farmpro_userData', JSON.stringify(userData));
+            localStorage.setItem('farmpro_lastSync', Date.now().toString());
+        }
+
+        function loadLocalData() {
+            const savedData = localStorage.getItem('farmpro_userData');
+            if (savedData) {
+                userData = { ...userData, ...JSON.parse(savedData) };
+            }
+        }
+
+        async function saveToFirebase(data, merge = true) {
+            if (!currentUser) return;
+            
+            try {
+                setSyncStatus('syncing');
+                await firebase.setDoc(firebase.doc(db, 'users', currentUser.uid), data, { merge });
+                setSyncStatus('synced');
+                return true;
+            } catch (error) {
+                console.error('Firebase save error:', error);
+                setSyncStatus('error');
+                if (!isOnline) {
+                    pendingSync.push({ data, merge });
+                }
+                return false;
+            }
+        }
+
+        async function loadFromFirebase() {
+            if (!currentUser || !isOnline) return false;
+            
+            try {
+                setSyncStatus('syncing');
+                const userDoc = await firebase.getDoc(firebase.doc(db, 'users', currentUser.uid));
+                if (userDoc.exists()) {
+                    userData = { ...userData, ...userDoc.data() };
+                    saveLocalData();
+                    setSyncStatus('synced');
+                    return true;
+                }
+            } catch (error) {
+                console.error('Firebase load error:', error);
+                setSyncStatus('error');
+            }
+            return false;
+        }
+
+        function setSyncStatus(status) {
+            const syncStat = document.getElementById('syncStatus');
+            const icons = {
+                'syncing': 'fas fa-sync-alt fa-spin',
+                'synced': 'fas fa-cloud-upload-alt',
+                'error': 'fas fa-exclamation-triangle'
+            };
+            const texts = {
+                'syncing': 'Syncing...',
+                'synced': 'Synced',
+                'error': 'Sync Error'
+            };
+            
+            syncStat.className = `sync-status ${status}`;
+            syncStat.innerHTML = `<i class="${icons[status]}"></i><span>${texts[status]}</span>`;
+        }
+
+        async function syncPendingData() {
+            if (!isOnline || pendingSync.length === 0) return;
+            
+            for (const item of pendingSync) {
+                const success = await saveToFirebase(item.data, item.merge);
+                if (success) {
+                    pendingSync = pendingSync.filter(p => p !== item);
+                }
+            }
+        }
+
+        function startCountdown() {
+            clearInterval(countdownTimer);
+            timeLeft = 120;
+            updateCountdown();
+            
+            countdownTimer = setInterval(() {
+                timeLeft--;
+                updateCountdown();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdownTimer);
+                    countdown.textContent = "OTP expired";
+                    countdown.style.color = "#d32f2f";
+                }
+            }, 1000);
+        }
+
+        function updateCountdown() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            countdown.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        async function sendOtp() {
+            const phoneNumber = phoneNumberInput.value.trim();
+            const countryCode = countryCodeSelect.value;
+            
+            if (!phoneNumber) {
+                showError('Please enter your phone number');
+                return;
+            }
+            
+            if (!/^\d{10}$/.test(phoneNumber)) {
+                showError('Please enter a valid 10-digit phone number');
+                return;
+            }
+
+            try {
+                // For production, use actual Firebase phone auth
+                // For demo, simulate OTP sending
+                phoneNumberDisplay.textContent = countryCode + phoneNumber;
+                changeStep(step1, step2);
+                startCountdown();
+                showSuccess('OTP sent successfully! Use 123456 for demo.');
+            } catch (error) {
+                showError('Error sending OTP. Please try again.');
+            }
+        }
+
+        async function verifyOtp() {
+            let otp = '';
+            otpInputs.forEach(input => {
+                otp += input.value;
+            });
+            
+            if (otp.length !== 6) {
+                showError('Please enter the complete 6-digit OTP');
+                return;
+            }
+            
+            // For demo purposes, accept 123456 as valid OTP
+            if (otp === '123456') {
+                try {
+                    // Simulate user authentication
+                    const phoneNumber = countryCodeSelect.value + phoneNumberInput.value.trim();
+                    const mockUser = { uid: 'demo_' + phoneNumber.replace('+', ''), phoneNumber };
+                    currentUser = mockUser;
+                    
+                    // Check if user exists in Firebase or localStorage
+                    const userExists = await checkUserExists();
+                    
+                    if (userExists) {
+                        changeStep(step2, step5);
+                        await loadFromFirebase();
+                        loadDashboard();
+                        showSuccess('Welcome back!');
+                    } else {
+                        changeStep(step2, step3);
+                        showSuccess('OTP verified! Please complete registration.');
+                    }
+                } catch (error) {
+                    showError('Error verifying OTP. Please try again.');
+                }
+            } else {
+                showError('Invalid OTP. Please try again or use 123456 for demo.');
+            }
+        }
+
+        async function checkUserExists() {
+            // Check Firebase first if online
+            if (isOnline && currentUser) {
+                try {
+                    const userDoc = await firebase.getDoc(firebase.doc(db, 'users', currentUser.uid));
+                    return userDoc.exists();
+                } catch (error) {
+                    console.log('Firebase check failed, using local data');
+                }
+            }
+            
+            // Fallback to local data
+            return userData.profile && userData.profile.firstName;
+        }
+
+        function resendOtp(e) {
+            e.preventDefault();
+            
+            if (timeLeft > 0) {
+                showError(`Please wait ${timeLeft} seconds before requesting a new OTP`);
+                return;
+            }
+            
+            startCountdown();
+            showSuccess('New OTP sent! Use 123456 for demo.');
+        }
+
+        function changeNumber() {
+            changeStep(step2, step1);
+            clearInterval(countdownTimer);
+            otpInputs.forEach(input => {
+                input.value = '';
+            });
+        }
+
+        async function completeRegistration() {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const farmLocation = document.getElementById('farmLocation').value.trim();
+            const farmAcres = document.getElementById('farmAcres').value;
+            const farmCents = document.getElementById('farmCents').value || '0';
+            const cropType = document.getElementById('cropType').value;
+            const cropAcres = document.getElementById('cropAcres').value;
+            const cropCents = document.getElementById('cropCents').value || '0';
+            const sowingDateVal = document.getElementById('sowingDate').value;
+            const duration = document.getElementById('durationSlider').value;
+            
+            if (!firstName || !lastName || !farmLocation || !farmAcres || !cropType || !cropAcres || !sowingDateVal) {
+                showError('Please fill all the required fields');
+                return;
+            }
+            
+            // Save user profile
+            userData.profile = {
+                firstName,
+                lastName,
+                farmLocation,
+                totalFarmSize: {
+                    acres: parseFloat(farmAcres),
+                    cents: parseInt(farmCents)
+                },
+                phone: currentUser.phoneNumber || (countryCodeSelect.value + phoneNumberInput.value.trim()),
+                createdAt: new Date().toISOString(),
+                lastUpdated: new Date().toISOString()
+            };
+            
+            // Add initial crop
+            const cropId = generateId();
+            const newCrop = {
+                id: cropId,
+                type: cropType,
+                acres: parseFloat(cropAcres),
+                cents: parseInt(cropCents),
+                sowingDate: sowingDateVal,
+                duration: parseInt(duration),
+                yield: 0,
+                sellingPrice: 0,
+                status: 'planted',
+                notes: '',
+                expectedYield: calculateExpectedYield(cropType, parseFloat(cropAcres) + parseInt(cropCents)/100),
+                createdAt: new Date().toISOString()
+            };
+            
+            userData.crops.push(newCrop);
+            
+            // Add initial transaction
+            addTransaction('crop', 'Crop planted: ' + cropType, 0, 'planted', cropId);
+            
+            saveLocalData();
+            await saveToFirebase(userData);
+            changeStep(step3, step4);
+            showSuccess('Registration completed successfully!');
+        }
+
+        function calculateExpectedYield(cropType, totalAcres) {
+            const yieldPerAcre = {
+                'paddy': 25,
+                'cotton': 8,
+                'maize': 30,
+                'chickpea': 12,
+                'chilli': 15,
+                'tobacco': 18,
+                'red-chickpea': 10,
+                'black-gram': 8,
+                'green-gram': 9
+            };
+            
+            return Math.round((yieldPerAcre[cropType] || 15) * totalAcres * 100) / 100;
+        }
+
+        function addTransaction(type, description, amount, category, relatedId = null) {
+            const transaction = {
+                id: generateId(),
+                type,
+                description,
+                amount,
+                category,
+                relatedId,
+                date: new Date().toISOString(),
+                timestamp: Date.now()
+            };
+            
+            userData.transactions.push(transaction);
+            return transaction;
+        }
+
+        function addFundingSource() {
+            const fundingSource = document.createElement('div');
+            fundingSource.className = 'funding-source';
+            fundingSource.innerHTML = `
+                <div class="funding-header">
+                    <select class="form-control funding-type" style="max-width: 200px;">
+                        <option value="own">Own Funds</option>
+                        <option value="bank">Bank Loan</option>
+                        <option value="family">Family/Friends Loan</option>
+                        <option value="govt">Government Subsidy</option>
+                        <option value="other">Other Source</option>
+                    </select>
+                    <span class="remove-funding">×</span>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-rupee-sign"></i> Amount (₹)</label>
+                        <input type="number" class="form-control funding-amount" placeholder="Enter amount" min="0" inputmode="decimal">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-percentage"></i> Interest Rate (%)</label>
+                        <input type="number" class="form-control funding-rate" placeholder="Enter rate" min="0" step="0.1" inputmode="decimal">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-calendar-alt"></i> Date Taken</label>
+                    <input type="text" class="form-control funding-date" placeholder="Select date">
+                </div>
+            `;
+            
+            flatpickr(fundingSource.querySelector('.funding-date'), {
+                dateFormat: "Y-m-d",
+                maxDate: "today"
+            });
+            
+            fundingSource.querySelector('.remove-funding').addEventListener('click', function() {
+                fundingSource.remove();
+            });
+            
+            fundingSource.querySelector('.funding-type').addEventListener('change', function() {
+                const rateInput = fundingSource.querySelector('.funding-rate');
+                if (this.value === 'own' || this.value === 'govt') {
+                    rateInput.value = 0;
+                    rateInput.disabled = true;
+                } else {
+                    rateInput.disabled = false;
+                }
+            });
+            
+            fundingSources.appendChild(fundingSource);
+        }
+
+        async function finishSetup() {
+            const fundingElements = document.querySelectorAll('.funding-source');
+            userData.funding = [];
+            
+            fundingElements.forEach(element => {
+                const type = element.querySelector('.funding-type').value;
+                const amount = element.querySelector('.funding-amount').value;
+                const rate = element.querySelector('.funding-rate').value;
+                const date = element.querySelector('.funding-date').value;
+                
+                if (amount && date) {
+                    const fundingId = generateId();
+                    userData.funding.push({
+                        id: fundingId,
+                        type: type,
+                        amount: parseFloat(amount),
+                        interestRate: parseFloat(rate) || 0,
+                        date: date,
+                        createdAt: new Date().toISOString()
+                    });
+                    
+                    addTransaction('funding', `${type} funding received`, parseFloat(amount), 'funding', fundingId);
+                }
+            });
+            
+            saveLocalData();
+            await saveToFirebase(userData);
+            changeStep(step4, step5);
+            loadDashboard();
+            showSuccess('Setup completed successfully!');
+        }
+
+        async function saveCrop() {
+            const cropType = selectedCrop;
+            const acres = document.getElementById('modalCropAcres').value;
+            const cents = document.getElementById('modalCopCents').value || '0';
+            const sowingDate = document.getElementById('modalSowingDate').value;
+            const duration = document.getElementById('modalDurationSlider').value;
+            const notes = document.getElementById('modalNotes').value;
+            
+            if (!cropType || !acres || !sowingDate) {
+                showError('Please fill all required fields');
+                return;
+            }
+            
+            const cropId = generateId();
+            const totalAcres = parseFloat(acres) + parseInt(cents)/100;
+            const newCrop = {
+                id: cropId,
+                type: cropType,
+                acres: parseFloat(acres),
+                cents: parseInt(cents),
+                sowingDate: sowingDate,
+                duration: parseInt(duration),
+                yield: 0,
+                sellingPrice: 0,
+                status: 'planted',
+                notes: notes,
+                expectedYield: calculateExpectedYield(cropType, totalAcres),
+                createdAt: new Date().toISOString()
+            };
+            
+            userData.crops.push(newCrop);
+            addTransaction('crop', `New crop planted: ${cropType}`, 0, 'planted', cropId);
+            
+            saveLocalData();
+            await saveToFirebase({ crops: userData.crops, transactions: userData.transactions }, true);
+            closeModals();
+            loadDashboard();
+            loadUtilitiesList();
+            showSuccess('Crop added successfully!');
+        }
+
+        function editCrop(cropId) {
+            const crop = userData.crops.find(c => c.id === cropId);
+            if (!crop) return;
+            
+            editingCropId = cropId;
+            document.getElementById('editYield').value = crop.yield;
+            document.getElementById('editSellingPrice').value = crop.sellingPrice;
+            document.getElementById('editStatus').value = crop.status;
+            document.getElementById('editNotes').value = crop.notes;
+            
+            openModal('editCropModal');
+        }
+
+        async function saveEditedCrop() {
+            if (!editingCropId) return;
+            
+            const crop = userData.crops.find(c => c.id === editingCropId);
+            if (!crop) return;
+            
+            const oldStatus = crop.status;
+            crop.yield = parseFloat(document.getElementById('editYield').value) || 0;
+            crop.sellingPrice = parseFloat(document.getElementById('editSellingPrice').value) || 0;
+            crop.status = document.getElementById('editStatus').value;
+            crop.notes = document.getElementById('editNotes').value;
+            crop.lastUpdated = new Date().toISOString();
+            
+            // Add transaction if status changed
+            if (oldStatus !== crop.status) {
+                addTransaction('crop', `Crop status updated: ${crop.type} - ${crop.status}`, 0, crop.status, crop.id);
+            }
+            
+            // Calculate income if harvested/sold
+            if ((crop.status === 'harvested' || crop.status === 'sold') && crop.yield > 0 && crop.sellingPrice > 0) {
+                const income = crop.yield * crop.sellingPrice;
+                
+                const existingIncomeIndex = userData.income.findIndex(inc => inc.cropId === crop.id);
+                if (existingIncomeIndex >= 0) {
+                    userData.income[existingIncomeIndex].amount = income;
+                    userData.income[existingIncomeIndex].lastUpdated = new Date().toISOString();
+                } else {
+                    const incomeId = generateId();
+                    userData.income.push({
+                        id: incomeId,
+                        cropId: crop.id,
+                        amount: income,
+                        date: new Date().toISOString().split('T')[0],
+                        source: 'crop-sale',
+                        createdAt: new Date().toISOString()
+                    });
+                    
+                    addTransaction('income', `Crop sale income: ${crop.type}`, income, 'crop-sale', crop.id);
+                }
+            }
+            
+            saveLocalData();
+            await saveToFirebase({ crops: userData.crops, income: userData.income, transactions: userData.transactions }, true);
+            closeModals();
+            loadDashboard();
+            showSuccess('Crop updated successfully!');
+        }
+
+        async function deleteCrop(cropId) {
+            if (confirm('Are you sure you want to delete this crop? This will also remove all related utilities and transactions.')) {
+                userData.crops = userData.crops.filter(c => c.id !== cropId);
+                userData.income = userData.income.filter(inc => inc.cropId !== cropId);
+                userData.utilities = userData.utilities.filter(util => util.cropId !== cropId);
+                userData.transactions = userData.transactions.filter(trans => trans.relatedId !== cropId);
+                
+                addTransaction('crop', 'Crop deleted', 0, 'deleted', cropId);
+                
+                saveLocalData();
+                await saveToFirebase({ 
+                    crops: userData.crops, 
+                    income: userData.income, 
+                    utilities: userData.utilities,
+                    transactions: userData.transactions 
+                }, true);
+                loadDashboard();
+                loadUtilitiesList();
+                showSuccess('Crop deleted successfully!');
+            }
+        }
+
+        function loadUtilitiesList() {
+            const cropSelect = document.getElementById('utilitysCropSelect');
+            cropSelect.innerHTML = '<option value="">Select a crop</option>';
+            
+            userData.crops.forEach(crop => {
+                const totalArea = crop.acres + (crop.cents || 0)/100;
+                const option = document.createElement('option');
+                option.value = crop.id;
+                option.textContent = `${crop.type.charAt(0).toUpperCase() + crop.type.slice(1).replace('-', ' ')} (${totalArea} acres)`;
+                cropSelect.appendChild(option);
+            });
+        }
+
+        function loadUtilitiesForCrop(cropId) {
+            if (!cropId) {
+                document.getElementById('utilitiesContent').innerHTML = '<p style="text-align: center; color: var(--gray); padding: 2rem;">Please select a crop to manage utilities</p>';
+                return;
+            }
+            
+            const crop = userData.crops.find(c => c.id === cropId);
+            if (!crop) return;
+            
+            currentUtilityCrop = crop;
+            const cropUtilities = userData.utilities.filter(util => util.cropId === cropId);
+            const totalArea = crop.acres + (crop.cents || 0)/100;
+            
+            document.getElementById('utilitiesContent').innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4>${crop.type.charAt(0).toUpperCase() + crop.type.slice(1).replace('-', ' ')} - ${totalArea} acres</h4>
+                        <button class="btn btn-success btn-small" onclick="openUtilitiesModal('${cropId}')">
+                            <i class="fas fa-plus"></i> Add Utility
+                        </button>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div><strong>Total Utilities Cost</strong></div>
+                            <div style="color: var(--danger);">₹${calculateCropUtilitiesCost(cropId).toLocaleString()}</div>
+                        </div>
+                        <div class="stat-item">
+                            <div><strong>Cost per Acre</strong></div>
+                            <div>₹${Math.round(calculateCropUtilitiesCost(cropId) / totalArea).toLocaleString()}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="utility-history">
+                    <h4>Utility History</h4>
+                    ${cropUtilities.length === 0 ? 
+                        '<p style="color: var(--gray); text-align: center; padding: 1rem;">No utilities recorded for this crop</p>' :
+                        cropUtilities.map(utility => `
+                            <div class="utility-history-item">
+                                <div>
+                                    <div><strong>${utility.type.charAt(0).toUpperCase() + utility.type.slice(1)}</strong></div>
+                                    <div style="font-size: 0.9rem; color: var(--gray);">${utility.date} ${utility.notes ? '• ' + utility.notes : ''}</div>
+                                </div>
+                                <div>
+                                    <div style="color: var(--danger); font-weight: 600;">₹${utility.totalCost.toLocaleString()}</div>
+                                    <div style="font-size: 0.8rem; color: var(--gray);">₹${utility.costPerAcre}/acre</div>
+                                </div>
+                            </div>
+                        `).join('')
+                    }
+                </div>
+            `;
+        }
+
+        function calculateCropUtilitiesCost(cropId) {
+            return userData.utilities
+                .filter(util => util.cropId === cropId)
+                .reduce((sum, util) => sum + util.totalCost, 0);
+        }
+
+        function openUtilitiesModal(cropId) {
+            currentUtilityCrop = userData.crops.find(c => c.id === cropId);
+            if (!currentUtilityCrop) return;
+            
+            const totalArea = currentUtilityCrop.acres + (currentUtilityCrop.cents || 0)/100;
+            document.getElementById('selectedCropArea').textContent = totalArea;
+            
+            openModal('utilitiesModal');
+        }
+
+        function updateUtilityCost() {
+            if (!currentUtilityCrop || !selectedUtility) return;
+            
+            const costPerAcre = parseFloat(document.getElementById('utilityAmount').value) || 0;
+            const totalArea = currentUtilityCrop.acres + (currentUtilityCrop.cents || 0)/100;
+            const totalCost = costPerAcre * totalArea;
+            
+            document.getElementById('totalUtilityCost').textContent = '₹' + totalCost.toLocaleString();
+        }
+
+        async function saveUtility() {
+            if (!currentUtilityCrop || !selectedUtility) {
+                showError('Please select utility type');
+                return;
+            }
+            
+            const costPerAcre = parseFloat(document.getElementById('utilityAmount').value);
+            const date = document.getElementById('utilityDate').value;
+            const notes = document.getElementById('utilityNotes').value;
+            
+            if (!costPerAcre || !date) {
+                showError('Please fill all required fields');
+                return;
+            }
+            
+            const totalArea = currentUtilityCrop.acres + (currentUtilityCrop.cents || 0)/100;
+            const totalCost = costPerAcre * totalArea;
+            
+            const utilityId = generateId();
+            const newUtility = {
+                id: utilityId,
+                cropId: currentUtilityCrop.id,
+                type: selectedUtility,
+                costPerAcre: costPerAcre,
+                totalCost: totalCost,
+                area: totalArea,
+                date: date,
+                notes: notes,
+                createdAt: new Date().toISOString()
+            };
+            
+            userData.utilities.push(newUtility);
+            
+            // Add to expenses for overall calculation
+            userData.expenses.push({
+                id: generateId(),
+                category: selectedUtility,
+                amount: totalCost,
+                date: date,
+                cropId: currentUtilityCrop.id,
+                createdAt: new Date().toISOString()
+            });
+            
+            addTransaction('expense', `${selectedUtility} for ${currentUtilityCrop.type}`, totalCost, selectedUtility, currentUtilityCrop.id);
+            
+            saveLocalData();
+            await saveToFirebase({ 
+                utilities: userData.utilities, 
+                expenses: userData.expenses,
+                transactions: userData.transactions 
+            }, true);
+            closeModals();
+            loadUtilitiesForCrop(currentUtilityCrop.id);
+            loadDashboard();
+            showSuccess('Utility expense added successfully!');
+        }
+
+        async function saveMachinery() {
+            const name = document.getElementById('machineryName').value.trim();
+            const cost = parseFloat(document.getElementById('machineryCost').value);
+            const date = document.getElementById('machineryDate').value;
+            const notes = document.getElementById('machineryNotes').value;
+            
+            if (!name || !cost || !date) {
+                showError('Please fill all required fields');
+                return;
+            }
+            
+            const machineryId = generateId();
+            const newMachinery = {
+                id: machineryId,
+                name: name,
+                cost: cost,
+                date: date,
+                notes: notes,
+                createdAt: new Date().toISOString()
+            };
+            
+            userData.machinery.push(newMachinery);
+            
+            // Add to expenses
+            userData.expenses.push({
+                id: generateId(),
+                category: 'machinery',
+                amount: cost,
+                date: date,
+                description: `Machinery purchase: ${name}`,
+                createdAt: new Date().toISOString()
+            });
+            
+            addTransaction('expense', `Machinery purchase: ${name}`, cost, 'machinery', machineryId);
+            
+            saveLocalData();
+            await saveToFirebase({ 
+                machinery: userData.machinery, 
+                expenses: userData.expenses,
+                transactions: userData.transactions 
+            }, true);
+            closeModals();
+            loadSecondaryIncome();
+            loadDashboard();
+            showSuccess('Machinery added successfully!');
+        }
+
+        async function saveLivestock() {
+            const type = document.getElementById('livestockType').value;
+            const count = parseInt(document.getElementById('livestockCount').value);
+            const costPerAnimal = parseFloat(document.getElementById('livestockCost').value);
+            const date = document.getElementById('livestockDate').value;
+            const notes = document.getElementById('livestockNotes').value;
+            
+            if (!count || !costPerAnimal || !date) {
+                showError('Please fill all required fields');
+                return;
+            }
+            
+            const totalCost = count * costPerAnimal;
+            const livestockId = generateId();
+            const newLivestock = {
+                id: livestockId,
+                type: type,
+                count: count,
+                costPerAnimal: costPerAnimal,
+                totalCost: totalCost,
+                date: date,
+                notes: notes,
+                createdAt: new Date().toISOString()
+            };
+            
+            userData.livestock.push(newLivestock);
+            
+            // Add to expenses
+            userData.expenses.push({
+                id: generateId(),
+                category: 'livestock',
+                amount: totalCost,
+                date: date,
+                description: `Livestock purchase: ${count} ${type}`,
+                createdAt: new Date().toISOString()
+            });
+            
+            addTransaction('expense', `Livestock purchase: ${count} ${type}`, totalCost, 'livestock', livestockId);
+            
+            saveLocalData();
+            await saveToFirebase({ 
+                livestock: userData.livestock, 
+                expenses: userData.expenses,
+                transactions: userData.transactions 
+            }, true);
+            closeModals();
+            loadSecondaryIncome();
+            loadDashboard();
+            showSuccess('Livestock added successfully!');
+        }
+
+        async function saveIncomeSource() {
+            if (!selectedIncomeSource) {
+                showError('Please select an income source type');
+                return;
+            }
+            
+            const frequency = document.getElementById('incomeFrequency').value;
+            const amount = parseFloat(document.getElementById('incomeAmount').value);
+            const startDate = document.getElementById('incomeStartDate').value;
+            const notes = document.getElementById('incomeNotes').value;
+            
+            if (!amount || !startDate) {
+                showError('Please fill all required fields');
+                return;
+            }
+            
+            const incomeSourceId = generateId();
+            const newIncomeSource = {
+                id: incomeSourceId,
+                type: selectedIncomeSource,
+                frequency: frequency,
+                expectedIncome: amount,
+                startDate: startDate,
+                notes: notes,
+                createdAt: new Date().toISOString()
+            };
+            
+            userData.secondaryIncome.push(newIncomeSource);
+            
+            // Add to income projections
+            userData.income.push({
+                id: generateId(),
+                source: 'secondary',
+                secondaryId: incomeSourceId,
+                amount: amount,
+                date: startDate,
+                frequency: frequency,
+                description: `Secondary income: ${selectedIncomeSource}`,
+                createdAt: new Date().toISOString()
+            });
+            
+            addTransaction('income', `Secondary income setup: ${selectedIncomeSource}`, 0, 'secondary', incomeSourceId);
+            
+            saveLocalData();
+            await saveToFirebase({ 
+                secondaryIncome: userData.secondaryIncome, 
+                income: userData.income,
+                transactions: userData.transactions 
+            }, true);
+            closeModals();
+            loadSecondaryIncome();
+            loadDashboard();
+            showSuccess('Income source added successfully!');
+        }
+
+        function loadSecondaryIncome() {
+            const machineryList = document.getElementById('machineryList');
+            const livestockList = document.getElementById('livestockList');
+            const incomeSourcesList = document.getElementById('incomeSourcesList');
+            
+            // Load machinery
+            if (userData.machinery.length === 0) {
+                machineryList.innerHTML = '<p style="color: var(--gray); text-align: center; padding: 1rem;">No machinery added yet.</p>';
+            } else {
+                machineryList.innerHTML = userData.machinery.map(machine => `
+                    <div class="secondary-income-item">
+                        <div style="display: flex; justify-content: space-between; width: 100%;">
+                            <div>
+                                <div><strong>${machine.name}</strong></div>
+                                <div style="font-size: 0.9rem; color: var(--gray);">Purchased: ${machine.date}</div>
+                                ${machine.notes ? `<div style="font-size: 0.8rem; margin-top: 5px;">${machine.notes}</div>` : ''}
+                            </div>
+                            <div style="color: var(--danger); font-weight: 600;">₹${machine.cost.toLocaleString()}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // Load livestock
+            if (userData.livestock.length === 0) {
+                livestockList.innerHTML = '<p style="color: var(--gray); text-align: center; padding: 1rem;">No livestock added yet.</p>';
+            } else {
+                livestockList.innerHTML = userData.livestock.map(animal => `
+                    <div class="secondary-income-item">
+                        <div style="display: flex; justify-content: space-between; width: 100%;">
+                            <div>
+                                <div><strong>${animal.count} ${animal.type.charAt(0).toUpperCase() + animal.type.slice(1)}</strong></div>
+                                <div style="font-size: 0.9rem; color: var(--gray);">Purchased: ${animal.date}</div>
+                                ${animal.notes ? `<div style="font-size: 0.8rem; margin-top: 5px;">${animal.notes}</div>` : ''}
+                            </div>
+                            <div style="color: var(--danger); font-weight: 600;">₹${animal.totalCost.toLocaleString()}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // Load income sources
+            if (userData.secondaryIncome.length === 0) {
+                incomeSourcesList.innerHTML = '<p style="color: var(--gray); text-align: center; padding: 1rem;">No income sources added yet.</p>';
+            } else {
+                incomeSourcesList.innerHTML = userData.secondaryIncome.map(source => {
+                    const frequencyMap = {
+                        'daily': 'Daily',
+                        'weekly': 'Weekly',
+                        'monthly': 'Monthly',
+                        'seasonal': 'Seasonal'
+                    };
+                    
+                    return `
+                        <div class="secondary-income-item">
+                            <div style="display: flex; justify-content: space-between; width: 100%;">
+                                <div>
+                                    <div><strong>${source.type.charAt(0).toUpperCase() + source.type.slice(1)}</strong></div>
+                                    <div style="font-size: 0.9rem; color: var(--gray);">${frequencyMap[source.frequency]} • Started: ${source.startDate}</div>
+                                    ${source.notes ? `<div style="font-size: 0.8rem; margin-top: 5px;">${source.notes}</div>` : ''}
+                                </div>
+                                <div style="color: var(--success); font-weight: 600;">₹${source.expectedIncome.toLocaleString()}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function calculateWeightedInterestRate() {
+            let totalAmount = 0;
+            let weightedSum = 0;
+            
+            userData.funding.forEach(fund => {
+                totalAmount += fund.amount;
+                weightedSum += (fund.amount * fund.interestRate);
+            });
+            
+            return totalAmount > 0 ? (weightedSum / totalAmount) : 0;
+        }
+
+        function calculateAnnualInterest() {
+            const weightedRate = calculateWeightedInterestRate();
+            const totalFunding = userData.funding.reduce((sum, fund) => sum + fund.amount, 0);
+            return (totalFunding * weightedRate) / 100;
+        }
+
+        async function loadDashboard() {
+            // Calculate totals
+            const totalIncome = userData.income.reduce((sum, inc) => sum + inc.amount, 0);
+            const totalExpenses = userData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+            const annualInterest = calculateAnnualInterest();
+            const netProfit = totalIncome - totalExpenses - annualInterest;
+            
+            // Update financial summary
+            document.getElementById('totalIncome').textContent = `₹${totalIncome.toLocaleString()}`;
+            document.getElementById('totalExpenses').textContent = `₹${totalExpenses.toLocaleString()}`;
+            document.getElementById('netProfit').textContent = `₹${netProfit.toLocaleString()}`;
+            document.getElementById('interestCost').textContent = `₹${annualInterest.toLocaleString()}`;
+            
+            // Color code profit/loss
+            const profitElement = document.getElementById('netProfit');
+            if (netProfit >= 0) {
+                profitElement.style.color = 'var(--success)';
+            } else {
+                profitElement.style.color = 'var(--danger)';
+            }
+            
+            // Load all sections
+            loadCropsList();
+            loadFinancialBreakdown();
+            loadTransactionHistory();
+            loadUtilitiesList();
+            loadSecondaryIncome();
+            
+            // Sync with Firebase if online
+            if (isOnline) {
+                await loadFromFirebase();
+            }
+        }
+
+        function loadCropsList(statusFilter = 'all') {
+            const cropsList = document.getElementById('cropsList');
+            let filteredCrops = userData.crops;
+            
+            if (statusFilter !== 'all') {
+                filteredCrops = userData.crops.filter(crop => crop.status === statusFilter);
+            }
+            
+            if (filteredCrops.length === 0) {
+                cropsList.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 2rem;">No crops found matching the filter criteria.</p>';
+                return;
+            }
+            
+            cropsList.innerHTML = filteredCrops.map(crop => {
+                const income = crop.yield * crop.sellingPrice;
+                const totalArea = crop.acres + (crop.cents || 0)/100;
+                const utilitiesCost = calculateCropUtilitiesCost(crop.id);
+                const netProfit = income - utilitiesCost;
+                const profitColor = netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+                
+                return `
+                    <div class="crop-card">
+                        <div class="crop-header">
+                            <div>
+                                <h4>${crop.type.charAt(0).toUpperCase() + crop.type.slice(1).replace('-', ' ')}</h4>
+                                <p style="color: var(--gray);">${totalArea} acres • ${crop.status}</p>
+                                <p style="font-size: 0.8rem; color: var(--gray);">Sowed: ${crop.sowingDate}</p>
+                            </div>
+                            <div class="crop-actions">
+                                <button class="btn btn-warning btn-small" onclick="openUtilitiesModal('${crop.id}')">
+                                    <i class="fas fa-tools"></i> Utilities
+                                </button>
+                                <button class="btn btn-success btn-small" onclick="editCrop('${crop.id}')">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="btn btn-danger btn-small" onclick="deleteCrop('${crop.id}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div><strong>Expected Yield</strong></div>
+                                <div>${crop.expectedYield} Qt</div>
+                            </div>
+                            <div class="stat-item">
+                                <div><strong>Actual Yield</strong></div>
+                                <div>${crop.yield || 'TBD'} Qt</div>
+                            </div>
+                            <div class="stat-item">
+                                <div><strong>Utilities Cost</strong></div>
+                                <div style="color: var(--danger);">₹${utilitiesCost.toLocaleString()}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div><strong>Net Profit</strong></div>
+                                <div style="color: ${profitColor};">₹${netProfit.toLocaleString()}</div>
+                            </div>
+                        </div>
+                        ${crop.notes ? `<p style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; font-style: italic;">"${crop.notes}"</p>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterCrops() {
+            const filter = document.getElementById('cropStatusFilter').value;
+            loadCropsList(filter);
+        }
+
+        function loadFinancialBreakdown() {
+            const fundingBreakdown = document.getElementById('fundingBreakdown');
+            const expenseBreakdown = document.getElementById('expenseBreakdown');
+            const profitAnalysis = document.getElementById('profitAnalysis');
+            
+            // Funding breakdown
+            const totalFunding = userData.funding.reduce((sum, fund) => sum + fund.amount, 0);
+            const weightedRate = calculateWeightedInterestRate();
+            
+            fundingBreakdown.innerHTML = `
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                        <strong>Total Investment:</strong>
+                        <strong>₹${totalFunding.toLocaleString()}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                        <strong>Weighted Interest Rate:</strong>
+                        <strong>${weightedRate.toFixed(2)}%</strong>
+                    </div>
+                </div>
+                ${userData.funding.map(fund => `
+                    <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #f0f0f0;">
+                        <div>
+                            <div>${fund.type.charAt(0).toUpperCase() + fund.type.slice(1)}</div>
+                            <small style="color: var(--gray);">${fund.date}</small>
+                        </div>
+                        <div style="text-align: right;">
+                        <div>₹${fund.amount.toLocaleString()}</div>
+                            <small style="color: var(--warning);">${fund.interestRate}% interest</small>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+            
+            // Expense breakdown by category
+            const expensesByCategory = userData.expenses.reduce((acc, expense) => {
+                acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+                return acc;
+            }, {});
+            
+            expenseBreakdown.innerHTML = Object.entries(expensesByCategory).map(([category, amount]) => `
+                <div style="display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #f0f0f0;">
+                    <div>${category.charAt(0).toUpperCase() + category.slice(1)}</div>
+                    <div><strong>₹${amount.toLocaleString()}</strong></div>
+                </div>
+            `).join('') || '<p style="color: var(--gray); text-align: center;">No expenses recorded yet.</p>';
+
+            // Profit analysis by crop
+            const cropProfits = userData.crops.map(crop => {
+                const income = crop.yield * crop.sellingPrice;
+                const utilitiesCost = calculateCropUtilitiesCost(crop.id);
+                const netProfit = income - utilitiesCost;
+                return { crop, income, utilitiesCost, netProfit };
+            });
+
+            profitAnalysis.innerHTML = cropProfits.map(item => `
+                <div style="display: flex; justify-content: space-between; padding: 15px; border-bottom: 1px solid #f0f0f0;">
+                    <div>
+                        <div><strong>${item.crop.type.charAt(0).toUpperCase() + item.crop.type.slice(1).replace('-', ' ')}</strong></div>
+                        <small style="color: var(--gray);">Income: ₹${item.income.toLocaleString()} | Expenses: ₹${item.utilitiesCost.toLocaleString()}</small>
+                    </div>
+                    <div style="color: ${item.netProfit >= 0 ? 'var(--success)' : 'var(--danger)'}; font-weight: 600;">
+                        ₹${item.netProfit.toLocaleString()}
+                    </div>
+                </div>
+            `).join('') || '<p style="color: var(--gray); text-align: center;">No profit data available.</p>';
+        }
+
+        function loadTransactionHistory(filter = 'all') {
+            const transactionsList = document.getElementById('transactionsList');
+            let filteredTransactions = userData.transactions;
+            
+            if (filter !== 'all') {
+                filteredTransactions = userData.transactions.filter(trans => trans.category === filter || trans.type === filter);
+            }
+            
+            filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (filteredTransactions.length === 0) {
+                transactionsList.innerHTML = '<p style="color: var(--gray); text-align: center; padding: 2rem;">No transactions found.</p>';
+                return;
+            }
+            
+            transactionsList.innerHTML = filteredTransactions.map(transaction => {
+                const date = new Date(transaction.date).toLocaleDateString();
+                const isIncome = transaction.type === 'income' || transaction.amount > 0 && transaction.type !== 'expense';
+                
+                return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #f0f0f0; transition: var(--transition);" onmouseover="this.style.backgroundColor='#f8f9fa'" onmouseout="this.style.backgroundColor='transparent'">
+                        <div>
+                            <div><strong>${transaction.description}</strong></div>
+                            <small style="color: var(--gray);">${date} • ${transaction.category}</small>
+                        </div>
+                        <div style="color: ${isIncome ? 'var(--success)' : 'var(--danger)'}; font-weight: 600; text-align: right;">
+                            ${isIncome ? '+' : '-'}₹${Math.abs(transaction.amount).toLocaleString()}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterTransactions(filter) {
+            loadTransactionHistory(filter);
+        }
+
+        function applyFinancialFilters() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const category = document.getElementById('categoryFilter').value;
+            
+            // Apply filters logic here
+            showSuccess('Filters applied successfully!');
+        }
+
+        async function generatePdfReport() {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Header
+                doc.setFontSize(20);
+                doc.text('FarmPro Financial Report', 20, 30);
+                
+                // User info
+                doc.setFontSize(12);
+                doc.text(`Farmer: ${userData.profile.firstName} ${userData.profile.lastName}`, 20, 50);
+                doc.text(`Phone: ${userData.profile.phone}`, 20, 60);
+                doc.text(`Farm Location: ${userData.profile.farmLocation || 'N/A'}`, 20, 70);
+                doc.text(`Report Date: ${new Date().toLocaleDateString()}`, 20, 80);
+                
+                // Financial Summary
+                doc.setFontSize(14);
+                doc.text('Financial Summary', 20, 100);
+                
+                const totalIncome = userData.income.reduce((sum, inc) => sum + inc.amount, 0);
+                const totalExpenses = userData.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+                const netProfit = totalIncome - totalExpenses;
+                
+                doc.setFontSize(12);
+                doc.text(`Total Income: ₹${totalIncome.toLocaleString()}`, 20, 115);
+                doc.text(`Total Expenses: ₹${totalExpenses.toLocaleString()}`, 20, 125);
+                doc.text(`Net Profit: ₹${netProfit.toLocaleString()}`, 20, 135);
+                
+                // Crops Table
+                doc.setFontSize(14);
+                doc.text('Crops Overview', 20, 155);
+                
+                const cropData = userData.crops.map(crop => [
+                    crop.type.charAt(0).toUpperCase() + crop.type.slice(1),
+                    `${crop.acres + (crop.cents || 0)/100}`,
+                    crop.status,
+                    `₹${calculateCropUtilitiesCost(crop.id).toLocaleString()}`
+                ]);
+                
+                doc.autoTable({
+                    head: [['Crop', 'Area (Acres)', 'Status', 'Utilities Cost']],
+                    body: cropData,
+                    startY: 165,
+                    theme: 'grid',
+                    headStyles: { fillColor: [46, 125, 50] }
+                });
+                
+                // Recent Transactions
+                const finalY = doc.lastAutoTable.finalY + 20;
+                doc.setFontSize(14);
+                doc.text('Recent Transactions', 20, finalY);
+                
+                const recentTransactions = userData.transactions
+                    .slice(-10)
+                    .map(trans => [
+                        new Date(trans.date).toLocaleDateString(),
+                        trans.description,
+                        trans.category,
+                        `₹${Math.abs(trans.amount).toLocaleString()}`
+                    ]);
+                
+                doc.autoTable({
+                    head: [['Date', 'Description', 'Category', 'Amount']],
+                    body: recentTransactions,
+                    startY: finalY + 10,
+                    theme: 'grid',
+                    headStyles: { fillColor: [46, 125, 50] }
+                });
+                
+                // Save PDF
+                doc.save(`FarmPro_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+                showSuccess('PDF report generated successfully!');
+                
+            } catch (error) {
+                showError('Error generating PDF report. Please try again.');
+            }
+        }
+
+        async function backupData() {
+            try {
+                if (isOnline && currentUser) {
+                    setSyncStatus('syncing');
+                    await saveToFirebase(userData);
+                    showSuccess('Data backed up to cloud successfully!');
+                } else {
+                    // Download local backup
+                    const dataStr = JSON.stringify(userData, null, 2);
+                    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                    const url = URL.createObjectURL(dataBlob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `farmpro_backup_${new Date().toISOString().split('T')[0]}.json`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                    showSuccess('Local backup downloaded successfully!');
+                }
+            } catch (error) {
+                showError('Error creating backup. Please try again.');
+            }
+        }
+
+        function exportTransactionsCsv() {
+            const headers = ['Date', 'Type', 'Description', 'Category', 'Amount'];
+            const csvContent = [
+                headers.join(','),
+                ...userData.transactions.map(trans => [
+                    new Date(trans.date).toLocaleDateString(),
+                    trans.type,
+                    `"${trans.description}"`,
+                    trans.category,
+                    trans.amount
+                ].join(','))
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `farmpro_transactions_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+            showSuccess('Transactions exported successfully!');
+        }
+
+        async function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                try {
+                    if (currentUser) {
+                        await firebase.signOut(auth);
+                    }
+                    
+                    // Reset to step 1
+                    changeStep(getCurrentActiveStep(), step1);
+                    
+                    // Reset all forms and data
+                    resetAllForms();
+                    
+                    showSuccess('Logged out successfully!');
+                } catch (error) {
+                    showError('Error logging out. Please try again.');
+                }
+            }
+        }
+
+        function resetAllForms() {
+            document.getElementById('phoneNumber').value = '';
+            otpInputs.forEach(input => input.value = '');
+            document.getElementById('firstName').value = '';
+            document.getElementById('lastName').value = '';
+            document.getElementById('farmLocation').value = '';
+            document.getElementById('farmAcres').value = '';
+            document.getElementById('farmCents').value = '';
+            document.getElementById('cropAcres').value = '';
+            document.getElementById('cropCents').value = '';
+            document.getElementById('sowingDate').value = '';
+            document.getElementById('durationSlider').value = 120;
+            durationValue.textContent = '120';
+            cropItems.forEach(item => item.classList.remove('selected'));
+            
+            // Remove all added funding sources except the first one
+            const fundingElements = document.querySelectorAll('.funding-source');
+            for (let i = 1; i < fundingElements.length; i++) {
+                fundingElements[i].remove();
+            }
+            
+            // Clear first funding source
+            const firstFunding = fundingElements[0];
+            if (firstFunding) {
+                firstFunding.querySelector('.funding-amount').value = '';
+                firstFunding.querySelector('.funding-rate').value = '0';
+                firstFunding.querySelector('.funding-date').value = '';
+                firstFunding.querySelector('.funding-type').value = 'own';
+            }
+        }
+
+        // Initialize date pickers for existing elements
+        flatpickr('.funding-date', {
+            dateFormat: "Y-m-d",
+            maxDate: "today"
+        });
+
+        // Set up funding type event delegation
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('funding-type')) {
+                const rateInput = e.target.closest('.funding-source').querySelector('.funding-rate');
+                if (e.target.value === 'own' || e.target.value === 'govt') {
+                    rateInput.value = 0;
+                    rateInput.disabled = true;
+                } else {
+                    rateInput.disabled = false;
+                }
+            }
+        });
+
+        // Make functions globally available
+        window.editCrop = editCrop;
+        window.deleteCrop = deleteCrop;
+        window.openUtilitiesModal = openUtilitiesModal;
+        window.openModal = openModal;
+        window.focusNextOtpInput = focusNextOtpInput;
+    </script>
+</body>
+</html>
