@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FarmPro - OTP Login</title>
+    <title>FarmPro - Farmer Financial Tracker</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <!-- Firebase App and Auth -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
         :root {
             --primary: #2e7d32;
@@ -49,7 +51,7 @@
 
         .container {
             width: 100%;
-            max-width: 450px;
+            max-width: 800px;
             background: white;
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
@@ -86,6 +88,8 @@
 
         .form-container {
             padding: 2rem;
+            max-height: 500px;
+            overflow-y: auto;
         }
 
         .form-group {
@@ -130,7 +134,6 @@
             cursor: pointer;
             font-weight: 600;
             transition: var(--transition);
-            width: 100%;
             font-size: 1rem;
         }
 
@@ -152,6 +155,10 @@
         .btn-outline:hover {
             background-color: var(--primary);
             color: white;
+        }
+
+        .btn-full {
+            width: 100%;
         }
 
         .otp-input-container {
@@ -233,8 +240,189 @@
             color: var(--gray);
         }
 
-        @media (max-width: 480px) {
+        .crop-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 1rem 0;
+        }
+
+        .crop-item {
+            border: 2px solid #ddd;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .crop-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .crop-item.selected {
+            border-color: var(--primary);
+            background-color: rgba(46, 125, 50, 0.1);
+        }
+
+        .crop-item img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 1rem;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .slider-container {
+            margin: 1.5rem 0;
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: #d3d3d3;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+        }
+
+        .slider-value {
+            text-align: center;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .expense-category {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 1rem 0;
+        }
+
+        .expense-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .expense-item:hover {
+            border-color: var(--primary);
+        }
+
+        .expense-item.selected {
+            border-color: var(--primary);
+            background-color: rgba(46, 125, 50, 0.1);
+        }
+
+        .expense-item img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+
+        .funding-source {
+            margin-bottom: 1rem;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+        }
+
+        .funding-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .remove-funding {
+            color: var(--danger);
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .dashboard-container {
+            padding: 2rem;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .financial-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        .financial-item {
+            text-align: center;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            background-color: var(--bg-light);
+        }
+
+        .financial-item.income {
+            border-left: 4px solid var(--success);
+        }
+
+        .financial-item.expense {
+            border-left: 4px solid var(--danger);
+        }
+
+        .financial-item.profit {
+            border-left: 4px solid var(--secondary);
+        }
+
+        .financial-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+
+        @media (max-width: 768px) {
             .container {
+                max-width: 100%;
                 border-radius: 0;
             }
             
@@ -242,6 +430,23 @@
                 width: 40px;
                 height: 40px;
                 font-size: 1.2rem;
+            }
+            
+            .crop-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .financial-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .expense-category {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -265,15 +470,15 @@
                 <div class="form-group">
                     <label for="phoneNumber">Phone Number</label>
                     <div class="input-group">
-                        <select class="form-control" style="max-width: 80px;">
-                            <option>+91</option>
-                            <option>+1</option>
-                            <option>+44</option>
+                        <select class="form-control" id="countryCode" style="max-width: 80px;">
+                            <option value="+91">+91</option>
+                            <option value="+1">+1</option>
+                            <option value="+44">+44</option>
                         </select>
                         <input type="tel" class="form-control" id="phoneNumber" placeholder="9876543210">
                     </div>
                 </div>
-                <button class="btn btn-primary" id="sendOtpBtn">Send OTP</button>
+                <button class="btn btn-primary btn-full" id="sendOtpBtn">Send OTP</button>
             </div>
 
             <!-- Step 2: OTP Verification -->
@@ -295,41 +500,204 @@
                     Didn't receive OTP? <a href="#" id="resendOtp">Resend OTP</a>
                 </div>
                 
-                <button class="btn btn-primary" id="verifyOtpBtn">Verify & Login</button>
-                <button class="btn btn-outline" id="changeNumberBtn" style="margin-top: 10px;">Change Phone Number</button>
+                <button class="btn btn-primary btn-full" id="verifyOtpBtn">Verify & Login</button>
+                <button class="btn btn-outline btn-full" id="changeNumberBtn" style="margin-top: 10px;">Change Phone Number</button>
             </div>
 
             <!-- Step 3: Registration Form -->
             <div class="step" id="step3">
                 <h2 style="text-align: center; margin-bottom: 1.5rem; color: var(--primary);">Complete Your Registration</h2>
                 
-                <div class="form-group">
-                    <label for="firstName">First Name</label>
-                    <input type="text" class="form-control" id="firstName" placeholder="Enter your first name">
-                </div>
-                
-                <div class="form-group">
-                    <label for="lastName">Last Name</label>
-                    <input type="text" class="form-control" id="lastName" placeholder="Enter your last name">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" class="form-control" id="firstName" placeholder="Enter your first name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" class="form-control" id="lastName" placeholder="Enter your last name">
+                    </div>
                 </div>
                 
                 <div class="form-group">
                     <label for="cropType">Primary Crop</label>
-                    <select class="form-control" id="cropType">
-                        <option value="">Select your primary crop</option>
-                        <option value="paddy">Paddy</option>
-                        <option value="cotton">Cotton</option>
-                        <option value="maize">Maize</option>
-                        <option value="chickpea">Chickpea</option>
-                        <option value="chilli">Chilli</option>
-                        <option value="tobacco">Tobacco</option>
-                        <option value="red-chickpea">Red Chickpea (Desi)</option>
-                        <option value="black-gram">Black Gram</option>
-                        <option value="green-gram">Green Gram</option>
-                    </select>
+                    <div class="crop-grid">
+                        <div class="crop-item" data-crop="paddy">
+                            <img src="https://via.placeholder.com/80x80.png?text=Paddy" alt="Paddy">
+                            <div>Paddy</div>
+                        </div>
+                        <div class="crop-item" data-crop="cotton">
+                            <img src="https://via.placeholder.com/80x80.png?text=Cotton" alt="Cotton">
+                            <div>Cotton</div>
+                        </div>
+                        <div class="crop-item" data-crop="maize">
+                            <img src="https://via.placeholder.com/80x80.png?text=Maize" alt="Maize">
+                            <div>Maize</div>
+                        </div>
+                        <div class="crop-item" data-crop="chickpea">
+                            <img src="https://via.placeholder.com/80x80.png?text=Chickpea" alt="Chickpea">
+                            <div>Chickpea</div>
+                        </div>
+                        <div class="crop-item" data-crop="chilli">
+                            <img src="https://via.placeholder.com/80x80.png?text=Chilli" alt="Chilli">
+                            <div>Chilli</div>
+                        </div>
+                        <div class="crop-item" data-crop="tobacco">
+                            <img src="https://via.placeholder.com/80x80.png?text=Tobacco" alt="Tobacco">
+                            <div>Tobacco</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="cropType" value="">
                 </div>
                 
-                <button class="btn btn-primary" id="completeRegistrationBtn">Complete Registration</button>
+                <div class="form-group">
+                    <label for="acres">Number of Acres</label>
+                    <input type="number" class="form-control" id="acres" placeholder="Enter number of acres" min="1" step="0.1">
+                </div>
+                
+                <div class="form-group">
+                    <label for="sowingDate">Sowing Date</label>
+                    <input type="text" class="form-control" id="sowingDate" placeholder="Select sowing date">
+                </div>
+                
+                <div class="slider-container">
+                    <label for="durationSlider">Crop Duration (days): <span id="durationValue">120</span></label>
+                    <input type="range" min="30" max="365" value="120" class="slider" id="durationSlider">
+                </div>
+                
+                <button class="btn btn-primary btn-full" id="completeRegistrationBtn">Complete Registration</button>
+            </div>
+
+            <!-- Step 4: Financial Setup -->
+            <div class="step" id="step4">
+                <h2 style="text-align: center; margin-bottom: 1.5rem; color: var(--primary);">Financial Setup</h2>
+                
+                <h3 style="margin-bottom: 1rem; color: var(--primary-dark);">Funding Sources</h3>
+                
+                <div id="fundingSources">
+                    <div class="funding-source">
+                        <div class="funding-header">
+                            <h4>Own Funds</h4>
+                            <span class="remove-funding" style="display: none;">×</span>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Amount (₹)</label>
+                                <input type="number" class="form-control funding-amount" placeholder="Enter amount" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Interest Rate (%)</label>
+                                <input type="number" class="form-control funding-rate" value="0" min="0" step="0.1" disabled>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Date Taken</label>
+                            <input type="text" class="form-control funding-date" placeholder="Select date">
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-outline btn-full" id="addFundingBtn" style="margin-bottom: 1.5rem;">+ Add Funding Source</button>
+                
+                <h3 style="margin-bottom: 1rem; color: var(--primary-dark);">Expected Expenses</h3>
+                
+                <div class="expense-category">
+                    <div class="expense-item" data-expense="seeds">
+                        <img src="https://via.placeholder.com/40x40.png?text=Seeds" alt="Seeds">
+                        <div>Seeds</div>
+                    </div>
+                    <div class="expense-item" data-expense="ploughing">
+                        <img src="https://via.placeholder.com/40x40.png?text=Ploughing" alt="Ploughing">
+                        <div>Ploughing</div>
+                    </div>
+                    <div class="expense-item" data-expense="weeding">
+                        <img src="https://via.placeholder.com/40x40.png?text=Weeding" alt="Weeding">
+                        <div>Weeding</div>
+                    </div>
+                    <div class="expense-item" data-expense="pesticides">
+                        <img src="https://via.placeholder.com/40x40.png?text=Pesticides" alt="Pesticides">
+                        <div>Pesticides</div>
+                    </div>
+                    <div class="expense-item" data-expense="irrigation">
+                        <img src="https://via.placeholder.com/40x40.png?text=Irrigation" alt="Irrigation">
+                        <div>Irrigation</div>
+                    </div>
+                    <div class="expense-item" data-expense="harvesting">
+                        <img src="https://via.placeholder.com/40x40.png?text=Harvesting" alt="Harvesting">
+                        <div>Harvesting</div>
+                    </div>
+                </div>
+                
+                <div id="expenseDetails" style="display: none;">
+                    <div class="form-group">
+                        <label for="expenseAmount">Amount (₹)</label>
+                        <input type="number" class="form-control" id="expenseAmount" placeholder="Enter amount" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="expenseDate">Date</label>
+                        <input type="text" class="form-control" id="expenseDate" placeholder="Select date">
+                    </div>
+                    <button class="btn btn-primary" id="addExpenseBtn">Add Expense</button>
+                </div>
+                
+                <div class="form-group">
+                    <h4>Added Expenses</h4>
+                    <ul id="expenseList" style="list-style: none; margin-top: 10px;">
+                        <!-- Expenses will be listed here -->
+                    </ul>
+                </div>
+                
+                <button class="btn btn-primary btn-full" id="finishSetupBtn">Finish Setup</button>
+            </div>
+
+            <!-- Step 5: Dashboard -->
+            <div class="step" id="step5">
+                <div class="dashboard-container">
+                    <div class="dashboard-header">
+                        <h2>Farm Dashboard</h2>
+                        <button class="btn btn-outline" id="logoutBtn">Logout</button>
+                    </div>
+                    
+                    <div class="financial-summary">
+                        <div class="financial-item income">
+                            <div>Total Income</div>
+                            <div class="financial-value">₹0</div>
+                            <div>From crop sales</div>
+                        </div>
+                        <div class="financial-item expense">
+                            <div>Total Expenses</div>
+                            <div class="financial-value">₹0</div>
+                            <div>Farming costs</div>
+                        </div>
+                        <div class="financial-item profit">
+                            <div>Net Profit</div>
+                            <div class="financial-value">₹0</div>
+                            <div>This season</div>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <h3>Crop Information</h3>
+                        <div id="cropInfo">
+                            <!-- Crop info will be displayed here -->
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <h3>Financial Breakdown</h3>
+                        <div id="financialBreakdown">
+                            <!-- Financial breakdown will be displayed here -->
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-card">
+                        <h3>Recent Activities</h3>
+                        <div id="recentActivities">
+                            <!-- Recent activities will be displayed here -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -358,22 +726,51 @@
         const step1 = document.getElementById('step1');
         const step2 = document.getElementById('step2');
         const step3 = document.getElementById('step3');
+        const step4 = document.getElementById('step4');
+        const step5 = document.getElementById('step5');
         const phoneNumberInput = document.getElementById('phoneNumber');
+        const countryCodeSelect = document.getElementById('countryCode');
         const phoneNumberDisplay = document.getElementById('phoneNumberDisplay');
         const sendOtpBtn = document.getElementById('sendOtpBtn');
         const verifyOtpBtn = document.getElementById('verifyOtpBtn');
         const resendOtpLink = document.getElementById('resendOtp');
         const changeNumberBtn = document.getElementById('changeNumberBtn');
         const completeRegistrationBtn = document.getElementById('completeRegistrationBtn');
+        const finishSetupBtn = document.getElementById('finishSetupBtn');
+        const addFundingBtn = document.getElementById('addFundingBtn');
+        const addExpenseBtn = document.getElementById('addExpenseBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
         const errorMessage = document.getElementById('errorMessage');
         const successMessage = document.getElementById('successMessage');
         const otpInputs = document.querySelectorAll('.otp-input');
         const countdown = document.getElementById('countdown');
+        const cropItems = document.querySelectorAll('.crop-item');
+        const expenseItems = document.querySelectorAll('.expense-item');
+        const fundingSources = document.getElementById('fundingSources');
+        const expenseDetails = document.getElementById('expenseDetails');
+        const expenseList = document.getElementById('expenseList');
+        const durationSlider = document.getElementById('durationSlider');
+        const durationValue = document.getElementById('durationValue');
+        const sowingDate = document.getElementById('sowingDate');
+
+        // Initialize date pickers
+        flatpickr(sowingDate, {
+            dateFormat: "Y-m-d",
+            maxDate: "today"
+        });
 
         // Global variables
         let confirmationResult = null;
         let countdownTimer = null;
         let timeLeft = 120; // 2 minutes in seconds
+        let selectedCrop = '';
+        let selectedExpense = '';
+        let userData = {
+            crops: [],
+            expenses: [],
+            funding: [],
+            income: []
+        };
 
         // Event Listeners
         sendOtpBtn.addEventListener('click', sendOtp);
@@ -381,6 +778,35 @@
         resendOtpLink.addEventListener('click', resendOtp);
         changeNumberBtn.addEventListener('click', changeNumber);
         completeRegistrationBtn.addEventListener('click', completeRegistration);
+        finishSetupBtn.addEventListener('click', finishSetup);
+        addFundingBtn.addEventListener('click', addFundingSource);
+        addExpenseBtn.addEventListener('click', addExpense);
+        logoutBtn.addEventListener('click', logout);
+
+        // Crop selection
+        cropItems.forEach(item => {
+            item.addEventListener('click', () => {
+                cropItems.forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                selectedCrop = item.getAttribute('data-crop');
+                document.getElementById('cropType').value = selectedCrop;
+            });
+        });
+
+        // Expense selection
+        expenseItems.forEach(item => {
+            item.addEventListener('click', () => {
+                expenseItems.forEach(i => i.classList.remove('selected'));
+                item.classList.add('selected');
+                selectedExpense = item.getAttribute('data-expense');
+                expenseDetails.style.display = 'block';
+            });
+        });
+
+        // Duration slider
+        durationSlider.addEventListener('input', () => {
+            durationValue.textContent = durationSlider.value;
+        });
 
         // OTP input navigation
         otpInputs.forEach((input, index) => {
@@ -436,6 +862,8 @@
                 
                 if (timeLeft <= 0) {
                     clearInterval(countdownTimer);
+                    countdown.textContent = "OTP expired";
+                    countdown.style.color = "#d32f2f";
                 }
             }, 1000);
         }
@@ -444,15 +872,11 @@
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
             countdown.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
-            if (timeLeft <= 0) {
-                countdown.textContent = "OTP expired";
-                countdown.style.color = var('--danger');
-            }
         }
 
         function sendOtp() {
             const phoneNumber = phoneNumberInput.value.trim();
+            const countryCode = countryCodeSelect.value;
             
             if (!phoneNumber) {
                 showError('Please enter your phone number');
@@ -464,7 +888,7 @@
                 return;
             }
             
-            const fullPhoneNumber = '+91' + phoneNumber;
+            const fullPhoneNumber = countryCode + phoneNumber;
             
             // Show loading state
             sendOtpBtn.textContent = 'Sending...';
@@ -474,7 +898,7 @@
             auth.signInWithPhoneNumber(fullPhoneNumber, window.recaptchaVerifier)
                 .then((result) => {
                     confirmationResult = result;
-                    phoneNumberDisplay.textContent = '+91 ' + phoneNumber;
+                    phoneNumberDisplay.textContent = fullPhoneNumber;
                     changeStep(step1, step2);
                     startCountdown();
                     showSuccess('OTP sent successfully!');
@@ -514,9 +938,9 @@
                         // New user - show registration form
                         changeStep(step2, step3);
                     } else {
-                        // Existing user - redirect to dashboard (simulated here)
-                        showSuccess('Login successful! Redirecting to dashboard...');
-                        simulateLoginRedirect();
+                        // Existing user - redirect to dashboard
+                        changeStep(step2, step5);
+                        loadDashboard();
                     }
                 })
                 .catch((error) => {
@@ -543,42 +967,325 @@
         function changeNumber() {
             changeStep(step2, step1);
             clearInterval(countdownTimer);
+            // Reset OTP inputs
+            otpInputs.forEach(input => {
+                input.value = '';
+            });
         }
 
         function completeRegistration() {
             const firstName = document.getElementById('firstName').value.trim();
             const lastName = document.getElementById('lastName').value.trim();
             const cropType = document.getElementById('cropType').value;
+            const acres = document.getElementById('acres').value;
+            const sowingDateVal = document.getElementById('sowingDate').value;
+            const duration = document.getElementById('durationSlider').value;
             
-            if (!firstName || !lastName || !cropType) {
+            if (!firstName || !lastName || !cropType || !acres || !sowingDateVal) {
                 showError('Please fill all the fields');
                 return;
             }
             
-            // In a real app, you would save this data to your database
-            showSuccess('Registration completed! Redirecting to dashboard...');
-            simulateLoginRedirect();
+            // Save user data
+            userData.profile = {
+                firstName,
+                lastName,
+                phone: countryCodeSelect.value + phoneNumberInput.value.trim()
+            };
+            
+            userData.crops.push({
+                type: cropType,
+                acres: parseFloat(acres),
+                sowingDate: sowingDateVal,
+                duration: parseInt(duration),
+                yield: 0,
+                status: 'growing'
+            });
+            
+            // Move to financial setup
+            changeStep(step3, step4);
         }
 
-        function simulateLoginRedirect() {
-            // Simulate redirect to dashboard
-            setTimeout(() => {
-                alert('Login successful! You would now be redirected to the farmer dashboard.');
-                // In a real app: window.location.href = 'dashboard.html';
-            }, 2000);
+        function addFundingSource() {
+            const fundingSource = document.createElement('div');
+            fundingSource.className = 'funding-source';
+            fundingSource.innerHTML = `
+                <div class="funding-header">
+                    <select class="form-control funding-type" style="max-width: 200px;">
+                        <option value="own">Own Funds</option>
+                        <option value="bank">Bank Loan</option>
+                        <option value="family">Family/Friends Loan</option>
+                        <option value="govt">Government Subsidy</option>
+                        <option value="other">Other Source</option>
+                    </select>
+                    <span class="remove-funding">×</span>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Amount (₹)</label>
+                        <input type="number" class="form-control funding-amount" placeholder="Enter amount" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Interest Rate (%)</label>
+                        <input type="number" class="form-control funding-rate" placeholder="Enter rate" min="0" step="0.1">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Date Taken</label>
+                    <input type="text" class="form-control funding-date" placeholder="Select date">
+                </div>
+            `;
+            
+            // Initialize date picker for the new funding source
+            flatpickr(fundingSource.querySelector('.funding-date'), {
+                dateFormat: "Y-m-d",
+                maxDate: "today"
+            });
+            
+            // Add event listener for the remove button
+            fundingSource.querySelector('.remove-funding').addEventListener('click', function() {
+                fundingSource.remove();
+            });
+            
+            //  countinue coding
+                        // Add event listener for the remove button
+            fundingSource.querySelector('.remove-funding').addEventListener('click', function() {
+                fundingSource.remove();
+            });
+            
+            // Add event listener for funding type change
+            fundingSource.querySelector('.funding-type').addEventListener('change', function() {
+                const rateInput = fundingSource.querySelector('.funding-rate');
+                if (this.value === 'own') {
+                    rateInput.value = 0;
+                    rateInput.disabled = true;
+                } else {
+                    rateInput.disabled = false;
+                }
+            });
+            
+            fundingSources.appendChild(fundingSource);
         }
 
-        // Initialize reCAPTCHA verifier
+        function addExpense() {
+            const amount = document.getElementById('expenseAmount').value;
+            const date = document.getElementById('expenseDate').value;
+            
+            if (!amount || !date) {
+                showError('Please enter both amount and date for the expense');
+                return;
+            }
+            
+            // Add expense to list
+            const expenseItem = document.createElement('li');
+            expenseItem.innerHTML = `
+                <div style="display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #eee;">
+                    <div>${selectedExpense.charAt(0).toUpperCase() + selectedExpense.slice(1)}</div>
+                    <div>₹${amount} on ${date}</div>
+                    <span style="color: var(--danger); cursor: pointer;" onclick="this.parentElement.remove()">×</span>
+                </div>
+            `;
+            
+            expenseList.appendChild(expenseItem);
+            
+            // Add to userData
+            userData.expenses.push({
+                category: selectedExpense,
+                amount: parseFloat(amount),
+                date: date
+            });
+            
+            // Reset form
+            document.getElementById('expenseAmount').value = '';
+            document.getElementById('expenseDate').value = '';
+            expenseItems.forEach(item => item.classList.remove('selected'));
+            expenseDetails.style.display = 'none';
+            selectedExpense = '';
+        }
+
+        function finishSetup() {
+            // Collect funding sources
+            const fundingElements = document.querySelectorAll('.funding-source');
+            fundingElements.forEach(element => {
+                const type = element.querySelector('.funding-type').value;
+                const amount = element.querySelector('.funding-amount').value;
+                const rate = element.querySelector('.funding-rate').value;
+                const date = element.querySelector('.funding-date').value;
+                
+                if (amount && date) {
+                    userData.funding.push({
+                        type: type,
+                        amount: parseFloat(amount),
+                        interestRate: parseFloat(rate) || 0,
+                        date: date
+                    });
+                }
+            });
+            
+            // Move to dashboard
+            changeStep(step4, step5);
+            loadDashboard();
+        }
+
+        function loadDashboard() {
+            // Calculate financial summary
+            const totalExpenses = userData.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+            const totalFunding = userData.funding.reduce((sum, fund) => sum + fund.amount, 0);
+            
+            // For demo purposes, let's assume some income based on crop type and acres
+            const crop = userData.crops[0];
+            let income = 0;
+            
+            // Mock income calculation based on crop type
+            const incomePerAcre = {
+                paddy: 40000,
+                cotton: 50000,
+                maize: 35000,
+                chickpea: 30000,
+                chilli: 60000,
+                tobacco: 70000
+            };
+            
+            if (crop && incomePerAcre[crop.type]) {
+                income = incomePerAcre[crop.type] * crop.acres;
+            }
+            
+            const profit = income - totalExpenses;
+            
+            // Update financial summary
+            document.querySelector('.financial-item.income .financial-value').textContent = `₹${income.toLocaleString()}`;
+            document.querySelector('.financial-item.expense .financial-value').textContent = `₹${totalExpenses.toLocaleString()}`;
+            document.querySelector('.financial-item.profit .financial-value').textContent = `₹${profit.toLocaleString()}`;
+            
+            // Update crop information
+            const cropInfo = document.getElementById('cropInfo');
+            if (crop) {
+                cropInfo.innerHTML = `
+                    <p><strong>Crop:</strong> ${crop.type.charAt(0).toUpperCase() + crop.type.slice(1)}</p>
+                    <p><strong>Acres:</strong> ${crop.acres}</p>
+                    <p><strong>Sowing Date:</strong> ${crop.sowingDate}</p>
+                    <p><strong>Expected Duration:</strong> ${crop.duration} days</p>
+                    <p><strong>Status:</strong> ${crop.status}</p>
+                `;
+            }
+            
+            // Update financial breakdown
+            const financialBreakdown = document.getElementById('financialBreakdown');
+            financialBreakdown.innerHTML = `
+                <h4>Funding Sources</h4>
+                <ul>
+                    ${userData.funding.map(fund => `
+                        <li>${fund.type.charAt(0).toUpperCase() + fund.type.slice(1)}: ₹${fund.amount.toLocaleString()} 
+                        ${fund.interestRate > 0 ? `at ${fund.interestRate}% interest` : ''}</li>
+                    `).join('')}
+                </ul>
+                
+                <h4>Expenses by Category</h4>
+                <ul>
+                    ${Object.entries(userData.expenses.reduce((acc, expense) => {
+                        acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+                        return acc;
+                    }, {})).map(([category, amount]) => `
+                        <li>${category.charAt(0).toUpperCase() + category.slice(1)}: ₹${amount.toLocaleString()}</li>
+                    `).join('')}
+                </ul>
+            `;
+            
+            // Update recent activities
+            const recentActivities = document.getElementById('recentActivities');
+            const activities = [
+                ...userData.expenses.map(expense => ({
+                    type: 'expense',
+                    text: `Added expense of ₹${expense.amount} for ${expense.category}`,
+                    date: expense.date
+                })),
+                ...userData.funding.map(fund => ({
+                    type: 'funding',
+                    text: `Added ${fund.type} funding of ₹${fund.amount}`,
+                    date: fund.date
+                }))
+            ];
+            
+            // Sort by date (newest first)
+            activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            recentActivities.innerHTML = `
+                <ul>
+                    ${activities.slice(0, 5).map(activity => `
+                        <li style="margin-bottom: 10px; padding: 10px; background: #f5f5f5; border-radius: 5px;">
+                            <div>${activity.text}</div>
+                            <small style="color: #777;">${activity.date}</small>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+        }
+
+        function logout() {
+            auth.signOut().then(() => {
+                changeStep(step5, step1);
+                // Reset all forms
+                document.getElementById('phoneNumber').value = '';
+                otpInputs.forEach(input => input.value = '');
+                document.getElementById('firstName').value = '';
+                document.getElementById('lastName').value = '';
+                document.getElementById('acres').value = '';
+                document.getElementById('sowingDate').value = '';
+                document.getElementById('durationSlider').value = 120;
+                durationValue.textContent = '120';
+                cropItems.forEach(item => item.classList.remove('selected'));
+                expenseItems.forEach(item => item.classList.remove('selected'));
+                expenseList.innerHTML = '';
+                expenseDetails.style.display = 'none';
+                
+                // Remove all added funding sources except the first one
+                const fundingElements = document.querySelectorAll('.funding-source');
+                for (let i = 1; i < fundingElements.length; i++) {
+                    fundingElements[i].remove();
+                }
+                
+                // Reset userData
+                userData = {
+                    crops: [],
+                    expenses: [],
+                    funding: [],
+                    income: []
+                };
+            });
+        }
+
+        // Initialize recaptcha
         window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('sendOtpBtn', {
             size: 'invisible',
-            callback: () => {
-                // reCAPTCHA solved, allow signInWithPhoneNumber
+            callback: function(response) {
+                // reCAPTCHA solved, allow signInWithPhoneNumber.
+                sendOtp();
             }
         });
 
-        // Initialize the app
-        document.addEventListener('DOMContentLoaded', () => {
-            // Any initialization code can go here
+        // Initialize date pickers for funding sources
+        document.querySelectorAll('.funding-date').forEach(input => {
+            flatpickr(input, {
+                dateFormat: "Y-m-d",
+                maxDate: "today"
+            });
+        });
+
+        // Initialize expense date picker
+        flatpickr(document.getElementById('expenseDate'), {
+            dateFormat: "Y-m-d",
+            maxDate: "today"
+        });
+
+        // Set up funding type change event for the initial funding source
+        document.querySelector('.funding-type').addEventListener('change', function() {
+            const rateInput = document.querySelector('.funding-rate');
+            if (this.value === 'own') {
+                rateInput.value = 0;
+                rateInput.disabled = true;
+            } else {
+                rateInput.disabled = false;
+            }
         });
     </script>
 </body>
