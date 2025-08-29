@@ -265,10 +265,10 @@
                 <div class="form-group">
                     <label for="phoneNumber">Phone Number</label>
                     <div class="input-group">
-                        <select class="form-control" style="max-width: 80px;">
-                            <option>+91</option>
-                            <option>+1</option>
-                            <option>+44</option>
+                        <select class="form-control" id="countryCode" style="max-width: 80px;">
+                            <option value="+91">+91</option>
+                            <option value="+1">+1</option>
+                            <option value="+44">+44</option>
                         </select>
                         <input type="tel" class="form-control" id="phoneNumber" placeholder="9876543210">
                     </div>
@@ -359,6 +359,7 @@
         const step2 = document.getElementById('step2');
         const step3 = document.getElementById('step3');
         const phoneNumberInput = document.getElementById('phoneNumber');
+        const countryCodeSelect = document.getElementById('countryCode');
         const phoneNumberDisplay = document.getElementById('phoneNumberDisplay');
         const sendOtpBtn = document.getElementById('sendOtpBtn');
         const verifyOtpBtn = document.getElementById('verifyOtpBtn');
@@ -436,6 +437,8 @@
                 
                 if (timeLeft <= 0) {
                     clearInterval(countdownTimer);
+                    countdown.textContent = "OTP expired";
+                    countdown.style.color = "#d32f2f"; // Using the actual color value instead of CSS variable
                 }
             }, 1000);
         }
@@ -444,15 +447,11 @@
             const minutes = Math.floor(timeLeft / 60);
             const seconds = timeLeft % 60;
             countdown.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            
-            if (timeLeft <= 0) {
-                countdown.textContent = "OTP expired";
-                countdown.style.color = var('--danger');
-            }
         }
 
         function sendOtp() {
             const phoneNumber = phoneNumberInput.value.trim();
+            const countryCode = countryCodeSelect.value;
             
             if (!phoneNumber) {
                 showError('Please enter your phone number');
@@ -464,7 +463,7 @@
                 return;
             }
             
-            const fullPhoneNumber = '+91' + phoneNumber;
+            const fullPhoneNumber = countryCode + phoneNumber;
             
             // Show loading state
             sendOtpBtn.textContent = 'Sending...';
@@ -474,7 +473,7 @@
             auth.signInWithPhoneNumber(fullPhoneNumber, window.recaptchaVerifier)
                 .then((result) => {
                     confirmationResult = result;
-                    phoneNumberDisplay.textContent = '+91 ' + phoneNumber;
+                    phoneNumberDisplay.textContent = fullPhoneNumber;
                     changeStep(step1, step2);
                     startCountdown();
                     showSuccess('OTP sent successfully!');
@@ -543,6 +542,10 @@
         function changeNumber() {
             changeStep(step2, step1);
             clearInterval(countdownTimer);
+            // Reset OTP inputs
+            otpInputs.forEach(input => {
+                input.value = '';
+            });
         }
 
         function completeRegistration() {
