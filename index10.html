@@ -1391,780 +1391,256 @@
     </div>
 
      <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyCdfgtj1gvZ-bkomW1V40h-4tyUPHy_peo",
-            authDomain: "jama-3f427.firebaseapp.com",
-            projectId: "jama-3f427",
-            storageBucket: "jama-3f427.firebasestorage.app",
-            messagingSenderId: "897112470741",
-            appId: "1:897112470741:web:ee6388f0faae459fcb1e5c",
-            measurementId: "G-NN1BRV0QKS"
-        };
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyCdfgtj1gvZ-bkomW1V40h-4tyUPHy_peo",
+        authDomain: "jama-3f427.firebaseapp.com",
+        projectId: "jama-3f427",
+        storageBucket: "jama-3f427.firebasestorage.app",
+        messagingSenderId: "897112470741",
+        appId: "1:897112470741:web:ee6388f0faae459fcb1e5c",
+        measurementId: "G-NN1BRV0QKS"
+    };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
 
-        // DOM Elements
-        const loginContainer = document.getElementById('loginContainer');
-        const appContainer = document.getElementById('appContainer');
-        const errorMessage = document.getElementById('errorMessage');
-        const successMessage = document.getElementById('successMessage');
-        const step1 = document.getElementById('step1');
-        const step2 = document.getElementById('step2');
-        const phoneNumberInput = document.getElementById('phoneNumber');
-        const countryCodeSelect = document.getElementById('countryCode');
-        const phoneNumberDisplay = document.getElementById('phoneNumberDisplay');
-        const sendOtpBtn = document.getElementById('sendOtpBtn');
-        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
-        const resendOtpLink = document.getElementById('resendOtp');
-        const changeNumberBtn = document.getElementById('changeNumberBtn');
-        const otpInputs = document.querySelectorAll('.otp-input');
-        const countdown = document.getElementById('countdown');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const navItems = document.querySelectorAll('.nav-item');
-        const sidebarLinks = document.querySelectorAll('.sidebar-link');
-        const sections = document.querySelectorAll('.section');
+    // DOM Elements
+    const loginContainer = document.getElementById('loginContainer');
+    const appContainer = document.getElementById('appContainer');
+    const errorMessage = document.getElementById('errorMessage');
+    const successMessage = document.getElementById('successMessage');
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const phoneNumberInput = document.getElementById('phoneNumber');
+    const countryCodeSelect = document.getElementById('countryCode');
+    const phoneNumberDisplay = document.getElementById('phoneNumberDisplay');
+    const sendOtpBtn = document.getElementById('sendOtpBtn');
+    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+    const resendOtpLink = document.getElementById('resendOtp');
+    const changeNumberBtn = document.getElementById('changeNumberBtn');
+    const otpInputs = document.querySelectorAll('.otp-input');
+    const countdown = document.getElementById('countdown');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const navItems = document.querySelectorAll('.nav-item');
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+    const sections = document.querySelectorAll('.section');
 
-        // Form elements
-        const cropItems = document.querySelectorAll('.crop-item');
-        const durationSlider = document.getElementById('durationSlider');
-        const durationValue = document.getElementById('durationValue');
-        const addCropBtn = document.getElementById('addCropBtn');
-        const cropsTable = document.getElementById('cropsTable');
-        const expenseItems = document.querySelectorAll('.expense-item');
-        const addExpenseBtn = document.getElementById('addExpenseBtn');
-        const addIncomeBtn = document.getElementById('addIncomeBtn');
-        const financialTable = document.getElementById('financialTable');
-        const addFundingBtn = document.getElementById('addFundingBtn');
-        const fundingSources = document.getElementById('fundingSources');
-        const addLivestockBtn = document.getElementById('addLivestockBtn');
-        const livestockTable = document.getElementById('livestockTable');
-        const addMachineryBtn = document.getElementById('addMachineryBtn');
-        const machineryTable = document.getElementById('machineryTable');
-        const expenseCrop = document.getElementById('expenseCrop');
-        const incomeCrop = document.getElementById('incomeCrop');
+    // Form elements
+    const cropItems = document.querySelectorAll('.crop-item');
+    const durationSlider = document.getElementById('durationSlider');
+    const durationValue = document.getElementById('durationValue');
+    const addCropBtn = document.getElementById('addCropBtn');
+    const cropsTable = document.getElementById('cropsTable');
+    const expenseItems = document.querySelectorAll('.expense-item');
+    const addExpenseBtn = document.getElementById('addExpenseBtn');
+    const addIncomeBtn = document.getElementById('addIncomeBtn');
+    const financialTable = document.getElementById('financialTable');
+    const addFundingBtn = document.getElementById('addFundingBtn');
+    const fundingSources = document.getElementById('fundingSources');
+    const addLivestockBtn = document.getElementById('addLivestockBtn');
+    const livestockTable = document.getElementById('livestockTable');
+    const addMachineryBtn = document.getElementById('addMachineryBtn');
+    const machineryTable = document.getElementById('machineryTable');
+    const expenseCrop = document.getElementById('expenseCrop');
+    const incomeCrop = document.getElementById('incomeCrop');
 
-        // Global variables
-        let confirmationResult = null;
-        let countdownTimer = null;
-        let timeLeft = 120; // 2 minutes in seconds
-        let selectedCrop = '';
-        let selectedExpense = '';
-        let userData = {
-            profile: {},
-            crops: [],
-            expenses: [],
-            income: [],
-            funding: [],
-            livestock: [],
-            machinery: []
-        };
+    // Global variables
+    let confirmationResult = null;
+    let countdownTimer = null;
+    let timeLeft = 120; // 2 minutes in seconds
+    let selectedCrop = '';
+    let selectedExpense = '';
+    let userData = {
+        profile: {},
+        crops: [],
+        expenses: [],
+        income: [],
+        funding: [],
+        livestock: [],
+        machinery: []
+    };
 
-        // Initialize date pickers
-        const sowingDate = document.getElementById('sowingDate');
-        if (sowingDate) {
-            flatpickr(sowingDate, {
-                dateFormat: "Y-m-d",
-                maxDate: "today"
+    // Initialize date pickers
+    const sowingDate = document.getElementById('sowingDate');
+    if (sowingDate) {
+        flatpickr(sowingDate, {
+            dateFormat: "Y-m-d",
+            maxDate: "today"
+        });
+    }
+
+    const expenseDate = document.getElementById('expenseDate');
+    if (expenseDate) {
+        flatpickr(expenseDate, {
+            dateFormat: "Y-m-d",
+            maxDate: "today"
+        });
+    }
+
+    const incomeDate = document.getElementById('incomeDate');
+    if (incomeDate) {
+        flatpickr(incomeDate, {
+            dateFormat: "Y-m-d",
+            maxDate: "today"
+        });
+    }
+
+    const livestockPurchaseDate = document.getElementById('livestockPurchaseDate');
+    if (livestockPurchaseDate) {
+        flatpickr(livestockPurchaseDate, {
+            dateFormat: "Y-m-d",
+            maxDate: "today"
+        });
+    }
+
+    const machineryPurchaseDate = document.getElementById('machineryPurchaseDate');
+    if (machineryPurchaseDate) {
+        flatpickr(machineryPurchaseDate, {
+            dateFormat: "Y-m-d",
+            maxDate: "today"
+        });
+    }
+
+    // Initialize funding date pickers
+    function initFundingDatePickers() {
+        document.querySelectorAll('.funding-date').forEach(input => {
+            if (!input._flatpickr) {
+                flatpickr(input, {
+                    dateFormat: "Y-m-d",
+                    maxDate: "today"
+                });
+            }
+        });
+    }
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set inputmode for numeric fields
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.setAttribute('inputmode', 'numeric');
+            input.setAttribute('pattern', '[0-9]*');
+        });
+
+        // Initialize all functionality
+        if (sendOtpBtn) sendOtpBtn.addEventListener('click', sendOtp);
+        if (verifyOtpBtn) verifyOtpBtn.addEventListener('click', verifyOtp);
+        if (resendOtpLink) resendOtpLink.addEventListener('click', resendOtp);
+        if (changeNumberBtn) changeNumberBtn.addEventListener('click', changeNumber);
+        if (logoutBtn) logoutBtn.addEventListener('click', logout);
+
+        // Navigation
+        if (navItems) {
+            navItems.forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const section = this.getAttribute('data-section');
+                    changeSection(section);
+                });
             });
         }
 
-        const expenseDate = document.getElementById('expenseDate');
-        if (expenseDate) {
-            flatpickr(expenseDate, {
-                dateFormat: "Y-m-d",
-                maxDate: "today"
+        if (sidebarLinks) {
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    sidebarLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    // Here you would handle subsection changes
+                });
             });
         }
 
-        const incomeDate = document.getElementById('incomeDate');
-        if (incomeDate) {
-            flatpickr(incomeDate, {
-                dateFormat: "Y-m-d",
-                maxDate: "today"
+        // Crop selection
+        if (cropItems) {
+            cropItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    cropItems.forEach(i => i.classList.remove('selected'));
+                    item.classList.add('selected');
+                    selectedCrop = item.getAttribute('data-crop');
+                    document.getElementById('cropType').value = selectedCrop;
+                });
             });
         }
 
-        const livestockPurchaseDate = document.getElementById('livestockPurchaseDate');
-        if (livestockPurchaseDate) {
-            flatpickr(livestockPurchaseDate, {
-                dateFormat: "Y-m-d",
-                maxDate: "today"
+        // Duration slider
+        if (durationSlider && durationValue) {
+            durationSlider.addEventListener('input', () => {
+                durationValue.textContent = durationSlider.value;
             });
         }
 
-        const machineryPurchaseDate = document.getElementById('machineryPurchaseDate');
-        if (machineryPurchaseDate) {
-            flatpickr(machineryPurchaseDate, {
-                dateFormat: "Y-m-d",
-                maxDate: "today"
+        // Add crop
+        if (addCropBtn) {
+            addCropBtn.addEventListener('click', addCrop);
+        }
+
+        // Expense selection
+        if (expenseItems) {
+            expenseItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    expenseItems.forEach(i => i.classList.remove('selected'));
+                    item.classList.add('selected');
+                    selectedExpense = item.getAttribute('data-expense');
+                });
+            });
+        }
+
+        // Add expense
+        if (addExpenseBtn) {
+            addExpenseBtn.addEventListener('click', addExpense);
+        }
+
+        // Add income
+        if (addIncomeBtn) {
+            addIncomeBtn.addEventListener('click', addIncome);
+        }
+
+        // Add funding source
+        if (addFundingBtn) {
+            addFundingBtn.addEventListener('click', addFundingSource);
+        }
+
+        // Add livestock
+        if (addLivestockBtn) {
+            addLivestockBtn.addEventListener('click', addLivestock);
+        }
+
+        // Add machinery
+        if (addMachineryBtn) {
+            addMachineryBtn.addEventListener('click', addMachinery);
+        }
+
+        // OTP input navigation
+        if (otpInputs) {
+            otpInputs.forEach((input, index) => {
+                // Set inputmode for OTP inputs
+                input.setAttribute('inputmode', 'numeric');
+                input.setAttribute('pattern', '[0-9]*');
+                
+                input.addEventListener('input', () => {
+                    if (input.value.length === 1 && index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    }
+                });
+                
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && input.value === '' && index > 0) {
+                        otpInputs[index - 1].focus();
+                    }
+                });
             });
         }
 
         // Initialize funding date pickers
-        function initFundingDatePickers() {
-            document.querySelectorAll('.funding-date').forEach(input => {
-                if (!input._flatpickr) {
-                    flatpickr(input, {
-                        dateFormat: "Y-m-d",
-                        maxDate: "today"
-                    });
-                }
-            });
-        }
+        initFundingDatePickers();
 
-        // Event Listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize all functionality
-            if (sendOtpBtn) sendOtpBtn.addEventListener('click', sendOtp);
-            if (verifyOtpBtn) verifyOtpBtn.addEventListener('click', verifyOtp);
-            if (resendOtpLink) resendOtpLink.addEventListener('click', resendOtp);
-            if (changeNumberBtn) changeNumberBtn.addEventListener('click', changeNumber);
-            if (logoutBtn) logoutBtn.addEventListener('click', logout);
-
-            // Navigation
-            if (navItems) {
-                navItems.forEach(item => {
-                    item.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        const section = this.getAttribute('data-section');
-                        changeSection(section);
-                    });
-                });
-            }
-
-            if (sidebarLinks) {
-                sidebarLinks.forEach(link => {
-                    link.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        sidebarLinks.forEach(l => l.classList.remove('active'));
-                        this.classList.add('active');
-                        // Here you would handle subsection changes
-                    });
-                });
-            }
-
-            // Crop selection
-            if (cropItems) {
-                cropItems.forEach(item => {
-                    item.addEventListener('click', () => {
-                        cropItems.forEach(i => i.classList.remove('selected'));
-                        item.classList.add('selected');
-                        selectedCrop = item.getAttribute('data-crop');
-                        document.getElementById('cropType').value = selectedCrop;
-                    });
-                });
-            }
-
-            // Duration slider
-            if (durationSlider && durationValue) {
-                durationSlider.addEventListener('input', () => {
-                    durationValue.textContent = durationSlider.value;
-                });
-            }
-
-            // Add crop
-            if (addCropBtn) {
-                addCropBtn.addEventListener('click', addCrop);
-            }
-
-            // Expense selection
-            if (expenseItems) {
-                expenseItems.forEach(item => {
-                    item.addEventListener('click', () => {
-                        expenseItems.forEach(i => i.classList.remove('selected'));
-                        item.classList.add('selected');
-                        selectedExpense = item.getAttribute('data-expense');
-                    });
-                });
-            }
-
-            // Add expense
-            if (addExpenseBtn) {
-                addExpenseBtn.addEventListener('click', addExpense);
-            }
-
-            // Add income
-            if (addIncomeBtn) {
-                addIncomeBtn.addEventListener('click', addIncome);
-            }
-
-            // Add funding source
-            if (addFundingBtn) {
-                addFundingBtn.addEventListener('click', addFundingSource);
-            }
-
-            // Add livestock
-            if (addLivestockBtn) {
-                addLivestockBtn.addEventListener('click', addLivestock);
-            }
-
-            // Add machinery
-            if (addMachineryBtn) {
-                addMachineryBtn.addEventListener('click', addMachinery);
-            }
-
-            // OTP input navigation
-            if (otpInputs) {
-                otpInputs.forEach((input, index) => {
-                    input.addEventListener('input', () => {
-                        if (input.value.length === 1 && index < otpInputs.length - 1) {
-                            otpInputs[index + 1].focus();
-                        }
-                    });
-                    
-                    input.addEventListener('keydown', (e) => {
-                        if (e.key === 'Backspace' && input.value === '' && index > 0) {
-                            otpInputs[index - 1].focus();
-                        }
-                    });
-                });
-            }
-
-            // Initialize funding date pickers
-            initFundingDatePickers();
-
-            // Set up funding type change event for the initial funding source
-            const fundingTypeSelect = document.querySelector('.funding-type');
-            if (fundingTypeSelect) {
-                fundingTypeSelect.addEventListener('change', function() {
-                    const rateInput = this.closest('.funding-source').querySelector('.funding-rate');
-                    if (this.value === 'own') {
-                        rateInput.value = 0;
-                        rateInput.disabled = true;
-                    } else {
-                        rateInput.disabled = false;
-                    }
-                });
-            }
-        });
-
-        // Functions
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-            successMessage.style.display = 'none';
-            
-            // Hide error after 5 seconds
-            setTimeout(() => {
-                errorMessage.style.display = 'none';
-            }, 5000);
-        }
-
-        function showSuccess(message) {
-            successMessage.textContent = message;
-            successMessage.style.display = 'block';
-            errorMessage.style.display = 'none';
-            
-            // Hide success after 5 seconds
-            setTimeout(() => {
-                successMessage.style.display = 'none';
-            }, 5000);
-        }
-
-        function changeSection(section) {
-            // Update navigation
-            navItems.forEach(item => {
-                if (item.getAttribute('data-section') === section) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
-            });
-
-            // Show selected section
-            sections.forEach(sec => {
-                if (sec.id === `${section}-section`) {
-                    sec.classList.add('active');
-                } else {
-                    sec.classList.remove('active');
-                }
-            });
-
-            // If crops section is selected, update crop dropdowns
-            if (section === 'financials') {
-                updateCropDropdowns();
-            }
-        }
-
-        function updateCropDropdowns() {
-            // Clear existing options
-            while (expenseCrop.options.length > 1) {
-                expenseCrop.remove(1);
-            }
-            while (incomeCrop.options.length > 1) {
-                incomeCrop.remove(1);
-            }
-
-            // Add crops to dropdowns
-            userData.crops.forEach(crop => {
-                const option = document.createElement('option');
-                option.value = crop.id;
-                option.textContent = `${crop.type} (${crop.acres} acres)`;
-                
-                expenseCrop.appendChild(option.cloneNode(true));
-                incomeCrop.appendChild(option);
-            });
-        }
-
-        function startCountdown() {
-            clearInterval(countdownTimer);
-            timeLeft = 120;
-            updateCountdown();
-            
-            countdownTimer = setInterval(() => {
-                timeLeft--;
-                updateCountdown();
-                
-                if (timeLeft <= 0) {
-                    clearInterval(countdownTimer);
-                    countdown.textContent = "OTP expired";
-                    countdown.style.color = "#d32f2f";
-                }
-            }, 1000);
-        }
-
-        function updateCountdown() {
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            countdown.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-
-        function sendOtp() {
-            const phoneNumber = phoneNumberInput.value.trim();
-            const countryCode = countryCodeSelect.value;
-            
-            if (!phoneNumber) {
-                showError('Please enter your phone number');
-                return;
-            }
-            
-            if (!/^\d{10}$/.test(phoneNumber)) {
-                showError('Please enter a valid 10-digit phone number');
-                return;
-            }
-            
-            const fullPhoneNumber = countryCode + phoneNumber;
-            
-            // Show loading state
-            sendOtpBtn.textContent = 'Sending...';
-            sendOtpBtn.disabled = true;
-            
-            // Firebase phone authentication
-            auth.signInWithPhoneNumber(fullPhoneNumber, window.recaptchaVerifier)
-                .then((result) => {
-                    confirmationResult = result;
-                    phoneNumberDisplay.textContent = fullPhoneNumber;
-                    changeStep(step1, step2);
-                    startCountdown();
-                    showSuccess('OTP sent successfully!');
-                })
-                .catch((error) => {
-                    console.error('Error sending OTP:', error);
-                    showError('Failed to send OTP. Please try again.');
-                })
-                .finally(() => {
-                    sendOtpBtn.textContent = 'Send OTP';
-                    sendOtpBtn.disabled = false;
-                });
-        }
-
-        function verifyOtp() {
-            let otp = '';
-            otpInputs.forEach(input => {
-                otp += input.value;
-            });
-            
-            if (otp.length !== 6) {
-                showError('Please enter the complete 6-digit OTP');
-                return;
-            }
-            
-            // Show loading state
-            verifyOtpBtn.textContent = 'Verifying...';
-            verifyOtpBtn.disabled = true;
-            
-            confirmationResult.confirm(otp)
-                .then((result) => {
-                    // User signed in successfully
-                    const user = result.user;
-                    showSuccess('Login successful!');
-                    
-                    // Hide login container and show app container
-                    loginContainer.style.display = 'none';
-                    appContainer.style.display = 'block';
-                    
-                    // Load user data from localStorage or initialize
-                    loadUserData();
-                })
-                .catch((error) => {
-                    console.error('Error verifying OTP:', error);
-                    showError('Invalid OTP. Please try again.');
-                })
-                .finally(() => {
-                    verifyOtpBtn.textContent = 'Verify & Login';
-                    verifyOtpBtn.disabled = false;
-                });
-        }
-
-        function resendOtp(e) {
-            e.preventDefault();
-            
-            if (timeLeft > 0) {
-                showError(`Please wait ${timeLeft} seconds before requesting a new OTP`);
-                return;
-            }
-            
-            sendOtp();
-        }
-
-        function changeNumber() {
-            changeStep(step2, step1);
-            clearInterval(countdownTimer);
-            // Reset OTP inputs
-            otpInputs.forEach(input => {
-                input.value = '';
-            });
-        }
-
-        function changeStep(currentStep, nextStep) {
-            currentStep.classList.remove('active');
-            nextStep.classList.add('active');
-        }
-
-        function loadUserData() {
-            const savedData = localStorage.getItem('farmProUserData');
-            if (savedData) {
-                userData = JSON.parse(savedData);
-                updateDashboard();
-                updateCropsTable();
-                updateFinancialTable();
-                updateLivestockTable();
-                updateMachineryTable();
-            } else {
-                // Initialize with empty data
-                userData = {
-                    profile: {},
-                    crops: [],
-                    expenses: [],
-                    income: [],
-                    funding: [],
-                    livestock: [],
-                    machinery: []
-                };
-            }
-        }
-
-        function saveUserData() {
-            localStorage.setItem('farmProUserData', JSON.stringify(userData));
-        }
-
-        function addCrop() {
-            const cropType = document.getElementById('cropType').value;
-            const acres = document.getElementById('acres').value;
-            const sowingDate = document.getElementById('sowingDate').value;
-            const duration = document.getElementById('durationSlider').value;
-            const expectedYield = document.getElementById('expectedYield').value;
-            
-            if (!cropType || !acres || !sowingDate || !expectedYield) {
-                showError('Please fill all the fields');
-                return;
-            }
-            
-            const cropId = Date.now().toString();
-            
-            // Add crop to userData
-            userData.crops.push({
-                id: cropId,
-                type: cropType,
-                acres: parseFloat(acres),
-                sowingDate: sowingDate,
-                duration: parseInt(duration),
-                expectedYield: parseFloat(expectedYield),
-                actualYield: 0,
-                status: 'growing',
-                harvestDate: ''
-            });
-            
-            // Save data
-            saveUserData();
-            
-            // Update UI
-            updateCropsTable();
-            updateDashboard();
-            
-            // Reset form
-            document.getElementById('acres').value = '';
-            document.getElementById('sowingDate').value = '';
-            document.getElementById('durationSlider').value = 120;
-            document.getElementById('durationValue').textContent = '120';
-            document.getElementById('expectedYield').value = '';
-            cropItems.forEach(item => item.classList.remove('selected'));
-            selectedCrop = '';
-            
-            showSuccess('Crop added successfully!');
-        }
-
-        function updateCropsTable() {
-            const tbody = cropsTable.querySelector('tbody');
-            tbody.innerHTML = '';
-            
-            userData.crops.forEach(crop => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${crop.type}</td>
-                    <td>${crop.acres}</td>
-                    <td>${crop.sowingDate}</td>
-                    <td>${crop.duration} days</td>
-                    <td>${crop.status}</td>
-                    <td>
-                        <button class="action-btn edit-btn" data-id="${crop.id}">Edit</button>
-                        <button class="action-btn delete-btn" data-id="${crop.id}">Delete</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-            
-            // Add event listeners to action buttons
-            tbody.querySelectorAll('.edit-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const cropId = this.getAttribute('data-id');
-                    editCrop(cropId);
-                });
-            });
-            
-            tbody.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const cropId = this.getAttribute('data-id');
-                    deleteCrop(cropId);
-                });
-            });
-        }
-
-        function editCrop(cropId) {
-            // Find the crop
-            const crop = userData.crops.find(c => c.id === cropId);
-            if (!crop) return;
-            
-            // For simplicity, we'll just create a prompt to edit yield and status
-            const newYield = prompt('Enter actual yield (kg per acre):', crop.actualYield || crop.expectedYield);
-            if (newYield === null) return;
-            
-            const newStatus = prompt('Enter status (growing/harvested):', crop.status);
-            if (newStatus === null) return;
-            
-            // Update crop
-            crop.actualYield = parseFloat(newYield) || 0;
-            crop.status = newStatus;
-            
-            if (newStatus === 'harvested' && !crop.harvestDate) {
-                crop.harvestDate = new Date().toISOString().split('T')[0];
-            }
-            
-            // Save and update
-            saveUserData();
-            updateCropsTable();
-            updateDashboard();
-            
-            showSuccess('Crop updated successfully!');
-        }
-
-        function deleteCrop(cropId) {
-            if (!confirm('Are you sure you want to delete this crop?')) return;
-            
-            // Remove crop
-            userData.crops = userData.crops.filter(c => c.id !== cropId);
-            
-            // Save and update
-            saveUserData();
-            updateCropsTable();
-            updateDashboard();
-            
-            showSuccess('Crop deleted successfully!');
-        }
-
-        function addExpense() {
-            const amount = document.getElementById('expenseAmount').value;
-            const date = document.getElementById('expenseDate').value;
-            const cropId = document.getElementById('expenseCrop').value;
-            const notes = document.getElementById('expenseNotes').value;
-            
-            if (!selectedExpense || !amount || !date) {
-                showError('Please select a category and enter amount and date');
-                return;
-            }
-            
-            const expenseId = Date.now().toString();
-            
-            // Add expense to userData
-            userData.expenses.push({
-                id: expenseId,
-                category: selectedExpense,
-                amount: parseFloat(amount),
-                date: date,
-                cropId: cropId || null,
-                notes: notes
-            });
-            
-            // Save data
-            saveUserData();
-            
-            // Update UI
-            updateFinancialTable();
-            updateDashboard();
-            
-            // Reset form
-            document.getElementById('expenseAmount').value = '';
-            document.getElementById('expenseDate').value = '';
-            document.getElementById('expenseCrop').value = '';
-            document.getElementById('expenseNotes').value = '';
-            expenseItems.forEach(item => item.classList.remove('selected'));
-            selectedExpense = '';
-            
-            showSuccess('Expense added successfully!');
-        }
-
-        function addIncome() {
-            const source = document.getElementById('incomeSource').value;
-            const amount = document.getElementById('incomeAmount').value;
-            const date = document.getElementById('incomeDate').value;
-            const cropId = document.getElementById('incomeCrop').value;
-            const notes = document.getElementById('incomeNotes').value;
-            
-            if (!amount || !date) {
-                showError('Please enter amount and date');
-                return;
-            }
-            
-            const incomeId = Date.now().toString();
-            
-            // Add income to userData
-            userData.income.push({
-                id: incomeId,
-                source: source,
-                amount: parseFloat(amount),
-                date: date,
-                cropId: cropId || null,
-                notes: notes
-            });
-            
-            // Save data
-            saveUserData();
-            
-            // Update UI
-            updateFinancialTable();
-            updateDashboard();
-            
-            // Reset form
-            document.getElementById('incomeAmount').value = '';
-            document.getElementById('incomeDate').value = '';
-            document.getElementById('incomeCrop').value = '';
-            document.getElementById('incomeNotes').value = '';
-            
-            showSuccess('Income added successfully!');
-        }
-
-        function updateFinancialTable() {
-            const tbody = financialTable.querySelector('tbody');
-            tbody.innerHTML = '';
-            
-            // Combine expenses and income
-            const allTransactions = [
-                ...userData.expenses.map(expense => ({ ...expense, type: 'expense' })),
-                ...userData.income.map(income => ({ ...income, type: 'income' }))
-            ];
-            
-            // Sort by date (newest first)
-            allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            allTransactions.forEach(transaction => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${transaction.date}</td>
-                    <td>${transaction.type === 'expense' ? 'Expense' : 'Income'}</td>
-                    <td>${transaction.type === 'expense' ? transaction.category : transaction.source}</td>
-                    <td>${transaction.type === 'expense' ? '-₹' : '₹'}${transaction.amount.toLocaleString()}</td>
-                    <td>${transaction.notes || '-'}</td>
-                    <td>
-                        <button class="action-btn delete-btn" data-type="${transaction.type}" data-id="${transaction.id}">Delete</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-            
-            // Add event listeners to delete buttons
-            tbody.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const type = this.getAttribute('data-type');
-                    const id = this.getAttribute('data-id');
-                    deleteFinancialRecord(type, id);
-                });
-            });
-        }
-
-        function deleteFinancialRecord(type, id) {
-            if (!confirm('Are you sure you want to delete this record?')) return;
-            
-            if (type === 'expense') {
-                userData.expenses = userData.expenses.filter(e => e.id !== id);
-            } else {
-                userData.income = userData.income.filter(i => i.id !== id);
-            }
-            
-            // Save and update
-            saveUserData();
-            updateFinancialTable();
-            updateDashboard();
-            
-            showSuccess('Record deleted successfully!');
-        }
-
-        function addFundingSource() {
-            const fundingSource = document.createElement('div');
-            fundingSource.className = 'funding-source';
-            fundingSource.innerHTML = `
-                <div class="funding-header">
-                    <select class="form-control funding-type" style="max-width: 200px;">
-                        <option value="own">Own Funds</option>
-                        <option value="bank">Bank Loan</option>
-                        <option value="family">Family/Friends Loan</option>
-                        <option value="govt">Government Subsidy</option>
-                        <option value="other">Other Source</option>
-                    </select>
-                    <span class="remove-btn">×</span>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Amount (₹)</label>
-                        <input type="number" class="form-control funding-amount" placeholder="Enter amount" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label>Interest Rate (%)</label>
-                        <input type="number" class="form-control funding-rate" placeholder="Enter rate" min="0" step="0.1">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Date Taken</label>
-                    <input type="text" class="form-control funding-date" placeholder="Select date">
-                </div>
-            `;
-            
-            // Initialize date picker for the new funding source
-            flatpickr(fundingSource.querySelector('.funding-date'), {
-                dateFormat: "Y-m-d",
-                maxDate: "today"
-            });
-            
-            // Add event listener for the remove button
-            fundingSource.querySelector('.remove-btn').addEventListener('click', function() {
-                fundingSource.remove();
-            });
-            
-            // Add event listener for funding type change
-            fundingSource.querySelector('.funding-type').addEventListener('change', function() {
-                const rateInput = fundingSource.querySelector('.funding-rate');
+        // Set up funding type change event for the initial funding source
+        const fundingTypeSelect = document.querySelector('.funding-type');
+        if (fundingTypeSelect) {
+            fundingTypeSelect.addEventListener('change', function() {
+                const rateInput = this.closest('.funding-source').querySelector('.funding-rate');
                 if (this.value === 'own') {
                     rateInput.value = 0;
                     rateInput.disabled = true;
@@ -2172,262 +1648,796 @@
                     rateInput.disabled = false;
                 }
             });
-            
-            fundingSources.appendChild(fundingSource);
         }
+    });
 
-        function addLivestock() {
-            const type = document.getElementById('livestockType').value;
-            const count = document.getElementById('livestockCount').value;
-            const purchaseDate = document.getElementById('livestockPurchaseDate').value;
-            const cost = document.getElementById('livestockCost').value;
-            const notes = document.getElementById('livestockNotes').value;
-            
-            if (!count || !purchaseDate || !cost) {
-                showError('Please fill all required fields');
-                return;
-            }
-            
-            const livestockId = Date.now().toString();
-            
-            // Add livestock to userData
-            userData.livestock.push({
-                id: livestockId,
-                type: type,
-                count: parseInt(count),
-                purchaseDate: purchaseDate,
-                cost: parseFloat(cost),
-                notes: notes
-            });
-            
-            // Save data
-            saveUserData();
-            
-            // Update UI
-            updateLivestockTable();
-            
-            // Reset form
-            document.getElementById('livestockCount').value = '';
-            document.getElementById('livestockPurchaseDate').value = '';
-            document.getElementById('livestockCost').value = '';
-            document.getElementById('livestockNotes').value = '';
-            
-            showSuccess('Livestock added successfully!');
-        }
+    // Functions
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+        successMessage.style.display = 'none';
+        
+        // Hide error after 5 seconds
+        setTimeout(() => {
+            errorMessage.style.display = 'none';
+        }, 5000);
+    }
 
-        function updateLivestockTable() {
-            const tbody = livestockTable.querySelector('tbody');
-            tbody.innerHTML = '';
-            
-            userData.livestock.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${item.type}</td>
-                    <td>${item.count}</td>
-                    <td>${item.purchaseDate}</td>
-                    <td>₹${item.cost.toLocaleString()}</td>
-                    <td>
-                        <button class="action-btn delete-btn" data-id="${item.id}">Delete</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-            
-            // Add event listeners to delete buttons
-            tbody.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    deleteLivestock(id);
-                });
-            });
-        }
+    function showSuccess(message) {
+        successMessage.textContent = message;
+        successMessage.style.display = 'block';
+        errorMessage.style.display = 'none';
+        
+        // Hide success after 5 seconds
+        setTimeout(() => {
+            successMessage.style.display = 'none';
+        }, 5000);
+    }
 
-        function deleteLivestock(id) {
-            if (!confirm('Are you sure you want to delete this livestock record?')) return;
-            
-            // Remove livestock
-            userData.livestock = userData.livestock.filter(l => l.id !== id);
-            
-            // Save and update
-            saveUserData();
-            updateLivestockTable();
-            
-            showSuccess('Livestock record deleted successfully!');
-        }
-
-        function addMachinery() {
-            const type = document.getElementById('machineryType').value;
-            const cost = document.getElementById('machineryCost').value;
-            const purchaseDate = document.getElementById('machineryPurchaseDate').value;
-            const maintenance = document.getElementById('machineryMaintenance').value;
-            const notes = document.getElementById('machineryNotes').value;
-            
-            if (!cost || !purchaseDate) {
-                showError('Please fill all required fields');
-                return;
-            }
-            
-            const machineryId = Date.now().toString();
-            
-            // Add machinery to userData
-            userData.machinery.push({
-                id: machineryId,
-                type: type,
-                cost: parseFloat(cost),
-                purchaseDate: purchaseDate,
-                maintenance: maintenance ? parseFloat(maintenance) : 0,
-                notes: notes
-            });
-            
-            // Save data
-            saveUserData();
-            
-            // Update UI
-            updateMachineryTable();
-            
-            // Reset form
-            document.getElementById('machineryCost').value = '';
-            document.getElementById('machineryPurchaseDate').value = '';
-            document.getElementById('machineryMaintenance').value = '';
-            document.getElementById('machineryNotes').value = '';
-            
-            showSuccess('Machinery added successfully!');
-        }
-
-        function updateMachineryTable() {
-            const tbody = machineryTable.querySelector('tbody');
-            tbody.innerHTML = '';
-            
-            userData.machinery.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${item.type}</td>
-                    <td>₹${item.cost.toLocaleString()}</td>
-                    <td>${item.purchaseDate}</td>
-                    <td>₹${item.maintenance.toLocaleString()}/year</td>
-                    <td>
-                        <button class="action-btn delete-btn" data-id="${item.id}">Delete</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-            
-            // Add event listeners to delete buttons
-            tbody.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    deleteMachinery(id);
-                });
-            });
-        }
-
-        function deleteMachinery(id) {
-            if (!confirm('Are you sure you want to delete this machinery record?')) return;
-            
-            // Remove machinery
-            userData.machinery = userData.machinery.filter(m => m.id !== id);
-            
-            // Save and update
-            saveUserData();
-            updateMachineryTable();
-            
-            showSuccess('Machinery record deleted successfully!');
-        }
-
-        function updateDashboard() {
-            // Calculate financial summary
-            const totalExpenses = userData.expenses.reduce((sum, expense) => sum + expense.amount, 0);
-            const totalIncome = userData.income.reduce((sum, income) => sum + income.amount, 0);
-            const netProfit = totalIncome - totalExpenses;
-            
-            // Update financial summary
-            document.querySelector('.financial-item.income .financial-value').textContent = `₹${totalIncome.toLocaleString()}`;
-            document.querySelector('.financial-item.expense .financial-value').textContent = `₹${totalExpenses.toLocaleString()}`;
-            document.querySelector('.financial-item.profit .financial-value').textContent = `₹${netProfit.toLocaleString()}`;
-            
-            // Update active crops
-            const activeCropsContainer = document.getElementById('activeCrops');
-            const activeCrops = userData.crops.filter(crop => crop.status === 'growing');
-            
-            if (activeCrops.length === 0) {
-                activeCropsContainer.innerHTML = '<p>No active crops. Add your first crop to get started.</p>';
+    function changeSection(section) {
+        // Update navigation
+        navItems.forEach(item => {
+            if (item.getAttribute('data-section') === section) {
+                item.classList.add('active');
             } else {
-                activeCropsContainer.innerHTML = '';
-                activeCrops.forEach(crop => {
-                    const cropEl = document.createElement('div');
-                    cropEl.className = 'crop-card';
-                    cropEl.innerHTML = `
-                        <h4>${crop.type}</h4>
-                        <p>${crop.acres} acres | Sown on ${crop.sowingDate}</p>
-                        <p>Expected yield: ${crop.expectedYield} kg/acre</p>
-                    `;
-                    activeCropsContainer.appendChild(cropEl);
-                });
-            }
-            
-            // Update recent activities
-            const recentActivitiesContainer = document.getElementById('recentActivities');
-            const allActivities = [
-                ...userData.expenses.map(expense => ({
-                    type: 'expense',
-                    text: `Added expense of ₹${expense.amount} for ${expense.category}`,
-                    date: expense.date
-                })),
-                ...userData.income.map(income => ({
-                    type: 'income',
-                    text: `Added income of ₹${income.amount} from ${income.source}`,
-                    date: income.date
-                })),
-                ...userData.crops.map(crop => ({
-                    type: 'crop',
-                    text: `Added ${crop.type} crop on ${crop.acres} acres`,
-                    date: crop.sowingDate
-                }))
-            ];
-            
-            // Sort by date (newest first)
-            allActivities.sort((a, b) => new Date(b.date) - new Date(a.date));
-            
-            if (allActivities.length === 0) {
-                recentActivitiesContainer.innerHTML = '<p>No recent activities.</p>';
-            } else {
-                recentActivitiesContainer.innerHTML = '';
-                const ul = document.createElement('ul');
-                
-                allActivities.slice(0, 5).forEach(activity => {
-                    const li = document.createElement('li');
-                    li.innerHTML = `
-                        <p>${activity.text}</p>
-                        <small>${activity.date}</small>
-                    `;
-                    ul.appendChild(li);
-                });
-                
-                recentActivitiesContainer.appendChild(ul);
-            }
-        }
-
-        function logout() {
-            auth.signOut().then(() => {
-                // Show login container and hide app container
-                loginContainer.style.display = 'flex';
-                appContainer.style.display = 'none';
-                
-                // Reset login form
-                changeStep(step2, step1);
-                phoneNumberInput.value = '';
-                otpInputs.forEach(input => input.value = '');
-            });
-        }
-
-        // Initialize recaptcha
-        window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('sendOtpBtn', {
-            size: 'invisible',
-            callback: function(response) {
-                // reCAPTCHA solved, allow signInWithPhoneNumber.
-                sendOtp();
+                item.classList.remove('active');
             }
         });
-    </script>
+
+        // Show selected section
+        sections.forEach(sec => {
+            if (sec.id === `${section}-section`) {
+                sec.classList.add('active');
+            } else {
+                sec.classList.remove('active');
+            }
+        });
+
+        // If crops section is selected, update crop dropdowns
+        if (section === 'financials') {
+            updateCropDropdowns();
+        }
+    }
+
+    function updateCropDropdowns() {
+        // Clear existing options
+        while (expenseCrop.options.length > 1) {
+            expenseCrop.remove(1);
+        }
+        while (incomeCrop.options.length > 1) {
+            incomeCrop.remove(1);
+        }
+
+        // Add crops to dropdowns
+        userData.crops.forEach(crop => {
+            const option = document.createElement('option');
+            option.value = crop.id;
+            option.textContent = `${crop.type} (${crop.acres} acres)`;
+            
+            expenseCrop.appendChild(option.cloneNode(true));
+            incomeCrop.appendChild(option);
+        });
+    }
+
+    function startCountdown() {
+        clearInterval(countdownTimer);
+        timeLeft = 120;
+        updateCountdown();
+        
+        countdownTimer = setInterval(() => {
+            timeLeft--;
+            updateCountdown();
+            
+            if (timeLeft <= 0) {
+                clearInterval(countdownTimer);
+                countdown.textContent = "OTP expired";
+                countdown.style.color = "#d32f2f";
+            }
+        }, 1000);
+    }
+
+    function updateCountdown() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        countdown.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function sendOtp() {
+        const phoneNumber = phoneNumberInput.value.trim();
+        const countryCode = countryCodeSelect.value;
+        
+        if (!phoneNumber) {
+            showError('Please enter your phone number');
+            return;
+        }
+        
+        if (!/^\d{10}$/.test(phoneNumber)) {
+            showError('Please enter a valid 10-digit phone number');
+            return;
+        }
+        
+        const fullPhoneNumber = countryCode + phoneNumber;
+        
+        // Show loading state
+        sendOtpBtn.textContent = 'Sending...';
+        sendOtpBtn.disabled = true;
+        
+        // Firebase phone authentication
+        auth.signInWithPhoneNumber(fullPhoneNumber, window.recaptchaVerifier)
+            .then((result) => {
+                confirmationResult = result;
+                phoneNumberDisplay.textContent = fullPhoneNumber;
+                changeStep(step1, step2);
+                startCountdown();
+                showSuccess('OTP sent successfully!');
+            })
+            .catch((error) => {
+                console.error('Error sending OTP:', error);
+                showError('Failed to send OTP. Please try again.');
+            })
+            .finally(() => {
+                sendOtpBtn.textContent = 'Send OTP';
+                sendOtpBtn.disabled = false;
+            });
+    }
+
+    function verifyOtp() {
+        let otp = '';
+        otpInputs.forEach(input => {
+            otp += input.value;
+        });
+        
+        if (otp.length !== 6) {
+            showError('Please enter the complete 6-digit OTP');
+            return;
+        }
+        
+        // Show loading state
+        verifyOtpBtn.textContent = 'Verifying...';
+        verifyOtpBtn.disabled = true;
+        
+        confirmationResult.confirm(otp)
+            .then((result) => {
+                // User signed in successfully
+                const user = result.user;
+                showSuccess('Login successful!');
+                
+                // Hide login container and show app container
+                loginContainer.style.display = 'none';
+                appContainer.style.display = 'block';
+                
+                // Load user data from localStorage or initialize
+                loadUserData();
+            })
+            .catch((error) => {
+                console.error('Error verifying OTP:', error);
+                showError('Invalid OTP. Please try again.');
+            })
+            .finally(() => {
+                verifyOtpBtn.textContent = 'Verify & Login';
+                verifyOtpBtn.disabled = false;
+            });
+    }
+
+    function resendOtp(e) {
+        e.preventDefault();
+        
+        if (timeLeft > 0) {
+            showError(`Please wait ${timeLeft} seconds before requesting a new OTP`);
+            return;
+        }
+        
+        sendOtp();
+    }
+
+    function changeNumber() {
+        changeStep(step2, step1);
+        clearInterval(countdownTimer);
+        // Reset OTP inputs
+        otpInputs.forEach(input => {
+            input.value = '';
+        });
+    }
+
+    function changeStep(currentStep, nextStep) {
+        currentStep.classList.remove('active');
+        nextStep.classList.add('active');
+    }
+
+    function loadUserData() {
+        const savedData = localStorage.getItem('farmProUserData');
+        if (savedData) {
+            userData = JSON.parse(savedData);
+            updateDashboard();
+            updateCropsTable();
+            updateFinancialTable();
+            updateLivestockTable();
+            updateMachineryTable();
+        } else {
+            // Initialize with empty data
+            userData = {
+                profile: {},
+                crops: [],
+                expenses: [],
+                income: [],
+                funding: [],
+                livestock: [],
+                machinery: []
+            };
+        }
+    }
+
+    function saveUserData() {
+        localStorage.setItem('farmProUserData', JSON.stringify(userData));
+    }
+
+    function addCrop() {
+        const cropType = document.getElementById('cropType').value;
+        const acres = document.getElementById('acres').value;
+        const sowingDate = document.getElementById('sowingDate').value;
+        const duration = document.getElementById('durationSlider').value;
+        const expectedYield = document.getElementById('expectedYield').value;
+        
+        if (!cropType || !acres || !sowingDate || !expectedYield) {
+            showError('Please fill all the fields');
+            return;
+        }
+        
+        const cropId = Date.now().toString();
+        
+        // Add crop to userData
+        userData.crops.push({
+            id: cropId,
+            type: cropType,
+            acres: parseFloat(acres),
+            sowingDate: sowingDate,
+            duration: parseInt(duration),
+            expectedYield: parseFloat(expectedYield),
+            actualYield: 0,
+            status: 'growing',
+            harvestDate: ''
+        });
+        
+        // Save data
+        saveUserData();
+        
+        // Update UI
+        updateCropsTable();
+        updateDashboard();
+        
+        // Reset form
+        document.getElementById('acres').value = '';
+        document.getElementById('sowingDate').value = '';
+        document.getElementById('durationSlider').value = 120;
+        document.getElementById('durationValue').textContent = '120';
+        document.getElementById('expectedYield').value = '';
+        cropItems.forEach(item => item.classList.remove('selected'));
+        selectedCrop = '';
+        
+        showSuccess('Crop added successfully!');
+    }
+
+    function updateCropsTable() {
+        const tbody = cropsTable.querySelector('tbody');
+        tbody.innerHTML = '';
+        
+        userData.crops.forEach(crop => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${crop.type}</td>
+                <td>${crop.acres}</td>
+                <td>${crop.sowingDate}</td>
+                <td>${crop.duration} days</td>
+                <td>${crop.status}</td>
+                <td>
+                    <button class="action-btn edit-btn" data-id="${crop.id}">Edit</button>
+                    <button class="action-btn delete-btn" data-id="${crop.id}">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+        // Add event listeners to action buttons
+        tbody.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const cropId = this.getAttribute('data-id');
+                editCrop(cropId);
+            });
+        });
+        
+        tbody.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const cropId = this.getAttribute('data-id');
+                deleteCrop(cropId);
+            });
+        });
+    }
+
+    function editCrop(cropId) {
+        // Find the crop
+        const crop = userData.crops.find(c => c.id === cropId);
+        if (!crop) return;
+        
+        // For simplicity, we'll just create a prompt to edit yield and status
+        const newYield = prompt('Enter actual yield (kg per acre):', crop.actualYield || crop.expectedYield);
+        if (newYield === null) return;
+        
+        const newStatus = prompt('Enter status (growing/harvested):', crop.status);
+        if (newStatus === null) return;
+        
+        // Update crop
+        crop.actualYield = parseFloat(newYield) || 0;
+        crop.status = newStatus;
+        
+        if (newStatus === 'harvested' && !crop.harvestDate) {
+            crop.harvestDate = new Date().toISOString().split('T')[0];
+        }
+        
+        // Save and update
+        saveUserData();
+        updateCropsTable();
+        updateDashboard();
+        
+        showSuccess('Crop updated successfully!');
+    }
+
+    function deleteCrop(cropId) {
+        if (!confirm('Are you sure you want to delete this crop?')) return;
+        
+        // Remove crop
+        userData.crops = userData.crops.filter(c => c.id !== cropId);
+        
+        // Save and update
+        saveUserData();
+        updateCropsTable();
+        updateDashboard();
+        
+        showSuccess('Crop deleted successfully!');
+    }
+
+    function addExpense() {
+        const amount = document.getElementById('expenseAmount').value;
+        const date = document.getElementById('expenseDate').value;
+        const cropId = document.getElementById('expenseCrop').value;
+        const notes = document.getElementById('expenseNotes').value;
+        
+        if (!selectedExpense || !amount || !date) {
+            showError('Please select a category and enter amount and date');
+            return;
+        }
+        
+        const expenseId = Date.now().toString();
+        
+        // Add expense to userData
+        userData.expenses.push({
+            id: expenseId,
+            category: selectedExpense,
+            amount: parseFloat(amount),
+            date: date,
+            cropId: cropId || null,
+            notes: notes
+        });
+        
+        // Save data
+        saveUserData();
+        
+        // Update UI
+        updateFinancialTable();
+        updateDashboard();
+        
+        // Reset form
+        document.getElementById('expenseAmount').value = '';
+        document.getElementById('expenseDate').value = '';
+        document.getElementById('expenseCrop').value = '';
+        document.getElementById('expenseNotes').value = '';
+        expenseItems.forEach(item => item.classList.remove('selected'));
+        selectedExpense = '';
+        
+        showSuccess('Expense added successfully!');
+    }
+
+    function addIncome() {
+        const source = document.getElementById('incomeSource').value;
+        const amount = document.getElementById('incomeAmount').value;
+        const date = document.getElementById('incomeDate').value;
+        const cropId = document.getElementById('incomeCrop').value;
+        const notes = document.getElementById('incomeNotes').value;
+        
+        if (!amount || !date) {
+            showError('Please enter amount and date');
+            return;
+        }
+        
+        const incomeId = Date.now().toString();
+        
+        // Add income to userData
+        userData.income.push({
+            id: incomeId,
+            source: source,
+            amount: parseFloat(amount),
+            date: date,
+            cropId: cropId || null,
+            notes: notes
+        });
+        
+        // Save data
+        saveUserData();
+        
+        // Update UI
+        updateFinancialTable();
+        updateDashboard();
+        
+        // Reset form
+        document.getElementById('incomeAmount').value = '';
+        document.getElementById('incomeDate').value = '';
+        document.getElementById('incomeCrop').value = '';
+        document.getElementById('incomeNotes').value = '';
+        
+        showSuccess('Income added successfully!');
+    }
+
+    function updateFinancialTable() {
+        const tbody = financialTable.querySelector('tbody');
+        tbody.innerHTML = '';
+        
+        // Combine expenses and income
+        const allTransactions = [
+            ...userData.expenses.map(expense => ({ ...expense, type: 'expense' })),
+            ...userData.income.map(income => ({ ...income, type: 'income' }))
+        ];
+        
+        // Sort by date (newest first)
+        allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        allTransactions.forEach(transaction => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${transaction.date}</td>
+                <td>${transaction.type === 'expense' ? 'Expense' : 'Income'}</td>
+                <td>${transaction.type === 'expense' ? transaction.category : transaction.source}</td>
+                <td>${transaction.type === 'expense' ? '-₹' : '₹'}${transaction.amount.toLocaleString()}</td>
+                <td>${transaction.notes || '-'}</td>
+                <td>
+                    <button class="action-btn delete-btn" data-type="${transaction.type}" data-id="${transaction.id}">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+        // Add event listeners to delete buttons
+        tbody.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const type = this.getAttribute('data-type');
+                const id = this.getAttribute('data-id');
+                deleteFinancialRecord(type, id);
+            });
+        });
+    }
+
+    function deleteFinancialRecord(type, id) {
+        if (!confirm('Are you sure you want to delete this record?')) return;
+        
+        if (type === 'expense') {
+            userData.expenses = userData.expenses.filter(e => e.id !== id);
+        } else {
+            userData.income = userData.income.filter(i => i.id !== id);
+        }
+        
+        // Save and update
+        saveUserData();
+        updateFinancialTable();
+        updateDashboard();
+        
+        showSuccess('Record deleted successfully!');
+    }
+
+    function addFundingSource() {
+        const fundingSource = document.createElement('div');
+        fundingSource.className = 'funding-source';
+        fundingSource.innerHTML = `
+            <div class="funding-header">
+                <select class="form-control funding-type" style="max-width: 200px;">
+                    <option value="own">Own Funds</option>
+                    <option value="bank">Bank Loan</option>
+                    <option value="family">Family/Friends Loan</option>
+                    <option value="govt">Government Subsidy</option>
+                    <option value="other">Other Source</option>
+                </select>
+                <span class="remove-btn">×</span>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Amount (₹)</label>
+                    <input type="number" inputmode="numeric" pattern="[0-9]*" class="form-control funding-amount" placeholder="Enter amount" min="0">
+                </div>
+                <div class="form-group">
+                    <label>Interest Rate (%)</label>
+                    <input type="number" inputmode="numeric" pattern="[0-9]*" class="form-control funding-rate" placeholder="Enter rate" min="0" step="0.1">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Date Taken</label>
+                <input type="text" class="form-control funding-date" placeholder="Select date">
+            </div>
+        `;
+        
+        // Initialize date picker for the new funding source
+        flatpickr(fundingSource.querySelector('.funding-date'), {
+            dateFormat: "Y-m-d",
+            maxDate: "today"
+        });
+        
+        // Add event listener for the remove button
+        fundingSource.querySelector('.remove-btn').addEventListener('click', function() {
+            fundingSource.remove();
+        });
+        
+        // Add event listener for funding type change
+        fundingSource.querySelector('.funding-type').addEventListener('change', function() {
+            const rateInput = fundingSource.querySelector('.funding-rate');
+            if (this.value === 'own') {
+                rateInput.value = 0;
+                rateInput.disabled = true;
+            } else {
+                rateInput.disabled = false;
+            }
+        });
+        
+        fundingSources.appendChild(fundingSource);
+    }
+
+    function addLivestock() {
+        const type = document.getElementById('livestockType').value;
+        const count = document.getElementById('livestockCount').value;
+        const purchaseDate = document.getElementById('livestockPurchaseDate').value;
+        const cost = document.getElementById('livestockCost').value;
+        const notes = document.getElementById('livestockNotes').value;
+        
+        if (!count || !purchaseDate || !cost) {
+            showError('Please fill all required fields');
+            return;
+        }
+        
+        const livestockId = Date.now().toString();
+        
+        // Add livestock to userData
+        userData.livestock.push({
+            id: livestockId,
+            type: type,
+            count: parseInt(count),
+            purchaseDate: purchaseDate,
+            cost: parseFloat(cost),
+            notes: notes
+        });
+        
+        // Save data
+        saveUserData();
+        
+        // Update UI
+        updateLivestockTable();
+        
+        // Reset form
+        document.getElementById('livestockCount').value = '';
+        document.getElementById('livestockPurchaseDate').value = '';
+        document.getElementById('livestockCost').value = '';
+        document.getElementById('livestockNotes').value = '';
+        
+        showSuccess('Livestock added successfully!');
+    }
+
+    function updateLivestockTable() {
+        const tbody = livestockTable.querySelector('tbody');
+        tbody.innerHTML = '';
+        
+        userData.livestock.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.type}</td>
+                <td>${item.count}</td>
+                <td>${item.purchaseDate}</td>
+                <td>₹${item.cost.toLocaleString()}</td>
+                <td>
+                    <button class="action-btn delete-btn" data-id="${item.id}">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+        // Add event listeners to delete buttons
+        tbody.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                deleteLivestock(id);
+            });
+        });
+    }
+
+    function deleteLivestock(id) {
+        if (!confirm('Are you sure you want to delete this livestock record?')) return;
+        
+        // Remove livestock
+        userData.livestock = userData.livestock.filter(l => l.id !== id);
+        
+        // Save and update
+        saveUserData();
+        updateLivestockTable();
+        
+        showSuccess('Livestock record deleted successfully!');
+    }
+
+    function addMachinery() {
+        const type = document.getElementById('machineryType').value;
+        const cost = document.getElementById('machineryCost').value;
+        const purchaseDate = document.getElementById('machineryPurchaseDate').value;
+        const maintenance = document.getElementById('machineryMaintenance').value;
+        const notes = document.getElementById('machineryNotes').value;
+        
+        if (!cost || !purchaseDate) {
+            showError('Please fill all required fields');
+            return;
+        }
+        
+        const machineryId = Date.now().toString();
+        
+        // Add machinery to userData
+        userData.machinery.push({
+            id: machineryId,
+            type: type,
+            cost: parseFloat(cost),
+            purchaseDate: purchaseDate,
+            maintenance: maintenance ? parseFloat(maintenance) : 0,
+            notes: notes
+        });
+        
+        // Save data
+        saveUserData();
+        
+        // Update UI
+        updateMachineryTable();
+        
+        // Reset form
+        document.getElementById('machineryCost').value = '';
+        document.getElementById('machineryPurchaseDate').value = '';
+        document.getElementById('machineryMaintenance').value = '';
+        document.getElementById('machineryNotes').value = '';
+        
+        showSuccess('Machinery added successfully!');
+    }
+
+    function updateMachineryTable() {
+        const tbody = machineryTable.querySelector('tbody');
+        tbody.innerHTML = '';
+        
+        userData.machinery.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.type}</td>
+                <td>₹${item.cost.toLocaleString()}</td>
+                <td>${item.purchaseDate}</td>
+                <td>₹${item.maintenance.toLocaleString()}/year</td>
+                <td>
+                    <button class="action-btn delete-btn" data-id="${item.id}">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        
+        // Add event listeners to delete buttons
+        tbody.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                deleteMachinery(id);
+            });
+        });
+    }
+
+    function deleteMachinery(id) {
+        if (!confirm('Are you sure you want to delete this machinery record?')) return;
+        
+        // Remove machinery
+        userData.machinery = userData.machinery.filter(m => m.id !== id);
+        
+        // Save and update
+        saveUserData();
+        updateMachineryTable();
+        
+        showSuccess('Machinery record deleted successfully!');
+    }
+
+    function updateDashboard() {
+        // Calculate financial summary
+        const totalExpenses = userData.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+        const totalIncome = userData.income.reduce((sum, income) => sum + income.amount, 0);
+        const netProfit = totalIncome - totalExpenses;
+        
+        // Update financial summary
+        document.querySelector('.financial-item.income .financial-value').textContent = `₹${totalIncome.toLocaleString()}`;
+        document.querySelector('.financial-item.expense .financial-value').textContent = `₹${totalExpenses.toLocaleString()}`;
+        document.querySelector('.financial-item.profit .financial-value').textContent = `₹${netProfit.toLocaleString()}`;
+        
+        // Update active crops
+        const activeCropsContainer = document.getElementById('activeCrops');
+        const activeCrops = userData.crops.filter(crop => crop.status === 'growing');
+        
+        if (activeCrops.length === 0) {
+            activeCropsContainer.innerHTML = '<p>No active crops. Add your first crop to get started.</p>';
+        } else {
+            activeCropsContainer.innerHTML = '';
+            activeCrops.forEach(crop => {
+                const cropEl = document.createElement('div');
+                cropEl.className = 'crop-card';
+                cropEl.innerHTML = `
+                    <h4>${crop.type}</h4>
+                    <p>${crop.acres} acres | Sown on ${crop.sowingDate}</p>
+                    <p>Expected yield: ${crop.expectedYield} kg/acre</p>
+                `;
+                activeCropsContainer.appendChild(cropEl);
+            });
+        }
+        
+        // Update recent activities
+        const recentActivitiesContainer = document.getElementById('recentActivities');
+        const allActivities = [
+            ...userData.expenses.map(expense => ({
+                type: 'expense',
+                text: `Added expense of ₹${expense.amount} for ${expense.category}`,
+                date: expense.date
+            })),
+            ...userData.income.map(income => ({
+                type: 'income',
+                text: `Added income of ₹${income.amount} from ${income.source}`,
+                date: income.date
+            })),
+            ...userData.crops.map(crop => ({
+                type: 'crop',
+                text: `Added ${crop.type} crop on ${crop.acres} acres`,
+                date: crop.sowingDate
+            }))
+        ];
+        
+        // Sort by date (newest first)
+        allActivities.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        if (allActivities.length === 0) {
+            recentActivitiesContainer.innerHTML = '<p>No recent activities.</p>';
+        } else {
+            recentActivitiesContainer.innerHTML = '';
+            const ul = document.createElement('ul');
+            
+            allActivities.slice(0, 5).forEach(activity => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <p>${activity.text}</p>
+                    <small>${activity.date}</small>
+                `;
+                ul.appendChild(li);
+            });
+            
+            recentActivitiesContainer.appendChild(ul);
+        }
+    }
+
+    function logout() {
+        auth.signOut().then(() => {
+            // Show login container and hide app container
+            loginContainer.style.display = 'flex';
+            appContainer.style.display = 'none';
+            
+            // Reset login form
+            changeStep(step2, step1);
+            phoneNumberInput.value = '';
+            otpInputs.forEach(input => input.value = '');
+        });
+    }
+
+    // Initialize recaptcha
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('sendOtpBtn', {
+        size: 'invisible',
+        callback: function(response) {
+            // reCAPTCHA solved, allow signInWithPhoneNumber.
+            sendOtp();
+        }
+    });
+</script>
 </body>
 </html>
