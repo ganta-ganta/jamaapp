@@ -1,0 +1,3382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmPro - Complete Agricultural Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signInWithPhoneNumber, RecaptchaVerifier, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, collection, addDoc, getDocs, query, where, orderBy, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase configuration - Replace with your actual config
+         const firebaseConfig = {
+
+    apiKey: "AIzaSyCdfgtj1gvZ-bkomW1V40h-4tyUPHy_peo",
+
+    authDomain: "jama-3f427.firebaseapp.com",
+
+    projectId: "jama-3f427",
+
+    storageBucket: "jama-3f427.firebasestorage.app",
+
+    messagingSenderId: "897112470741",
+
+    appId: "1:897112470741:web:ee6388f0faae459fcb1e5c",
+
+    measurementId: "G-NN1BRV0QKS"
+
+  };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Make Firebase available globally
+        window.firebaseAuth = auth;
+        window.firebaseDb = db;
+        window.firebaseOperations = {
+            signInWithEmailAndPassword,
+            createUserWithEmailAndPassword,
+            signInWithPopup,
+            GoogleAuthProvider,
+            signInWithPhoneNumber,
+            RecaptchaVerifier,
+            signOut,
+            onAuthStateChanged,
+            doc,
+            setDoc,
+            getDoc,
+            updateDoc,
+            deleteDoc,
+            collection,
+            addDoc,
+            getDocs,
+            query,
+            where,
+            orderBy,
+            onSnapshot
+        };
+
+        // Initialize app after Firebase is loaded
+        window.initializeFirebaseApp();
+    </script>
+
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #4caf50;
+            --primary-dark: #1b5e20;
+            --secondary: #ffa000;
+            --secondary-light: #ffc107;
+            --secondary-dark: #ff6f00;
+            --text-light: #f5f5f5;
+            --text-dark: #333;
+            --bg-light: #f8f9fa;
+            --success: #388e3c;
+            --warning: #f57c00;
+            --danger: #d32f2f;
+            --info: #1976d2;
+            --gray: #78909c;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f5f7fa;
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 100vw;
+            background: white;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            z-index: 2000;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .connection-status.online {
+            background: var(--success);
+            color: white;
+        }
+
+        .connection-status.offline {
+            background: var(--danger);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            font-size: 1.8rem;
+        }
+
+        .logo h1 {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .content-container {
+            padding: 0.5rem;
+            padding-bottom: 80px;
+            min-height: calc(100vh - 60px);
+        }
+
+        .auth-container {
+            max-width: 100%;
+            padding: 1rem;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .auth-tab.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+            background: rgba(46, 125, 50, 0.05);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .input-group .form-control {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+        }
+
+        .btn-google {
+            background: #4285f4;
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-info {
+            background: var(--info);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: var(--border-radius);
+            margin: 0.5rem;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+            transition: var(--transition);
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
+        .success-message {
+            background: #e8f5e9;
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .warning-message {
+            background: #fff3e0;
+            color: var(--warning);
+            border-left: 4px solid var(--warning);
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: var(--transition);
+        }
+
+        .dashboard-card:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+
+        .financial-summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .financial-item {
+            text-align: center;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            background: white;
+            box-shadow: var(--box-shadow);
+        }
+
+        .financial-item.income {
+            border-left: 4px solid var(--success);
+        }
+
+        .financial-item.expense {
+            border-left: 4px solid var(--danger);
+        }
+
+        .financial-item.profit {
+            border-left: 4px solid var(--secondary);
+        }
+
+        .financial-item.loan {
+            border-left: 4px solid var(--info);
+        }
+
+        .financial-value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin: 0.5rem 0;
+        }
+
+        .financial-label {
+            font-size: 0.8rem;
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        .mobile-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            z-index: 1000;
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--gray);
+            font-size: 0.7rem;
+            transition: var(--transition);
+            padding: 4px;
+            border-radius: 8px;
+            min-width: 50px;
+        }
+
+        .mobile-nav-item.active {
+            color: var(--primary);
+            background: rgba(46, 125, 50, 0.1);
+        }
+
+        .mobile-nav-item i {
+            font-size: 1.1rem;
+            margin-bottom: 2px;
+        }
+
+        .floating-action-button {
+            position: fixed;
+            bottom: 90px;
+            right: 15px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--secondary);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 16px rgba(255, 160, 0, 0.3);
+            z-index: 1000;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .floating-action-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 160, 0, 0.4);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            backdrop-filter: blur(2px);
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            width: 95%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            color: var(--danger);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        .selectable-item {
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            padding: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .selectable-item:hover {
+            border-color: var(--primary);
+            transform: scale(1.02);
+        }
+
+        .selectable-item.selected {
+            border-color: var(--primary);
+            background: rgba(46, 125, 50, 0.1);
+        }
+
+        .selectable-item i {
+            font-size: 1.5rem;
+            margin-bottom: 6px;
+            color: var(--primary);
+        }
+
+        .selectable-item div {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.8rem;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .calendar-month {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 0.8rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+        }
+
+        .calendar-month:hover {
+            background: #e8f5e9;
+            border-color: var(--primary);
+        }
+
+        .calendar-month.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .month-name {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .month-activities {
+            font-size: 0.7rem;
+            color: var(--gray);
+        }
+
+        .calendar-month.active .month-activities {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem;
+            border-bottom: 1px solid #f0f0f0;
+            transition: var(--transition);
+        }
+
+        .transaction-item:hover {
+            background: #f8f9fa;
+        }
+
+        .transaction-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.8rem;
+        }
+
+        .transaction-icon.income {
+            background: rgba(56, 142, 60, 0.1);
+            color: var(--success);
+        }
+
+        .transaction-icon.expense {
+            background: rgba(211, 47, 47, 0.1);
+            color: var(--danger);
+        }
+
+        .transaction-icon.loan {
+            background: rgba(25, 118, 210, 0.1);
+            color: var(--info);
+        }
+
+        .transaction-amount {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .transaction-amount.income {
+            color: var(--success);
+        }
+
+        .transaction-amount.expense {
+            color: var(--danger);
+        }
+
+        .transaction-amount.loan {
+            color: var(--info);
+        }
+
+        .loan-card {
+            border: 2px solid var(--info);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #e3f2fd, white);
+        }
+
+        .loan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .loan-status {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .loan-status.active {
+            background: var(--info);
+            color: white;
+        }
+
+        .loan-status.completed {
+            background: var(--success);
+            color: white;
+        }
+
+        .loan-status.overdue {
+            background: var(--danger);
+            color: white;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 1rem;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .user-info h3 {
+            margin-bottom: 0.3rem;
+            color: var(--primary-dark);
+        }
+
+        .user-info p {
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: var(--box-shadow);
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .quick-action-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+
+        .quick-action {
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .quick-action:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .quick-action i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .quick-action span {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .calendar-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .calendar-nav {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--primary);
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .year-display {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .recaptcha-container {
+            margin: 1rem 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        /* Mobile specific optimizations */
+        @media (max-width: 768px) {
+            .content-container {
+                padding: 0.3rem;
+                padding-bottom: 80px;
+            }
+            
+            .financial-summary {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.3rem;
+            }
+            
+            .grid-3 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .calendar-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.3rem;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr;
+                gap: 0.3rem;
+            }
+
+            .quick-action-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.3rem;
+            }
+
+            .modal-content {
+                width: 98%;
+                padding: 0.8rem;
+            }
+
+            .dashboard-card {
+                padding: 0.8rem;
+                margin-bottom: 0.8rem;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e1e5e9;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            transition: width 0.3s ease;
+        }
+
+        .reminder-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">
+        <i class="fas fa-wifi"></i>
+        <span>Online</span>
+    </div>
+
+    <div class="app-container">
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+                <h1>FarmPro</h1>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="error-message message" id="errorMessage"></div>
+        <div class="success-message message" id="successMessage"></div>
+        <div class="warning-message message" id="warningMessage"></div>
+
+        <!-- Authentication Page -->
+        <div id="authPage" class="content-container">
+            <div class="auth-container">
+                <div class="auth-tabs">
+                    <div class="auth-tab active" data-auth="email">
+                        <i class="fas fa-envelope"></i> Email
+                    </div>
+                    <div class="auth-tab" data-auth="phone">
+                        <i class="fas fa-mobile-alt"></i> Phone
+                    </div>
+                    <div class="auth-tab" data-auth="google">
+                        <i class="fab fa-google"></i> Google
+                    </div>
+                </div>
+
+                <!-- Email Authentication -->
+                <div class="auth-form active" id="emailAuth">
+                    <div class="form-group">
+                        <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" class="form-control" id="email" placeholder="farmer@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password"><i class="fas fa-lock"></i> Password</label>
+                        <input type="password" class="form-control" id="password" placeholder="Enter password" required>
+                    </div>
+                    <button class="btn btn-primary btn-full" id="emailLoginBtn">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <button class="btn btn-outline btn-full" id="emailRegisterBtn" style="margin-top: 0.5rem;">
+                        <i class="fas fa-user-plus"></i> Register
+                    </button>
+                </div>
+
+                <!-- Phone Authentication -->
+                <div class="auth-form" id="phoneAuth">
+                    <div class="form-group">
+                        <label for="phoneNumber"><i class="fas fa-mobile-alt"></i> Phone Number</label>
+                        <div class="input-group">
+                            <select class="form-control" id="countryCode" style="max-width: 80px;">
+                                <option value="+91">🇮🇳 +91</option>
+                                <option value="+1">🇺🇸 +1</option>
+                                <option value="+44">🇬🇧 +44</option>
+                            </select>
+                            <input type="tel" class="form-control" id="phoneNumber" placeholder="9876543210" inputmode="numeric" required>
+                        </div>
+                    </div>
+                    <div class="recaptcha-container" id="recaptcha-container"></div>
+                    <button class="btn btn-primary btn-full" id="sendOtpBtn">
+                        <i class="fas fa-paper-plane"></i> Send OTP
+                    </button>
+                </div>
+
+                <!-- Google Authentication -->
+                <div class="auth-form" id="googleAuth">
+                    <div style="text-align: center; padding: 2rem;">
+                        <i class="fab fa-google" style="font-size: 3rem; color: #4285f4; margin-bottom: 1rem;"></i>
+                        <p style="margin-bottom: 1.5rem; color: var(--gray);">Sign in with your Google account</p>
+                        <button class="btn btn-google btn-full" id="googleSignInBtn">
+                            <i class="fab fa-google"></i> Continue with Google
+                        </button>
+                    </div>
+                </div>
+
+                <!-- OTP Verification -->
+                <div class="auth-form" id="otpVerification" style="display: none;">
+                    <p style="text-align: center; margin-bottom: 1.5rem;">
+                        Enter OTP sent to <span id="phoneDisplay"></span>
+                    </p>
+                    <div style="display: flex; gap: 8px; justify-content: center; margin: 1.5rem 0;">
+                        <input type="text" class="form-control otp-input" maxlength="1" style="width: 45px; text-align: center;" inputmode="numeric">
+                        <input type="text" class="form-control otp-input" maxlength="1" style="width: 45px; text-align: center;" inputmode="numeric">
+                        <input type="text" class="form-control otp-input" maxlength="1" style="width: 45px; text-align: center;" inputmode="numeric">
+                        <input type="text" class="form-control otp-input" maxlength="1" style="width: 45px; text-align: center;" inputmode="numeric">
+                        <input type="text" class="form-control otp-input" maxlength="1" style="width: 45px; text-align: center;" inputmode="numeric">
+                        <input type="text" class="form-control otp-input" maxlength="1" style="width: 45px; text-align: center;" inputmode="numeric">
+                    </div>
+                    <div style="text-align: center; margin: 1rem 0; font-weight: 600; color: var(--primary);" id="countdown">02:00</div>
+                    <button class="btn btn-primary btn-full" id="verifyOtpBtn">
+                        <i class="fas fa-check"></i> Verify OTP
+                    </button>
+                    <button class="btn btn-outline btn-full" id="backToPhoneBtn" style="margin-top: 0.5rem;">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Page -->
+        <div id="registrationPage" class="content-container" style="display: none;">
+            <h2 style="text-align: center; margin-bottom: 1.5rem; color: var(--primary);">
+                <i class="fas fa-user-plus"></i> Complete Profile
+            </h2>
+            
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Full Name</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="regFirstName" placeholder="First Name" required>
+                    <input type="text" class="form-control" id="regLastName" placeholder="Last Name" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-map-marker-alt"></i> Farm Location</label>
+                <input type="text" class="form-control" id="regFarmLocation" placeholder="Village, District, State" required>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-expand-arrows-alt"></i> Total Farm Size</label>
+                <div class="input-group">
+                    <input type="number" class="form-control" id="regFarmAcres" placeholder="Acres" min="0" step="0.1" required>
+                    <input type="number" class="form-control" id="regFarmCents" placeholder="Cents" min="0" max="99">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-seedling"></i> Primary Crops</label>
+                <div class="grid-3" id="primaryCropsGrid">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-full" id="completeRegistrationBtn">
+                <i class="fas fa-check-circle"></i> Complete Registration
+            </button>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="dashboardPage" class="content-container" style="display: none;">
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overview-tab">
+                <div class="financial-summary">
+                    <div class="financial-item income">
+                        <div class="financial-label">Total Income</div>
+                        <div class="financial-value" id="totalIncome">₹0</div>
+                    </div>
+                    <div class="financial-item expense">
+                        <div class="financial-label">Total Expenses</div>
+                        <div class="financial-value" id="totalExpenses">₹0</div>
+                    </div>
+                    <div class="financial-item profit">
+                        <div class="financial-label">Net Profit</div>
+                        <div class="financial-value" id="netProfit">₹0</div>
+                    </div>
+                    <div class="financial-item loan">
+                        <div class="financial-label">Active Loans</div>
+                        <div class="financial-value" id="activeLoans">₹0</div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-lightbulb"></i> Smart Suggestions</h3>
+                    <div id="smartSuggestions">
+                        <!-- AI-powered suggestions will be displayed here -->
+                    </div>
+                </div>
+
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <button class="calendar-nav" id="prevYear">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div class="year-display" id="currentYear">2025</div>
+                        <button class="calendar-nav" id="nextYear">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Calendar will be populated here -->
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-tasks"></i> Today's Activities</h3>
+                    <div id="todaysActivities">
+                        <!-- Today's activities will be displayed here -->
+                    </div>
+                </div>
+
+                <div class="quick-action-grid">
+                    <div class="quick-action" onclick="openModal('transactionModal')">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>Add Transaction</span>
+                    </div>
+                    <div class="quick-action" onclick="openModal('cropModal')">
+                        <i class="fas fa-seedling"></i>
+                        <span>Add Crop</span>
+                    </div>
+                    <div class="quick-action" onclick="openModal('loanModal')">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        <span>Manage Loans</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Crops Tab -->
+            <div class="tab-content" id="crops-tab">
+                <div class="dashboard-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3><i class="fas fa-seedling"></i> Crops</h3>
+                        <button class="btn btn-success btn-small" id="addCropBtn">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+                    
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalCrops">0</div>
+                            <div class="stat-label">Active Crops</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalArea">0</div>
+                            <div class="stat-label">Total Acres</div>
+                        </div>
+                    </div>
+
+                    <div id="cropsList">
+                        <!-- Crops will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transactions Tab -->
+            <div class="tab-content" id="transactions-tab">
+                <div class="dashboard-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3><i class="fas fa-receipt"></i> Transactions</h3>
+                        <button class="btn btn-success btn-small" id="addTransactionBtn">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-value" id="monthlyIncome">₹0</div>
+                            <div class="stat-label">This Month Income</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="monthlyExpenses">₹0</div>
+                            <div class="stat-label">This Month Expenses</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="transactionSearch" placeholder="🔍 Search transactions...">
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                        <button class="btn btn-small btn-outline active" data-period="month">Month</button>
+                        <button class="btn btn-small btn-outline" data-period="year">Year</button>
+                        <button class="btn btn-small btn-outline" data-period="all">All</button>
+                    </div>
+
+                    <div id="transactionsList">
+                        <!-- Transactions will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loans Tab -->
+            <div class="tab-content" id="loans-tab">
+                <div class="dashboard-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3><i class="fas fa-hand-holding-usd"></i> Loan Management</h3>
+                        <button class="btn btn-success btn-small" id="addLoanBtn">
+                            <i class="fas fa-plus"></i> Add
+                        </button>
+                    </div>
+
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalLoansGiven">₹0</div>
+                            <div class="stat-label">Loans Given</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalLoansTaken">₹0</div>
+                            <div class="stat-label">Loans Taken</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="monthlyInterest">₹0</div>
+                            <div class="stat-label">Monthly Interest</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="upcomingRenewals">0</div>
+                            <div class="stat-label">Renewals Due</div>
+                        </div>
+                    </div>
+
+                    <div id="loansList">
+                        <!-- Loans will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calendar Tab -->
+            <div class="tab-content" id="calendar-tab">
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-calendar-alt"></i> Farming Calendar</h3>
+                    
+                    <div class="calendar-header">
+                        <button class="calendar-nav" id="prevYearCalendar">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <div class="year-display" id="calendarYear">2025</div>
+                        <button class="calendar-nav" id="nextYearCalendar">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="calendar-grid" id="farmingCalendarGrid">
+                        <!-- Farming calendar will be populated here -->
+                    </div>
+                </div>
+
+                <div class="dashboard-card" id="monthlyDetails" style="display: none;">
+                    <h3><i class="fas fa-calendar-day"></i> <span id="selectedMonthName">Month</span> Details</h3>
+                    <div id="monthlyActivitiesList">
+                        <!-- Monthly activities will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Tab -->
+            <div class="tab-content" id="user-tab">
+                <div class="user-profile">
+                    <div class="user-avatar" id="userAvatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-info">
+                        <h3 id="userFullName">Farmer Name</h3>
+                        <p id="userEmail">farmer@example.com</p>
+                        <p id="userLocation">Farm Location</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-chart-bar"></i> Farm Statistics</h3>
+                    <div class="stats-row">
+                        <div class="stat-card">
+                            <div class="stat-value" id="userTotalCrops">0</div>
+                            <div class="stat-label">Total Crops</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="userFarmSize">0</div>
+                            <div class="stat-label">Farm Size (Acres)</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="userTotalTransactions">0</div>
+                            <div class="stat-label">Total Transactions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="userJoinDate">-</div>
+                            <div class="stat-label">Member Since</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-cog"></i> Account Settings</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                        <button class="btn btn-outline btn-full" id="exportAllDataBtn">
+                            <i class="fas fa-download"></i> Export All Data
+                        </button>
+                        <button class="btn btn-warning btn-full" id="clearDataBtn">
+                            <i class="fas fa-trash"></i> Clear All Data
+                        </button>
+                        <button class="btn btn-danger btn-full" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-info-circle"></i> About FarmPro</h3>
+                    <p style="color: var(--gray); line-height: 1.5;">
+                        FarmPro helps farmers manage their agricultural operations with advanced features for crop tracking, financial management, and loan administration.
+                    </p>
+                    <p style="color: var(--gray); font-size: 0.8rem; margin-top: 1rem;">
+                        Version 2.0 • Last updated: January 2025
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Transaction Modal -->
+        <div class="modal" id="transactionModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-receipt"></i> Add Transaction</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-exchange-alt"></i> Type</label>
+                    <select class="form-control" id="transactionType" required>
+                        <option value="income">💰 Income</option>
+                        <option value="expense">💸 Expense</option>
+                        <option value="loan-given">🤝 Loan Given</option>
+                        <option value="loan-taken">📋 Loan Taken</option>
+                        <option value="loan-payment">💳 Loan Payment</option>
+                        <option value="interest-received">📈 Interest Received</option>
+                        <option value="interest-paid">📉 Interest Paid</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-tag"></i> Category</label>
+                    <select class="form-control" id="transactionCategory" required>
+                        <!-- Will be populated based on type -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-edit"></i> Description</label>
+                    <input type="text" class="form-control" id="transactionDescription" placeholder="Transaction description" required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-rupee-sign"></i> Amount</label>
+                    <input type="number" class="form-control" id="transactionAmount" placeholder="Enter amount" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-calendar"></i> Date</label>
+                    <input type="date" class="form-control" id="transactionDate" required>
+                </div>
+
+                <div class="form-group" id="cropSelectionGroup" style="display: none;">
+                    <label><i class="fas fa-seedling"></i> Related Crop</label>
+                    <select class="form-control" id="relatedCrop">
+                        <option value="">Select crop (optional)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="loanDetailsGroup" style="display: none;">
+                    <label><i class="fas fa-percentage"></i> Interest Rate (% per year)</label>
+                    <input type="number" class="form-control" id="interestRate" placeholder="Interest rate" min="0" max="100" step="0.1">
+                    
+                    <label style="margin-top: 0.8rem;"><i class="fas fa-calendar-plus"></i> Renewal Date</label>
+                    <input type="date" class="form-control" id="renewalDate">
+                    
+                    <label style="margin-top: 0.8rem;"><i class="fas fa-user"></i> Person/Bank Name</label>
+                    <input type="text" class="form-control" id="loanPerson" placeholder="Name of person or bank">
+                </div>
+
+                <div class="form-group" id="collateralGroup" style="display: none;">
+                    <label><i class="fas fa-shield-alt"></i> Collateral Type</label>
+                    <select class="form-control" id="collateralType">
+                        <option value="">No Collateral</option>
+                        <option value="gold">🏆 Gold</option>
+                        <option value="house">🏠 House</option>
+                        <option value="land">🏞️ Land</option>
+                        <option value="vehicle">🚗 Vehicle</option>
+                        <option value="documents">📄 Documents</option>
+                    </select>
+                    
+                    <label style="margin-top: 0.8rem;"><i class="fas fa-info-circle"></i> Collateral Details</label>
+                    <textarea class="form-control" id="collateralDetails" rows="2" placeholder="Describe the collateral..."></textarea>
+                </div>
+
+                <button class="btn btn-primary btn-full" id="saveTransactionBtn">
+                    <i class="fas fa-save"></i> Save Transaction
+                </button>
+            </div>
+        </div>
+
+        <!-- Add Crop Modal -->
+        <div class="modal" id="cropModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-seedling"></i> <span id="cropModalTitle">Add Crop</span></h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>Crop Type</label>
+                    <div class="grid-3" id="cropTypeGrid">
+                        <!-- Crop types will be populated here -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-expand-arrows-alt"></i> Area</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="cropAcres" placeholder="Acres" min="0" step="0.1" required>
+                        <input type="number" class="form-control" id="cropCents" placeholder="Cents" min="0" max="99">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-calendar"></i> Sowing Date</label>
+                    <input type="date" class="form-control" id="sowingDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-clock"></i> Duration (Days)</label>
+                    <input type="number" class="form-control" id="cropDuration" placeholder="Growth duration" min="30" max="365" value="120" required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-target"></i> Expected Yield (Quintals)</label>
+                    <input type="number" class="form-control" id="expectedYield" placeholder="Expected yield" min="0" step="0.1">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-rupee-sign"></i> Expected Price/Quintal</label>
+                    <input type="number" class="form-control" id="expectedPrice" placeholder="Expected selling price" min="0">
+                </div>
+
+                <button class="btn btn-primary btn-full" id="saveCropBtn">
+                    <i class="fas fa-save"></i> <span id="saveCropBtnText">Save Crop</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Add Loan Modal -->
+        <div class="modal" id="loanModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-hand-holding-usd"></i> Loan Management</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-exchange-alt"></i> Loan Type</label>
+                    <select class="form-control" id="loanType" required>
+                        <option value="given">🤝 Money Lent to Others</option>
+                        <option value="taken">📋 Money Borrowed</option>
+                        <option value="bank">🏦 Bank Loan</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Person/Bank Name</label>
+                    <input type="text" class="form-control" id="loanPersonName" placeholder="Name" required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-rupee-sign"></i> Loan Amount</label>
+                    <input type="number" class="form-control" id="loanAmount" placeholder="Loan amount" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-percentage"></i> Interest Rate (% per year)</label>
+                    <input type="number" class="form-control" id="loanInterestRate" placeholder="Interest rate" min="0" max="100" step="0.1" required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-calendar"></i> Loan Date</label>
+                    <input type="date" class="form-control" id="loanDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-calendar-plus"></i> Renewal/Due Date</label>
+                    <input type="date" class="form-control" id="loanRenewalDate" required>
+                </div>
+
+                <div class="form-group" id="bankLoanGroup" style="display: none;">
+                    <label><i class="fas fa-shield-alt"></i> Collateral Type</label>
+                    <select class="form-control" id="bankCollateralType">
+                        <option value="gold">🏆 Gold</option>
+                        <option value="house">🏠 House/Property</option>
+                        <option value="land">🏞️ Agricultural Land</option>
+                        <option value="vehicle">🚗 Vehicle</option>
+                        <option value="fd">💎 Fixed Deposit</option>
+                        <option value="other">📄 Other Documents</option>
+                    </select>
+                    
+                    <label style="margin-top: 0.8rem;"><i class="fas fa-info-circle"></i> Collateral Details</label>
+                    <textarea class="form-control" id="bankCollateralDetails" rows="2" placeholder="Describe the collateral..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-sticky-note"></i> Notes</label>
+                    <textarea class="form-control" id="loanNotes" rows="2" placeholder="Additional notes..."></textarea>
+                </div>
+
+                <button class="btn btn-primary btn-full" id="saveLoanBtn">
+                    <i class="fas fa-save"></i> Save Loan
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Bottom Navigation -->
+        <div class="mobile-bottom-nav">
+            <a href="#" class="mobile-nav-item active" data-tab="overview">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-tab="crops">
+                <i class="fas fa-seedling"></i>
+                <span>Crops</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-tab="transactions">
+                <i class="fas fa-receipt"></i>
+                <span>Money</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-tab="loans">
+                <i class="fas fa-hand-holding-usd"></i>
+                <span>Loans</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-tab="calendar">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Calendar</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-tab="user">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
+            </a>
+        </div>
+
+        <!-- Floating Action Button -->
+        <button class="floating-action-button" id="fabButton">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+
+    <script>
+        // Global application state
+        let currentUser = null;
+        let isOnline = navigator.onLine;
+        let selectedAuthTab = 'email';
+        let currentPage = 'auth';
+        let currentTab = 'overview';
+        let selectedCrop = '';
+        let currentYear = new Date().getFullYear();
+        let selectedMonth = null;
+        let recaptchaVerifier = null;
+        let confirmationResult = null;
+        
+        let appData = {
+            crops: [],
+            transactions: [],
+            loans: [],
+            profile: null
+        };
+
+        // Crop types configuration
+        const cropTypes = [
+            { name: 'paddy', icon: 'fa-seedling', label: 'Paddy/Rice' },
+            { name: 'wheat', icon: 'fa-wheat-awn', label: 'Wheat' },
+            { name: 'cotton', icon: 'fa-leaf', label: 'Cotton' },
+            { name: 'maize', icon: 'fa-corn', label: 'Maize/Corn' },
+            { name: 'sugarcane', icon: 'fa-candy-cane', label: 'Sugarcane' },
+            { name: 'soybean', icon: 'fa-spa', label: 'Soybean' },
+            { name: 'tomato', icon: 'fa-apple-alt', label: 'Tomato' },
+            { name: 'onion', icon: 'fa-circle', label: 'Onion' },
+            { name: 'potato', icon: 'fa-circle', label: 'Potato' },
+            { name: 'chili', icon: 'fa-pepper-hot', label: 'Chili' },
+            { name: 'groundnut', icon: 'fa-circle', label: 'Groundnut' },
+            { name: 'sunflower', icon: 'fa-sun', label: 'Sunflower' }
+        ];
+
+        // Transaction categories
+        const transactionCategories = {
+            income: [
+                { value: 'crop-sale', label: '🌾 Crop Sale', icon: 'fa-seedling' },
+                { value: 'milk-sale', label: '🥛 Milk Sale', icon: 'fa-cow' },
+                { value: 'egg-sale', label: '🥚 Egg Sale', icon: 'fa-egg' },
+                { value: 'livestock-sale', label: '🐄 Livestock Sale', icon: 'fa-horse' },
+                { value: 'vegetable-sale', label: '🥕 Vegetable Sale', icon: 'fa-carrot' },
+                { value: 'fruit-sale', label: '🍎 Fruit Sale', icon: 'fa-apple-alt' },
+                { value: 'subsidy', label: '🏛️ Government Subsidy', icon: 'fa-landmark' },
+                { value: 'other-income', label: '💰 Other Income', icon: 'fa-money-bill' }
+            ],
+            expense: [
+                { value: 'seeds', label: '🌱 Seeds', icon: 'fa-seedling' },
+                { value: 'fertilizer', label: '🧪 Fertilizer', icon: 'fa-flask' },
+                { value: 'pesticide', label: '🐛 Pesticide', icon: 'fa-bug' },
+                { value: 'labor', label: '👷 Labor Wages', icon: 'fa-users' },
+                { value: 'fuel', label: '⛽ Fuel', icon: 'fa-gas-pump' },
+                { value: 'electricity', label: '⚡ Electricity', icon: 'fa-bolt' },
+                { value: 'irrigation', label: '💧 Irrigation', icon: 'fa-tint' },
+                { value: 'machinery', label: '🚜 Machinery', icon: 'fa-tractor' },
+                { value: 'transport', label: '🚛 Transport', icon: 'fa-truck' },
+                { value: 'feed', label: '🌾 Animal Feed', icon: 'fa-bone' },
+                { value: 'medical', label: '💊 Medical/Veterinary', icon: 'fa-medkit' },
+                { value: 'personal', label: '🏠 Personal/Household', icon: 'fa-home' },
+                { value: 'other-expense', label: '💸 Other Expense', icon: 'fa-money-bill' }
+            ]
+        };
+
+        // Initialize Firebase App
+        window.initializeFirebaseApp = function() {
+            document.addEventListener('DOMContentLoaded', function() {
+                initializeApp();
+            });
+        };
+
+        function initializeApp() {
+            setupEventListeners();
+            initializeDatePickers();
+            updateConnectionStatus();
+            setupOfflineDetection();
+            
+            // Setup Firebase Auth State Listener
+            if (window.firebaseAuth) {
+                window.firebaseOperations.onAuthStateChanged(window.firebaseAuth, (user) => {
+                    if (user) {
+                        currentUser = user;
+                        loadUserData();
+                    } else {
+                        currentUser = null;
+                        showPage('auth');
+                    }
+                });
+            } else {
+                // Fallback for demo mode
+                checkLocalAuth();
+            }
+
+            setCurrentDate();
+            generateSmartSuggestions();
+        }
+
+        function setupEventListeners() {
+            // Auth tab switching
+            document.querySelectorAll('.auth-tab').forEach(tab => {
+                tab.addEventListener('click', () => switchAuthTab(tab.dataset.auth));
+            });
+
+            // Authentication buttons
+            document.getElementById('sendOtpBtn').addEventListener('click', sendOtp);
+            document.getElementById('verifyOtpBtn').addEventListener('click', verifyOtp);
+            document.getElementById('emailLoginBtn').addEventListener('click', emailLogin);
+            document.getElementById('emailRegisterBtn').addEventListener('click', emailRegister);
+            document.getElementById('googleSignInBtn').addEventListener('click', googleSignIn);
+            document.getElementById('backToPhoneBtn').addEventListener('click', backToPhone);
+
+            // Registration
+            document.getElementById('completeRegistrationBtn').addEventListener('click', completeRegistration);
+
+            // Dashboard buttons
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            document.getElementById('addCropBtn').addEventListener('click', () => openModal('cropModal'));
+            document.getElementById('addTransactionBtn').addEventListener('click', () => openModal('transactionModal'));
+            document.getElementById('addLoanBtn').addEventListener('click', () => openModal('loanModal'));
+
+            // Save buttons
+            document.getElementById('saveCropBtn').addEventListener('click', saveCrop);
+            document.getElementById('saveTransactionBtn').addEventListener('click', saveTransaction);
+            document.getElementById('saveLoanBtn').addEventListener('click', saveLoan);
+
+            // User actions
+            document.getElementById('exportAllDataBtn').addEventListener('click', exportAllData);
+            document.getElementById('clearDataBtn').addEventListener('click', clearAllData);
+
+            // Calendar navigation
+            document.getElementById('prevYear').addEventListener('click', () => changeYear(-1));
+            document.getElementById('nextYear').addEventListener('click', () => changeYear(1));
+            document.getElementById('prevYearCalendar').addEventListener('click', () => changeCalendarYear(-1));
+            document.getElementById('nextYearCalendar').addEventListener('click', () => changeCalendarYear(1));
+
+            // Mobile navigation
+            document.querySelectorAll('.mobile-nav-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const tab = item.dataset.tab;
+                    switchTab(tab);
+                    updateMobileNav(tab);
+                });
+            });
+
+            // Modal close functionality
+            document.querySelectorAll('.modal-close').forEach(btn => {
+                btn.addEventListener('click', closeModals);
+            });
+
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) closeModals();
+                });
+            });
+
+            // Floating action button
+            document.getElementById('fabButton').addEventListener('click', () => openModal('transactionModal'));
+
+            // Form dependencies
+            document.getElementById('transactionType').addEventListener('change', updateTransactionForm);
+            document.getElementById('loanType').addEventListener('change', updateLoanForm);
+
+            // Calendar month selection
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('.calendar-month')) {
+                    const monthIndex = parseInt(e.target.closest('.calendar-month').dataset.month);
+                    showMonthDetails(monthIndex);
+                }
+            });
+
+            // Crop selection
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('#cropTypeGrid .selectable-item')) {
+                    selectCropType(e.target.closest('.selectable-item'));
+                }
+            });
+
+            // Primary crops selection for registration
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('#primaryCropsGrid .selectable-item')) {
+                    const item = e.target.closest('.selectable-item');
+                    item.classList.toggle('selected');
+                }
+            });
+
+            // OTP input handling
+            document.querySelectorAll('.otp-input').forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1) {
+                        const nextInput = document.querySelectorAll('.otp-input')[index + 1];
+                        if (nextInput) nextInput.focus();
+                    }
+                });
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && e.target.value === '') {
+                        const prevInput = document.querySelectorAll('.otp-input')[index - 1];
+                        if (prevInput) prevInput.focus();
+                    }
+                });
+            });
+
+            // Transaction search and filters
+            document.getElementById('transactionSearch').addEventListener('input', filterTransactions);
+            
+            // Period filters
+            document.addEventListener('click', (e) => {
+                if (e.target.dataset.period) {
+                    setTransactionPeriod(e.target.dataset.period);
+                }
+            });
+        }
+
+        function initializeDatePickers() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Set default dates
+            document.getElementById('transactionDate').value = today;
+            document.getElementById('sowingDate').value = today;
+            document.getElementById('loanDate').value = today;
+            
+            // Set default renewal date to 1 year from now
+            const nextYear = new Date();
+            nextYear.setFullYear(nextYear.getFullYear() + 1);
+            document.getElementById('loanRenewalDate').value = nextYear.toISOString().split('T')[0];
+            document.getElementById('renewalDate').value = nextYear.toISOString().split('T')[0];
+        }
+
+        function setCurrentDate() {
+            document.getElementById('currentYear').textContent = currentYear;
+            document.getElementById('calendarYear').textContent = currentYear;
+        }
+
+        // Firebase Authentication Functions
+        async function emailLogin() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showError('Please fill all fields');
+                return;
+            }
+
+            try {
+                if (window.firebaseAuth) {
+                    const userCredential = await window.firebaseOperations.signInWithEmailAndPassword(window.firebaseAuth, email, password);
+                    currentUser = userCredential.user;
+                    await loadUserData();
+                    showSuccess('Login successful!');
+                } else {
+                    // Demo mode fallback
+                    await demoLogin(email, 'email');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('Login failed: ' + error.message);
+            }
+        }
+
+        async function emailRegister() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showError('Please fill all fields');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters');
+                return;
+            }
+
+            try {
+                if (window.firebaseAuth) {
+                    const userCredential = await window.firebaseOperations.createUserWithEmailAndPassword(window.firebaseAuth, email, password);
+                    currentUser = userCredential.user;
+                    showPage('registration');
+                    showSuccess('Account created! Complete your profile.');
+                } else {
+                    // Demo mode fallback
+                    await demoRegister(email, 'email');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showError('Registration failed: ' + error.message);
+            }
+        }
+
+        async function googleSignIn() {
+            try {
+                if (window.firebaseAuth) {
+                    const provider = new window.firebaseOperations.GoogleAuthProvider();
+                    const result = await window.firebaseOperations.signInWithPopup(window.firebaseAuth, provider);
+                    currentUser = result.user;
+                    await loadUserData();
+                    showSuccess('Google sign-in successful!');
+                } else {
+                    // Demo mode fallback
+                    await demoLogin('demo@google.com', 'google');
+                }
+            } catch (error) {
+                console.error('Google sign-in error:', error);
+                showError('Google sign-in failed: ' + error.message);
+            }
+        }
+
+        async function sendOtp() {
+            const phone = document.getElementById('phoneNumber').value.trim();
+            const countryCode = document.getElementById('countryCode').value;
+            
+            if (!phone || phone.length !== 10) {
+                showError('Please enter a valid 10-digit phone number');
+                return;
+            }
+
+            const fullPhone = countryCode + phone;
+
+            try {
+                if (window.firebaseAuth) {
+                    if (!recaptchaVerifier) {
+                        recaptchaVerifier = new window.firebaseOperations.RecaptchaVerifier(window.firebaseAuth, 'recaptcha-container', {
+                            'size': 'normal',
+                            'callback': (response) => {
+                                console.log('reCAPTCHA solved');
+                            }
+                        });
+                    }
+
+                    confirmationResult = await window.firebaseOperations.signInWithPhoneNumber(window.firebaseAuth, fullPhone, recaptchaVerifier);
+                    document.getElementById('phoneDisplay').textContent = fullPhone;
+                    showAuthForm('otpVerification');
+                    startOtpCountdown();
+                    showSuccess('OTP sent successfully!');
+                } else {
+                    // Demo mode fallback
+                    document.getElementById('phoneDisplay').textContent = fullPhone;
+                    showAuthForm('otpVerification');
+                    startOtpCountdown();
+                    showSuccess('OTP sent! Use 123456 for demo.');
+                }
+            } catch (error) {
+                console.error('OTP send error:', error);
+                showError('Failed to send OTP: ' + error.message);
+            }
+        }
+
+        async function verifyOtp() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            let otp = '';
+            otpInputs.forEach(input => otp += input.value);
+            
+            if (otp.length !== 6) {
+                showError('Please enter complete 6-digit OTP');
+                return;
+            }
+
+            try {
+                if (confirmationResult) {
+                    const result = await confirmationResult.confirm(otp);
+                    currentUser = result.user;
+                    await loadUserData();
+                    showSuccess('Phone verification successful!');
+                } else {
+                    // Demo mode fallback
+                    if (otp === '123456') {
+                        await demoLogin(document.getElementById('phoneDisplay').textContent, 'phone');
+                    } else {
+                        showError('Invalid OTP. Use 123456 for demo.');
+                    }
+                }
+            } catch (error) {
+                console.error('OTP verification error:', error);
+                showError('Invalid OTP. Please try again.');
+            }
+        }
+
+        // Demo mode functions for testing without Firebase
+        async function demoLogin(identifier, method) {
+            currentUser = {
+                uid: 'demo_' + identifier.replace(/[^a-zA-Z0-9]/g, '_'),
+                email: method === 'email' ? identifier : null,
+                phoneNumber: method === 'phone' ? identifier : null,
+                displayName: method === 'google' ? 'Demo User' : null
+            };
+            
+            await loadUserData();
+            showSuccess('Demo login successful!');
+        }
+
+        async function demoRegister(identifier, method) {
+            currentUser = {
+                uid: 'demo_' + identifier.replace(/[^a-zA-Z0-9]/g, '_'),
+                email: method === 'email' ? identifier : null,
+                phoneNumber: method === 'phone' ? identifier : null
+            };
+            
+            showPage('registration');
+            showSuccess('Demo account created! Complete your profile.');
+        }
+
+        function checkLocalAuth() {
+            const savedUser = localStorage.getItem('farmpro_current_user');
+            if (savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    loadUserData();
+                } catch (error) {
+                    console.error('Error loading saved user:', error);
+                    showPage('auth');
+                }
+            } else {
+                showPage('auth');
+            }
+        }
+
+        async function loadUserData() {
+            if (!currentUser) return;
+
+            try {
+                if (window.firebaseDb) {
+                    // Load from Firebase
+                    const userDoc = await window.firebaseOperations.getDoc(
+                        window.firebaseOperations.doc(window.firebaseDb, 'users', currentUser.uid)
+                    );
+                    
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data();
+                        appData = userData;
+                        
+                        if (userData.profile) {
+                            showPage('dashboard');
+                            loadDashboard();
+                        } else {
+                            showPage('registration');
+                        }
+                    } else {
+                        showPage('registration');
+                    }
+                } else {
+                    // Load from localStorage for demo
+                    const savedData = localStorage.getItem(`farmpro_data_${currentUser.uid}`);
+                    if (savedData) {
+                        appData = JSON.parse(savedData);
+                        if (appData.profile) {
+                            showPage('dashboard');
+                            loadDashboard();
+                        } else {
+                            showPage('registration');
+                        }
+                    } else {
+                        showPage('registration');
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+                showPage('registration');
+            }
+        }
+
+        async function saveUserData() {
+            if (!currentUser) return;
+
+            try {
+                if (window.firebaseDb) {
+                    // Save to Firebase
+                    await window.firebaseOperations.setDoc(
+                        window.firebaseOperations.doc(window.firebaseDb, 'users', currentUser.uid),
+                        appData
+                    );
+                } else {
+                    // Save to localStorage for demo
+                    localStorage.setItem(`farmpro_data_${currentUser.uid}`, JSON.stringify(appData));
+                    localStorage.setItem('farmpro_current_user', JSON.stringify(currentUser));
+                }
+            } catch (error) {
+                console.error('Error saving user data:', error);
+                showError('Failed to save data. Please try again.');
+            }
+        }
+
+        async function completeRegistration() {
+            const firstName = document.getElementById('regFirstName').value.trim();
+            const lastName = document.getElementById('regLastName').value.trim();
+            const farmLocation = document.getElementById('regFarmLocation').value.trim();
+            const farmAcres = document.getElementById('regFarmAcres').value;
+            const farmCents = document.getElementById('regFarmCents').value || '0';
+            
+            if (!firstName || !lastName || !farmLocation || !farmAcres) {
+                showError('Please fill all required fields');
+                return;
+            }
+
+            const selectedCrops = Array.from(document.querySelectorAll('#primaryCropsGrid .selectable-item.selected'))
+                .map(item => item.dataset.crop);
+
+            appData.profile = {
+                firstName,
+                lastName,
+                farmLocation,
+                totalFarmSize: {
+                    acres: parseFloat(farmAcres),
+                    cents: parseInt(farmCents)
+                },
+                primaryCrops: selectedCrops,
+                registrationDate: new Date().toISOString(),
+                email: currentUser.email,
+                phone: currentUser.phoneNumber
+            };
+
+            await saveUserData();
+            showPage('dashboard');
+            loadDashboard();
+            showSuccess('Registration completed successfully!');
+        }
+
+        function loadDashboard() {
+            if (!appData.profile) return;
+
+            updateFinancialSummary();
+            loadUserProfile();
+            loadCalendar();
+            loadTodaysActivities();
+            generateSmartSuggestions();
+            calculateLoanStats();
+            
+            // Load tab-specific data based on current tab
+            if (currentTab === 'crops') loadCropsData();
+            else if (currentTab === 'transactions') loadTransactionsData();
+            else if (currentTab === 'loans') loadLoansData();
+        }
+
+        function loadUserProfile() {
+            if (!appData.profile) return;
+
+            const fullName = `${appData.profile.firstName} ${appData.profile.lastName}`;
+            document.getElementById('userFullName').textContent = fullName;
+            document.getElementById('userEmail').textContent = appData.profile.email || 'Not provided';
+            document.getElementById('userLocation').textContent = appData.profile.farmLocation;
+            
+            // Set avatar
+            const avatar = document.getElementById('userAvatar');
+            if (currentUser?.photoURL) {
+                avatar.innerHTML = `<img src="${currentUser.photoURL}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+            } else {
+                avatar.textContent = appData.profile.firstName.charAt(0).toUpperCase();
+            }
+
+            // Update user stats
+            document.getElementById('userTotalCrops').textContent = appData.crops?.length || 0;
+            document.getElementById('userFarmSize').textContent = (appData.profile.totalFarmSize.acres + (appData.profile.totalFarmSize.cents || 0)/100).toFixed(1);
+            document.getElementById('userTotalTransactions').textContent = appData.transactions?.length || 0;
+            
+            const joinDate = new Date(appData.profile.registrationDate);
+            document.getElementById('userJoinDate').textContent = joinDate.toLocaleDateString();
+        }
+
+        function updateFinancialSummary() {
+            const transactions = appData.transactions || [];
+            
+            const totalIncome = transactions
+                .filter(t => ['income', 'loan-given', 'interest-received'].includes(t.type))
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const totalExpenses = transactions
+                .filter(t => ['expense', 'loan-taken', 'loan-payment', 'interest-paid'].includes(t.type))
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const activeLoans = (appData.loans || [])
+                .filter(l => l.status === 'active')
+                .reduce((sum, l) => sum + l.amount, 0);
+            
+            const netProfit = totalIncome - totalExpenses;
+
+            document.getElementById('totalIncome').textContent = `₹${totalIncome.toLocaleString()}`;
+            document.getElementById('totalExpenses').textContent = `₹${totalExpenses.toLocaleString()}`;
+            document.getElementById('netProfit').textContent = `₹${netProfit.toLocaleString()}`;
+            document.getElementById('activeLoans').textContent = `₹${activeLoans.toLocaleString()}`;
+
+            // Update monthly stats
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            
+            const monthlyTransactions = transactions.filter(t => {
+                const transactionDate = new Date(t.date);
+                return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+            });
+
+            const monthlyIncome = monthlyTransactions
+                .filter(t => ['income', 'interest-received'].includes(t.type))
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const monthlyExpenses = monthlyTransactions
+                .filter(t => ['expense', 'interest-paid'].includes(t.type))
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            document.getElementById('monthlyIncome').textContent = `₹${monthlyIncome.toLocaleString()}`;
+            document.getElementById('monthlyExpenses').textContent = `₹${monthlyExpenses.toLocaleString()}`;
+
+            // Color code net profit
+            const profitElement = document.getElementById('netProfit');
+            profitElement.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+        }
+
+        function loadCalendar() {
+            const calendarGrid = document.getElementById('calendarGrid');
+            const months = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+
+            // Calculate activities per month
+            const monthlyData = calculateMonthlyActivities();
+
+            calendarGrid.innerHTML = months.map((month, index) => {
+                const activities = monthlyData[index] || [];
+                const hasRenewals = activities.some(a => a.type === 'renewal');
+                
+                return `
+                    <div class="calendar-month" data-month="${index}">
+                        <div class="month-name">
+                            ${month.substr(0, 3)}
+                            ${hasRenewals ? '<i class="fas fa-exclamation-circle" style="color: var(--danger); margin-left: 4px;"></i>' : ''}
+                        </div>
+                        <div class="month-activities">
+                            ${activities.length} activities
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Also update farming calendar
+            const farmingCalendarGrid = document.getElementById('farmingCalendarGrid');
+            if (farmingCalendarGrid) {
+                farmingCalendarGrid.innerHTML = calendarGrid.innerHTML;
+            }
+        }
+
+        function calculateMonthlyActivities() {
+            const monthlyData = {};
+            
+            // Add crop activities
+            (appData.crops || []).forEach(crop => {
+                const sowingMonth = new Date(crop.sowingDate).getMonth();
+                const harvestDate = new Date(crop.sowingDate);
+                harvestDate.setDate(harvestDate.getDate() + crop.duration);
+                const harvestMonth = harvestDate.getMonth();
+                
+                if (!monthlyData[sowingMonth]) monthlyData[sowingMonth] = [];
+                monthlyData[sowingMonth].push({
+                    type: 'sowing',
+                    crop: crop.type,
+                    date: crop.sowingDate,
+                    description: `Sowing ${crop.type}`
+                });
+                
+                if (!monthlyData[harvestMonth]) monthlyData[harvestMonth] = [];
+                monthlyData[harvestMonth].push({
+                    type: 'harvest',
+                    crop: crop.type,
+                    date: harvestDate.toISOString().split('T')[0],
+                    description: `Harvest ${crop.type}`
+                });
+            });
+
+            // Add loan renewals
+            (appData.loans || []).forEach(loan => {
+                if (loan.renewalDate) {
+                    const renewalMonth = new Date(loan.renewalDate).getMonth();
+                    if (!monthlyData[renewalMonth]) monthlyData[renewalMonth] = [];
+                    monthlyData[renewalMonth].push({
+                        type: 'renewal',
+                        loan: loan.personName,
+                        date: loan.renewalDate,
+                        description: `Loan renewal: ${loan.personName}`,
+                        urgent: new Date(loan.renewalDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                    });
+                }
+            });
+
+            return monthlyData;
+        }
+
+        function showMonthDetails(monthIndex) {
+            const months = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            
+            selectedMonth = monthIndex;
+            
+            // Update calendar display
+            document.querySelectorAll('.calendar-month').forEach((month, index) => {
+                month.classList.toggle('active', index === monthIndex);
+            });
+
+            const monthlyData = calculateMonthlyActivities();
+            const monthActivities = monthlyData[monthIndex] || [];
+            
+            document.getElementById('selectedMonthName').textContent = months[monthIndex];
+            document.getElementById('monthlyDetails').style.display = 'block';
+            
+            const activitiesList = document.getElementById('monthlyActivitiesList');
+            if (monthActivities.length === 0) {
+                activitiesList.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 1rem;">No activities planned for this month</p>';
+                return;
+            }
+
+            activitiesList.innerHTML = monthActivities.map(activity => {
+                let iconClass = 'fa-calendar';
+                let iconColor = 'var(--primary)';
+                
+                if (activity.type === 'sowing') {
+                    iconClass = 'fa-seedling';
+                    iconColor = 'var(--success)';
+                } else if (activity.type === 'harvest') {
+                    iconClass = 'fa-cut';
+                    iconColor = 'var(--warning)';
+                } else if (activity.type === 'renewal') {
+                    iconClass = 'fa-exclamation-triangle';
+                    iconColor = activity.urgent ? 'var(--danger)' : 'var(--info)';
+                }
+
+                return `
+                    <div class="transaction-item">
+                        <div style="display: flex; align-items: center;">
+                            <div class="transaction-icon" style="background: ${iconColor}15; color: ${iconColor};">
+                                <i class="fas ${iconClass}"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 600;">${activity.description}</div>
+                                <div style="font-size: 0.8rem; color: var(--gray);">${activity.date}</div>
+                            </div>
+                        </div>
+                        ${activity.urgent ? '<div class="reminder-badge">!</div>' : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function loadTodaysActivities() {
+            const today = new Date().toISOString().split('T')[0];
+            const todaysActivities = [];
+
+            // Check for crop activities
+            (appData.crops || []).forEach(crop => {
+                if (crop.sowingDate === today) {
+                    todaysActivities.push({
+                        type: 'sowing',
+                        description: `Sowing ${crop.type}`,
+                        icon: 'fa-seedling',
+                        color: 'var(--success)'
+                    });
+                }
+
+                const harvestDate = new Date(crop.sowingDate);
+                harvestDate.setDate(harvestDate.getDate() + crop.duration);
+                if (harvestDate.toISOString().split('T')[0] === today) {
+                    todaysActivities.push({
+                        type: 'harvest',
+                        description: `Harvest ${crop.type}`,
+                        icon: 'fa-cut',
+                        color: 'var(--warning)'
+                    });
+                }
+            });
+
+            // Check for loan renewals
+            (appData.loans || []).forEach(loan => {
+                if (loan.renewalDate === today) {
+                    todaysActivities.push({
+                        type: 'renewal',
+                        description: `Loan renewal: ${loan.personName}`,
+                        icon: 'fa-exclamation-triangle',
+                        color: 'var(--danger)'
+                    });
+                }
+            });
+
+            const container = document.getElementById('todaysActivities');
+            if (todaysActivities.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 1rem;">No activities scheduled for today</p>';
+                return;
+            }
+
+            container.innerHTML = todaysActivities.map(activity => `
+                <div class="transaction-item">
+                    <div style="display: flex; align-items: center;">
+                        <div class="transaction-icon" style="background: ${activity.color}15; color: ${activity.color};">
+                            <i class="fas ${activity.icon}"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 600;">${activity.description}</div>
+                            <div style="font-size: 0.8rem; color: var(--gray);">Today</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function generateSmartSuggestions() {
+            const suggestions = [];
+            const today = new Date();
+            
+            // Crop-based suggestions
+            (appData.crops || []).forEach(crop => {
+                const sowingDate = new Date(crop.sowingDate);
+                const daysSinceSowing = Math.floor((today - sowingDate) / (1000 * 60 * 60 * 24));
+                
+                if (daysSinceSowing < 7) {
+                    suggestions.push({
+                        icon: 'fa-eye',
+                        text: `Monitor ${crop.type} germination`,
+                        type: 'crop',
+                        priority: 'high'
+                    });
+                } else if (daysSinceSowing >= 30 && daysSinceSowing <= 35) {
+                    suggestions.push({
+                        icon: 'fa-flask',
+                        text: `Apply fertilizer to ${crop.type}`,
+                        type: 'crop',
+                        priority: 'medium'
+                    });
+                } else if (daysSinceSowing >= crop.duration - 10) {
+                    suggestions.push({
+                        icon: 'fa-cut',
+                        text: `Prepare for ${crop.type} harvest`,
+                        type: 'crop',
+                        priority: 'high'
+                    });
+                }
+            });
+
+            // Loan-based suggestions
+            (appData.loans || []).forEach(loan => {
+                const renewalDate = new Date(loan.renewalDate);
+                const daysToRenewal = Math.floor((renewalDate - today) / (1000 * 60 * 60 * 24));
+                
+                if (daysToRenewal <= 30 && daysToRenewal > 0) {
+                    suggestions.push({
+                        icon: 'fa-exclamation-triangle',
+                        text: `Loan renewal due in ${daysToRenewal} days: ${loan.personName}`,
+                        type: 'loan',
+                        priority: 'high'
+                    });
+                } else if (daysToRenewal <= 0) {
+                    suggestions.push({
+                        icon: 'fa-exclamation-circle',
+                        text: `Overdue loan renewal: ${loan.personName}`,
+                        type: 'loan',
+                        priority: 'urgent'
+                    });
+                }
+            });
+
+            // Financial suggestions
+            const monthlyIncome = getMonthlyTotal('income');
+            const monthlyExpenses = getMonthlyTotal('expense');
+            
+            if (monthlyExpenses > monthlyIncome && monthlyIncome > 0) {
+                suggestions.push({
+                    icon: 'fa-chart-line',
+                    text: 'Monthly expenses exceed income. Review budget.',
+                    type: 'financial',
+                    priority: 'medium'
+                });
+            }
+
+            // Seasonal suggestions
+            const month = today.getMonth();
+            if (month === 2 || month === 3) { // March-April
+                suggestions.push({
+                    icon: 'fa-seedling',
+                    text: 'Good time for summer crop sowing',
+                    type: 'seasonal',
+                    priority: 'low'
+                });
+            } else if (month === 5 || month === 6) { // June-July
+                suggestions.push({
+                    icon: 'fa-cloud-rain',
+                    text: 'Monsoon season - prepare for kharif crops',
+                    type: 'seasonal',
+                    priority: 'medium'
+                });
+            }
+
+            // Display suggestions
+            const container = document.getElementById('smartSuggestions');
+            if (suggestions.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 1rem;">All caught up! No urgent suggestions.</p>';
+                return;
+            }
+
+            // Sort by priority
+            const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
+            suggestions.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+
+            container.innerHTML = suggestions.slice(0, 5).map(suggestion => {
+                let bgColor = 'var(--info)';
+                if (suggestion.priority === 'urgent') bgColor = 'var(--danger)';
+                else if (suggestion.priority === 'high') bgColor = 'var(--warning)';
+                else if (suggestion.priority === 'medium') bgColor = 'var(--primary)';
+
+                return `
+                    <div style="display: flex; align-items: center; padding: 0.8rem; margin-bottom: 0.5rem; background: ${bgColor}15; border-left: 4px solid ${bgColor}; border-radius: 8px;">
+                        <i class="fas ${suggestion.icon}" style="color: ${bgColor}; margin-right: 0.8rem; font-size: 1.2rem;"></i>
+                        <span style="flex: 1;">${suggestion.text}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getMonthlyTotal(type) {
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            
+            return (appData.transactions || [])
+                .filter(t => {
+                    const transactionDate = new Date(t.date);
+                    const isCurrentMonth = transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+                    
+                    if (type === 'income') {
+                        return isCurrentMonth && ['income', 'interest-received'].includes(t.type);
+                    } else {
+                        return isCurrentMonth && ['expense', 'interest-paid'].includes(t.type);
+                    }
+                })
+                .reduce((sum, t) => sum + t.amount, 0);
+        }
+
+        function loadCropsData() {
+            updateCropStats();
+            loadCropsList();
+        }
+
+        function updateCropStats() {
+            const crops = appData.crops || [];
+            document.getElementById('totalCrops').textContent = crops.length;
+            
+            const totalAcres = crops.reduce((sum, crop) => sum + crop.acres + (crop.cents || 0)/100, 0);
+            document.getElementById('totalArea').textContent = totalAcres.toFixed(1);
+        }
+
+        function loadCropsList() {
+            const container = document.getElementById('cropsList');
+            const crops = appData.crops || [];
+            
+            if (!crops.length) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 2rem;">No crops added yet</p>';
+                return;
+            }
+
+            container.innerHTML = crops.map(crop => {
+                const sowingDate = new Date(crop.sowingDate);
+                const expectedHarvest = new Date(sowingDate.getTime() + (crop.duration * 24 * 60 * 60 * 1000));
+                const today = new Date();
+                const daysElapsed = Math.floor((today - sowingDate) / (1000 * 60 * 60 * 24));
+                const progressPercent = Math.min((daysElapsed / crop.duration) * 100, 100);
+
+                return `
+                    <div class="dashboard-card" style="margin-bottom: 0.8rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+                            <div>
+                                <h4><i class="fas fa-seedling"></i> ${crop.type.charAt(0).toUpperCase() + crop.type.slice(1)}</h4>
+                                <p style="color: var(--gray); margin: 0; font-size: 0.85rem;">${crop.acres + (crop.cents || 0)/100} acres</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="color: var(--success); font-weight: 600;">₹${((crop.expectedYield || 0) * (crop.expectedPrice || 0)).toLocaleString()}</div>
+                                <div style="font-size: 0.7rem; color: var(--gray);">Expected Income</div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom: 0.5rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.8rem;">
+                                <span>Growth Progress</span>
+                                <span>${Math.round(progressPercent)}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progressPercent}%;"></div>
+                            </div>
+                            <div style="font-size: 0.7rem; color: var(--gray); text-align: center;">
+                                ${Math.max(0, crop.duration - daysElapsed)} days remaining
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function loadTransactionsData() {
+            filterTransactions();
+        }
+
+        function filterTransactions() {
+            const searchTerm = document.getElementById('transactionSearch').value.toLowerCase();
+            const selectedPeriod = document.querySelector('[data-period].active')?.dataset.period || 'month';
+            
+            let filteredTransactions = appData.transactions || [];
+            
+            // Apply period filter
+            const now = new Date();
+            if (selectedPeriod === 'month') {
+                filteredTransactions = filteredTransactions.filter(t => {
+                    const transactionDate = new Date(t.date);
+                    return transactionDate.getMonth() === now.getMonth() && 
+                           transactionDate.getFullYear() === now.getFullYear();
+                });
+            } else if (selectedPeriod === 'year') {
+                filteredTransactions = filteredTransactions.filter(t => {
+                    const transactionDate = new Date(t.date);
+                    return transactionDate.getFullYear() === now.getFullYear();
+                });
+            }
+
+            // Apply search filter
+            if (searchTerm) {
+                filteredTransactions = filteredTransactions.filter(t => 
+                    t.description.toLowerCase().includes(searchTerm) ||
+                    t.category.toLowerCase().includes(searchTerm) ||
+                    t.type.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Sort by date (newest first)
+            filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const container = document.getElementById('transactionsList');
+            if (!filteredTransactions.length) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 2rem;">No transactions found</p>';
+                return;
+            }
+
+            container.innerHTML = filteredTransactions.map(transaction => {
+                const category = transactionCategories.income.find(c => c.value === transaction.category) ||
+                              transactionCategories.expense.find(c => c.value === transaction.category) ||
+                              { label: transaction.category, icon: 'fa-circle' };
+
+                let typeClass = 'income';
+                let typeIcon = 'fa-arrow-up';
+                let amountPrefix = '+';
+                
+                if (['expense', 'loan-taken', 'loan-payment', 'interest-paid'].includes(transaction.type)) {
+                    typeClass = 'expense';
+                    typeIcon = 'fa-arrow-down';
+                    amountPrefix = '-';
+                } else if (['loan-given', 'loan-taken'].includes(transaction.type)) {
+                    typeClass = 'loan';
+                    typeIcon = 'fa-handshake';
+                    amountPrefix = transaction.type === 'loan-given' ? '-' : '+';
+                }
+
+                return `
+                    <div class="transaction-item">
+                        <div style="display: flex; align-items: center;">
+                            <div class="transaction-icon ${typeClass}">
+                                <i class="fas ${category.icon || typeIcon}"></i>
+                            </div>
+                            <div>
+                                <div style="font-weight: 600;">${transaction.description}</div>
+                                <div style="font-size: 0.8rem; color: var(--gray);">
+                                    ${category.label} • ${transaction.date}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="transaction-amount ${typeClass}">
+                            ${amountPrefix}₹${transaction.amount.toLocaleString()}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setTransactionPeriod(period) {
+            document.querySelectorAll('[data-period]').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-period="${period}"]`).classList.add('active');
+            filterTransactions();
+        }
+
+        function loadLoansData() {
+            calculateLoanStats();
+            loadLoansList();
+        }
+
+        function calculateLoanStats() {
+            const loans = appData.loans || [];
+            
+            const loansGiven = loans.filter(l => l.type === 'given').reduce((sum, l) => sum + l.amount, 0);
+            const loansTaken = loans.filter(l => l.type === 'taken' || l.type === 'bank').reduce((sum, l) => sum + l.amount, 0);
+            
+            const monthlyInterest = loans
+                .filter(l => l.status === 'active')
+                .reduce((sum, l) => sum + (l.amount * l.interestRate / 100 / 12), 0);
+            
+            const upcomingRenewals = loans.filter(l => {
+                if (!l.renewalDate) return false;
+                const renewalDate = new Date(l.renewalDate);
+                const today = new Date();
+                const daysToRenewal = Math.floor((renewalDate - today) / (1000 * 60 * 60 * 24));
+                return daysToRenewal <= 30 && daysToRenewal >= 0;
+            }).length;
+
+            document.getElementById('totalLoansGiven').textContent = `₹${loansGiven.toLocaleString()}`;
+            document.getElementById('totalLoansTaken').textContent = `₹${loansTaken.toLocaleString()}`;
+            document.getElementById('monthlyInterest').textContent = `₹${monthlyInterest.toLocaleString()}`;
+            document.getElementById('upcomingRenewals').textContent = upcomingRenewals;
+        }
+
+        function loadLoansList() {
+            const container = document.getElementById('loansList');
+            const loans = appData.loans || [];
+            
+            if (!loans.length) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 2rem;">No loans recorded yet</p>';
+                return;
+            }
+
+            // Sort loans by renewal date
+            const sortedLoans = loans.sort((a, b) => {
+                if (!a.renewalDate) return 1;
+                if (!b.renewalDate) return -1;
+                return new Date(a.renewalDate) - new Date(b.renewalDate);
+            });
+
+            container.innerHTML = sortedLoans.map(loan => {
+                const renewalDate = new Date(loan.renewalDate);
+                const today = new Date();
+                const daysToRenewal = Math.floor((renewalDate - today) / (1000 * 60 * 60 * 24));
+                
+                let statusClass = 'active';
+                let statusText = 'Active';
+                
+                if (daysToRenewal <= 0) {
+                    statusClass = 'overdue';
+                    statusText = 'Overdue';
+                } else if (daysToRenewal <= 30) {
+                    statusClass = 'active';
+                    statusText = `Due in ${daysToRenewal} days`;
+                }
+
+                const monthlyInterest = (loan.amount * loan.interestRate / 100 / 12);
+
+                return `
+                    <div class="loan-card">
+                        <div class="loan-header">
+                            <div>
+                                <h4>
+                                    <i class="fas ${loan.type === 'bank' ? 'fa-university' : 'fa-user'}"></i> 
+                                    ${loan.personName}
+                                </h4>
+                                <p style="color: var(--gray); margin: 0; font-size: 0.85rem;">
+                                    ${loan.type === 'given' ? 'Money Lent' : loan.type === 'bank' ? 'Bank Loan' : 'Money Borrowed'}
+                                    ${loan.collateralType ? ` • ${loan.collateralType} collateral` : ''}
+                                </p>
+                            </div>
+                            <span class="loan-status ${statusClass}">${statusText}</span>
+                        </div>
+                        
+                        <div class="grid-2" style="margin-bottom: 0.8rem;">
+                            <div>
+                                <strong>Amount:</strong> ₹${loan.amount.toLocaleString()}
+                            </div>
+                            <div>
+                                <strong>Interest:</strong> ${loan.interestRate}% p.a.
+                            </div>
+                            <div>
+                                <strong>Monthly Interest:</strong> ₹${monthlyInterest.toLocaleString()}
+                            </div>
+                            <div>
+                                <strong>Renewal:</strong> ${loan.renewalDate}
+                            </div>
+                        </div>
+
+                        ${loan.notes ? `<p style="font-size: 0.85rem; color: var(--gray);">${loan.notes}</p>` : ''}
+                        
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.8rem;">
+                            <button class="btn btn-success btn-small" onclick="recordLoanPayment('${loan.id}')">
+                                <i class="fas fa-money-bill"></i> Payment
+                            </button>
+                            <button class="btn btn-info btn-small" onclick="renewLoan('${loan.id}')">
+                                <i class="fas fa-refresh"></i> Renew
+                            </button>
+                            ${loan.type !== 'bank' ? `
+                                <button class="btn btn-warning btn-small" onclick="closeLoan('${loan.id}')">
+                                    <i class="fas fa-check"></i> Close
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Save Functions
+        async function saveCrop() {
+            if (!selectedCrop) {
+                showError('Please select a crop type');
+                return;
+            }
+
+            const acres = parseFloat(document.getElementById('cropAcres').value);
+            const cents = parseInt(document.getElementById('cropCents').value || '0');
+            const sowingDate = document.getElementById('sowingDate').value;
+            const duration = parseInt(document.getElementById('cropDuration').value);
+            const expectedYield = parseFloat(document.getElementById('expectedYield').value || '0');
+            const expectedPrice = parseFloat(document.getElementById('expectedPrice').value || '0');
+
+            if (!acres || !sowingDate || !duration) {
+                showError('Please fill all required fields');
+                return;
+            }
+
+            const newCrop = {
+                id: generateId(),
+                type: selectedCrop,
+                acres: acres,
+                cents: cents,
+                sowingDate: sowingDate,
+                duration: duration,
+                expectedYield: expectedYield,
+                expectedPrice: expectedPrice,
+                status: 'active',
+                createdAt: new Date().toISOString()
+            };
+
+            if (!appData.crops) appData.crops = [];
+            appData.crops.push(newCrop);
+
+            await saveUserData();
+            closeModals();
+            loadCropsData();
+            updateFinancialSummary();
+            loadCalendar();
+            showSuccess('Crop added successfully!');
+            resetForms();
+        }
+
+        async function saveTransaction() {
+            const type = document.getElementById('transactionType').value;
+            const category = document.getElementById('transactionCategory').value;
+            const description = document.getElementById('transactionDescription').value.trim();
+            const amount = parseFloat(document.getElementById('transactionAmount').value);
+            const date = document.getElementById('transactionDate').value;
+            const cropId = document.getElementById('relatedCrop').value;
+
+            if (!description || !amount || !date || !category) {
+                showError('Please fill all required fields');
+                return;
+            }
+
+            const newTransaction = {
+                id: generateId(),
+                type: type,
+                category: category,
+                description: description,
+                amount: amount,
+                date: date,
+                cropId: cropId || null,
+                createdAt: new Date().toISOString()
+            };
+
+            // Handle loan-specific data
+            if (['loan-given', 'loan-taken'].includes(type)) {
+                const interestRate = parseFloat(document.getElementById('interestRate').value || '0');
+                const renewalDate = document.getElementById('renewalDate').value;
+                const loanPerson = document.getElementById('loanPerson').value.trim();
+                
+                if (interestRate && renewalDate && loanPerson) {
+                    // Create loan record
+                    const newLoan = {
+                        id: generateId(),
+                        type: type === 'loan-given' ? 'given' : 'taken',
+                        personName: loanPerson,
+                        amount: amount,
+                        interestRate: interestRate,
+                        date: date,
+                        renewalDate: renewalDate,
+                        status: 'active',
+                        notes: description,
+                        createdAt: new Date().toISOString()
+                    };
+
+                    // Add collateral if it's a bank loan
+                    const collateralType = document.getElementById('collateralType').value;
+                    const collateralDetails = document.getElementById('collateralDetails').value;
+                    
+                    if (collateralType) {
+                        newLoan.collateralType = collateralType;
+                        newLoan.collateralDetails = collateralDetails;
+                        newLoan.type = 'bank';
+                    }
+
+                    if (!appData.loans) appData.loans = [];
+                    appData.loans.push(newLoan);
+                }
+            }
+
+            if (!appData.transactions) appData.transactions = [];
+            appData.transactions.push(newTransaction);
+
+            await saveUserData();
+            closeModals();
+            updateFinancialSummary();
+            loadCalendar();
+            if (currentTab === 'transactions') loadTransactionsData();
+            if (currentTab === 'loans') loadLoansData();
+            showSuccess('Transaction saved successfully!');
+            resetForms();
+        }
+
+        async function saveLoan() {
+            const type = document.getElementById('loanType').value;
+            const personName = document.getElementById('loanPersonName').value.trim();
+            const amount = parseFloat(document.getElementById('loanAmount').value);
+            const interestRate = parseFloat(document.getElementById('loanInterestRate').value);
+            const date = document.getElementById('loanDate').value;
+            const renewalDate = document.getElementById('loanRenewalDate').value;
+            const notes = document.getElementById('loanNotes').value.trim();
+
+            if (!personName || !amount || !interestRate || !date || !renewalDate) {
+                showError('Please fill all required fields');
+                return;
+            }
+
+            const newLoan = {
+                id: generateId(),
+                type: type,
+                personName: personName,
+                amount: amount,
+                interestRate: interestRate,
+                date: date,
+                renewalDate: renewalDate,
+                status: 'active',
+                notes: notes,
+                createdAt: new Date().toISOString()
+            };
+
+            // Add bank loan specific data
+            if (type === 'bank') {
+                const collateralType = document.getElementById('bankCollateralType').value;
+                const collateralDetails = document.getElementById('bankCollateralDetails').value;
+                
+                newLoan.collateralType = collateralType;
+                newLoan.collateralDetails = collateralDetails;
+            }
+
+            // Create corresponding transaction
+            const transactionType = type === 'given' ? 'loan-given' : 'loan-taken';
+            const newTransaction = {
+                id: generateId(),
+                type: transactionType,
+                category: type === 'bank' ? 'bank-loan' : 'personal-loan',
+                description: `${type === 'given' ? 'Loan given to' : 'Loan taken from'} ${personName}`,
+                amount: amount,
+                date: date,
+                loanId: newLoan.id,
+                createdAt: new Date().toISOString()
+            };
+
+            if (!appData.loans) appData.loans = [];
+            if (!appData.transactions) appData.transactions = [];
+            
+            appData.loans.push(newLoan);
+            appData.transactions.push(newTransaction);
+
+            await saveUserData();
+            closeModals();
+            updateFinancialSummary();
+            loadLoansData();
+            loadCalendar();
+            showSuccess('Loan record created successfully!');
+            resetForms();
+        }
+
+        // Loan management functions
+        function recordLoanPayment(loanId) {
+            const loan = appData.loans.find(l => l.id === loanId);
+            if (!loan) return;
+
+            document.getElementById('transactionType').value = loan.type === 'given' ? 'income' : 'loan-payment';
+            document.getElementById('transactionDescription').value = `Payment from ${loan.personName}`;
+            updateTransactionForm();
+            openModal('transactionModal');
+        }
+
+        function renewLoan(loanId) {
+            const loan = appData.loans.find(l => l.id === loanId);
+            if (!loan) return;
+
+            const newRenewalDate = new Date(loan.renewalDate);
+            newRenewalDate.setFullYear(newRenewalDate.getFullYear() + 1);
+            
+            loan.renewalDate = newRenewalDate.toISOString().split('T')[0];
+            
+            saveUserData();
+            loadLoansData();
+            loadCalendar();
+            showSuccess(`Loan renewal updated for ${loan.personName}`);
+        }
+
+        function closeLoan(loanId) {
+            const loan = appData.loans.find(l => l.id === loanId);
+            if (!loan) return;
+
+            if (confirm(`Close loan with ${loan.personName}?`)) {
+                loan.status = 'closed';
+                loan.closedDate = new Date().toISOString().split('T')[0];
+                
+                saveUserData();
+                loadLoansData();
+                updateFinancialSummary();
+                showSuccess(`Loan with ${loan.personName} has been closed`);
+            }
+        }
+
+        // Utility Functions
+        function switchAuthTab(tabName) {
+            selectedAuthTab = tabName;
+            
+            document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+            
+            document.querySelector(`[data-auth="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}Auth`).classList.add('active');
+
+            // Setup reCAPTCHA for phone auth
+            if (tabName === 'phone' && window.firebaseAuth && !recaptchaVerifier) {
+                setTimeout(() => {
+                    try {
+                        recaptchaVerifier = new window.firebaseOperations.RecaptchaVerifier(window.firebaseAuth, 'recaptcha-container', {
+                            'size': 'normal',
+                            'callback': (response) => {
+                                console.log('reCAPTCHA solved');
+                            }
+                        });
+                        recaptchaVerifier.render();
+                    } catch (error) {
+                        console.error('reCAPTCHA error:', error);
+                    }
+                }, 100);
+            }
+        }
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+
+            // Load tab-specific data
+            if (tabName === 'crops') loadCropsData();
+            else if (tabName === 'transactions') loadTransactionsData();
+            else if (tabName === 'loans') loadLoansData();
+            else if (tabName === 'calendar') loadCalendar();
+            else if (tabName === 'user') loadUserProfile();
+        }
+
+        function updateMobileNav(activeTab) {
+            document.querySelectorAll('.mobile-nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`.mobile-nav-item[data-tab="${activeTab}"]`).classList.add('active');
+        }
+
+        function showPage(pageName) {
+            currentPage = pageName;
+            
+            document.getElementById('authPage').style.display = pageName === 'auth' ? 'block' : 'none';
+            document.getElementById('registrationPage').style.display = pageName === 'registration' ? 'block' : 'none';
+            document.getElementById('dashboardPage').style.display = pageName === 'dashboard' ? 'block' : 'none';
+        }
+
+        function showAuthForm(formName) {
+            document.querySelectorAll('.auth-form').forEach(form => {
+                form.style.display = 'none';
+                form.classList.remove('active');
+            });
+            
+            const targetForm = document.getElementById(formName);
+            targetForm.style.display = 'block';
+            targetForm.classList.add('active');
+        }
+
+        function backToPhone() {
+            showAuthForm('phoneAuth');
+        }
+
+        function startOtpCountdown() {
+            let timeLeft = 120;
+            const countdownElement = document.getElementById('countdown');
+            
+            const timer = setInterval(() => {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                countdownElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    countdownElement.textContent = 'OTP Expired';
+                    countdownElement.style.color = 'var(--danger)';
+                }
+                timeLeft--;
+            }, 1000);
+        }
+
+        function populateCropTypeGrid() {
+            const grid = document.getElementById('cropTypeGrid');
+            const primaryGrid = document.getElementById('primaryCropsGrid');
+            
+            const cropHTML = cropTypes.map(crop => `
+                <div class="selectable-item" data-crop="${crop.name}">
+                    <i class="fas ${crop.icon}"></i>
+                    <div>${crop.label}</div>
+                </div>
+            `).join('');
+
+            if (grid) grid.innerHTML = cropHTML;
+            if (primaryGrid) primaryGrid.innerHTML = cropHTML;
+        }
+
+        function selectCropType(item) {
+            document.querySelectorAll('#cropTypeGrid .selectable-item').forEach(i => i.classList.remove('selected'));
+            item.classList.add('selected');
+            selectedCrop = item.dataset.crop;
+        }
+
+        function updateTransactionForm() {
+            const type = document.getElementById('transactionType').value;
+            const categorySelect = document.getElementById('transactionCategory');
+            const cropGroup = document.getElementById('cropSelectionGroup');
+            const loanGroup = document.getElementById('loanDetailsGroup');
+            const collateralGroup = document.getElementById('collateralGroup');
+
+            // Reset visibility
+            cropGroup.style.display = 'none';
+            loanGroup.style.display = 'none';
+            collateralGroup.style.display = 'none';
+
+            // Populate categories based on type
+            let categories = [];
+            if (['income', 'interest-received'].includes(type)) {
+                categories = transactionCategories.income;
+                cropGroup.style.display = 'block';
+            } else if (['expense', 'interest-paid'].includes(type)) {
+                categories = transactionCategories.expense;
+                cropGroup.style.display = 'block';
+            } else if (['loan-given', 'loan-taken'].includes(type)) {
+                categories = [
+                    { value: 'personal-loan', label: '👤 Personal Loan', icon: 'fa-user' },
+                    { value: 'bank-loan', label: '🏦 Bank Loan', icon: 'fa-university' },
+                    { value: 'emergency-loan', label: '🚨 Emergency Loan', icon: 'fa-exclamation' }
+                ];
+                loanGroup.style.display = 'block';
+                if (type === 'loan-taken') {
+                    collateralGroup.style.display = 'block';
+                }
+            } else if (type === 'loan-payment') {
+                categories = [
+                    { value: 'loan-repayment', label: '💳 Loan Repayment', icon: 'fa-credit-card' }
+                ];
+            }
+
+            categorySelect.innerHTML = categories.map(cat => 
+                `<option value="${cat.value}">${cat.label}</option>`
+            ).join('');
+
+            // Populate crop selection
+            const cropSelect = document.getElementById('relatedCrop');
+            const cropOptions = (appData.crops || []).map(crop => 
+                `<option value="${crop.id}">${crop.type.charAt(0).toUpperCase() + crop.type.slice(1)} (${crop.acres} acres)</option>`
+            ).join('');
+            cropSelect.innerHTML = '<option value="">Select crop (optional)</option>' + cropOptions;
+        }
+
+        function updateLoanForm() {
+            const type = document.getElementById('loanType').value;
+            const bankGroup = document.getElementById('bankLoanGroup');
+            
+            bankGroup.style.display = type === 'bank' ? 'block' : 'none';
+        }
+
+        function changeYear(delta) {
+            currentYear += delta;
+            document.getElementById('currentYear').textContent = currentYear;
+            loadCalendar();
+        }
+
+        function changeCalendarYear(delta) {
+            currentYear += delta;
+            document.getElementById('calendarYear').textContent = currentYear;
+            loadCalendar();
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            if (modalId === 'transactionModal') {
+                updateTransactionForm();
+            } else if (modalId === 'loanModal') {
+                updateLoanForm();
+            } else if (modalId === 'cropModal') {
+                populateCropTypeGrid();
+            }
+        }
+
+        function closeModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('active');
+            });
+            document.body.style.overflow = 'auto';
+            resetForms();
+        }
+
+        function resetForms() {
+            document.querySelectorAll('.modal input, .modal textarea, .modal select').forEach(input => {
+                if (input.type !== 'date') {
+                    input.value = input.defaultValue || '';
+                }
+            });
+            
+            document.querySelectorAll('.selectable-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            selectedCrop = '';
+            
+            // Reset to current date for date inputs
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('transactionDate').value = today;
+            document.getElementById('sowingDate').value = today;
+            document.getElementById('loanDate').value = today;
+        }
+
+        async function exportAllData() {
+            if (!appData.transactions?.length && !appData.crops?.length && !appData.loans?.length) {
+                showError('No data to export');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Title
+            doc.setFontSize(18);
+            doc.text('FarmPro - Complete Farm Data Report', 20, 20);
+
+            // User info
+            doc.setFontSize(12);
+            doc.text(`Farmer: ${appData.profile?.firstName} ${appData.profile?.lastName}`, 20, 35);
+            doc.text(`Location: ${appData.profile?.farmLocation}`, 20, 45);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 55);
+
+            let yPosition = 70;
+
+            // Financial Summary
+            doc.setFontSize(14);
+            doc.text('Financial Summary', 20, yPosition);
+            yPosition += 15;
+
+            const totalIncome = (appData.transactions || [])
+                .filter(t => ['income', 'loan-given', 'interest-received'].includes(t.type))
+                .reduce((sum, t) => sum + t.amount, 0);
+            const totalExpenses = (appData.transactions || [])
+                .filter(t => ['expense', 'loan-taken', 'loan-payment', 'interest-paid'].includes(t.type))
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            doc.setFontSize(10);
+            doc.text(`Total Income: ₹${totalIncome.toLocaleString()}`, 20, yPosition);
+            doc.text(`Total Expenses: ₹${totalExpenses.toLocaleString()}`, 20, yPosition + 10);
+            doc.text(`Net Profit: ₹${(totalIncome - totalExpenses).toLocaleString()}`, 20, yPosition + 20);
+            yPosition += 40;
+
+            // Transactions Table
+            if (appData.transactions?.length > 0) {
+                doc.setFontSize(14);
+                doc.text('Recent Transactions', 20, yPosition);
+                yPosition += 10;
+
+                const transactionData = appData.transactions.slice(0, 20).map(t => [
+                    t.date,
+                    t.type.charAt(0).toUpperCase() + t.type.slice(1),
+                    t.description,
+                    `₹${t.amount.toLocaleString()}`
+                ]);
+
+                doc.autoTable({
+                    head: [['Date', 'Type', 'Description', 'Amount']],
+                    body: transactionData,
+                    startY: yPosition,
+                    styles: { fontSize: 8 },
+                    headStyles: { fillColor: [46, 125, 50] }
+                });
+            }
+
+            doc.save(`FarmPro_Complete_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+            showSuccess('Complete data exported successfully!');
+        }
+
+        async function clearAllData() {
+            if (confirm('⚠️ This will delete ALL your data permanently. Are you sure?')) {
+                appData = {
+                    profile: appData.profile, // Keep profile
+                    crops: [],
+                    transactions: [],
+                    loans: []
+                };
+                
+                await saveUserData();
+                loadDashboard();
+                showSuccess('All data cleared successfully!');
+            }
+        }
+
+        async function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                try {
+                    if (window.firebaseAuth) {
+                        await window.firebaseOperations.signOut(window.firebaseAuth);
+                    } else {
+                        localStorage.removeItem('farmpro_current_user');
+                    }
+                    
+                    currentUser = null;
+                    appData = {
+                        crops: [],
+                        transactions: [],
+                        loans: [],
+                        profile: null
+                    };
+                    
+                    showPage('auth');
+                    showSuccess('Logged out successfully!');
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    showError('Logout failed. Please try again.');
+                }
+            }
+        }
+
+        function updateConnectionStatus() {
+            const status = document.getElementById('connectionStatus');
+            
+            if (isOnline) {
+                status.className = 'connection-status online';
+                status.innerHTML = '<i class="fas fa-wifi"></i><span>Online</span>';
+            } else {
+                status.className = 'connection-status offline';
+                status.innerHTML = '<i class="fas fa-wifi-off"></i><span>Offline</span>';
+            }
+        }
+
+        function setupOfflineDetection() {
+            window.addEventListener('online', () => {
+                isOnline = true;
+                updateConnectionStatus();
+                showSuccess('Connection restored!');
+            });
+
+            window.addEventListener('offline', () => {
+                isOnline = false;
+                updateConnectionStatus();
+                showWarning('You are offline. Data will be saved locally.');
+            });
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function showError(message) {
+            showMessage('error', message);
+        }
+
+        function showSuccess(message) {
+            showMessage('success', message);
+        }
+
+        function showWarning(message) {
+            showMessage('warning', message);
+        }
+
+        function showMessage(type, message) {
+            hideAllMessages();
+            const messageElement = document.getElementById(`${type}Message`);
+            messageElement.textContent = message;
+            messageElement.style.display = 'block';
+            
+            setTimeout(() => {
+                messageElement.style.display = 'none';
+            }, type === 'warning' ? 6000 : 4000);
+        }
+
+        function hideAllMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('warningMessage').style.display = 'none';
+        }
+
+        // Initialize the app when Firebase is ready
+        if (typeof window.initializeFirebaseApp !== 'function') {
+            // Fallback if Firebase isn't loaded
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('Firebase not available, running in demo mode');
+                initializeApp();
+            });
+        }
+
+        // Auto-save data every 2 minutes
+        setInterval(() => {
+            if (currentUser) {
+                saveUserData();
+            }
+        }, 2 * 60 * 1000);
+    </script>
+</body>
+</html>
