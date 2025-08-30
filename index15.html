@@ -1,0 +1,3616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FarmPro - Complete Agricultural Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #4caf50;
+            --primary-dark: #1b5e20;
+            --secondary: #ffa000;
+            --secondary-light: #ffc107;
+            --secondary-dark: #ff6f00;
+            --text-light: #f5f5f5;
+            --text-dark: #333;
+            --bg-light: #f8f9fa;
+            --bg-dark: #2c3e50;
+            --success: #388e3c;
+            --warning: #f57c00;
+            --danger: #d32f2f;
+            --gray: #78909c;
+            --border-radius: 12px;
+            --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            position: relative;
+            margin: 0 auto;
+            min-height: calc(100vh - 20px);
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 25px;
+            font-weight: 600;
+            z-index: 2000;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .connection-status.online {
+            background: var(--success);
+            color: white;
+        }
+
+        .connection-status.offline {
+            background: var(--danger);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .sync-status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            z-index: 100;
+        }
+
+        .sync-status.syncing {
+            color: var(--warning);
+        }
+
+        .sync-status.synced {
+            color: var(--success);
+        }
+
+        .sync-status.error {
+            color: var(--danger);
+        }
+
+        .logo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .logo h1 {
+            font-weight: 700;
+            font-size: 1.8rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            opacity: 0.95;
+            font-size: 1rem;
+        }
+
+        .content-container {
+            padding: 1.5rem;
+            padding-bottom: 100px;
+        }
+
+        .auth-container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+        }
+
+        .auth-tab.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+            background: rgba(46, 125, 50, 0.05);
+        }
+
+        .auth-tab:hover {
+            background: rgba(46, 125, 50, 0.05);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .input-group .form-control {
+            flex: 1;
+        }
+
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            font-size: 1rem;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+            color: white;
+            border: 2px solid transparent;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: linear-gradient(135deg, var(--secondary-dark), var(--secondary));
+        }
+
+        .btn-google {
+            background: #4285f4;
+            color: white;
+        }
+
+        .btn-google:hover {
+            background: #3367d6;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #4caf50);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #e53935);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #ff9800);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+        }
+
+        .message {
+            padding: 16px 20px;
+            border-radius: var(--border-radius);
+            margin: 1rem 0;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+            transition: var(--transition);
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
+        .success-message {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .warning-message {
+            background: linear-gradient(135deg, #fff3e0, #ffcc80);
+            color: var(--warning);
+            border-left: 4px solid var(--warning);
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .financial-summary {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        .financial-item {
+            text-align: center;
+            padding: 1.2rem;
+            border-radius: var(--border-radius);
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: var(--transition);
+        }
+
+        .financial-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .financial-item.income {
+            border-left: 5px solid var(--success);
+            background: linear-gradient(135deg, #e8f5e9, white);
+        }
+
+        .financial-item.expense {
+            border-left: 5px solid var(--danger);
+            background: linear-gradient(135deg, #ffebee, white);
+        }
+
+        .financial-item.profit {
+            border-left: 5px solid var(--secondary);
+            background: linear-gradient(135deg, #fff8e1, white);
+        }
+
+        .financial-item.secondary {
+            border-left: 5px solid #9c27b0;
+            background: linear-gradient(135deg, #f3e5f5, white);
+        }
+
+        .financial-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0.5rem 0;
+        }
+
+        .financial-label {
+            font-size: 0.85rem;
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        .nav-tabs {
+            display: flex;
+            border-bottom: 2px solid #e1e5e9;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .nav-tab {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+            font-weight: 600;
+            color: var(--gray);
+            white-space: nowrap;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .nav-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.05), transparent);
+        }
+
+        .nav-tab:hover {
+            color: var(--primary);
+            background: rgba(46, 125, 50, 0.05);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .dashboard-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .selectable-item {
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .selectable-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(46, 125, 50, 0.15);
+        }
+
+        .selectable-item.selected {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.1), rgba(76, 175, 80, 0.05));
+            transform: scale(1.02);
+        }
+
+        .selectable-item i {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        .selectable-item div {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            max-width: 90%;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            color: var(--danger);
+            transform: scale(1.1);
+        }
+
+        .mobile-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 1000;
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--gray);
+            font-size: 0.75rem;
+            transition: var(--transition);
+            padding: 5px;
+            border-radius: 8px;
+            min-width: 60px;
+        }
+
+        .mobile-nav-item.active {
+            color: var(--primary);
+            background: rgba(46, 125, 50, 0.1);
+        }
+
+        .mobile-nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        .floating-action-button {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-light));
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(255, 160, 0, 0.3);
+            z-index: 1000;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .floating-action-button:hover {
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 8px 25px rgba(255, 160, 0, 0.4);
+        }
+
+        .quick-actions-menu {
+            position: fixed;
+            bottom: 150px;
+            right: 20px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1rem;
+            z-index: 999;
+            display: none;
+            min-width: 200px;
+        }
+
+        .quick-actions-menu.active {
+            display: block;
+            animation: slideUp 0.3s ease-in-out;
+        }
+
+        .quick-action-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: var(--transition);
+            margin-bottom: 5px;
+        }
+
+        .quick-action-item:hover {
+            background: var(--bg-light);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .income-source-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 1rem 0;
+        }
+
+        .machinery-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 1rem 0;
+        }
+
+        .machinery-item {
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            background: white;
+            transition: var(--transition);
+        }
+
+        .machinery-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-1px);
+        }
+
+        .machinery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-owned {
+            background: var(--success);
+            color: white;
+        }
+
+        .badge-rented {
+            background: var(--warning);
+            color: white;
+        }
+
+        .badge-needed {
+            background: var(--danger);
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 1rem 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .stat-item:hover {
+            background: #e8f5e9;
+            transform: translateY(-1px);
+        }
+
+        .labor-card {
+            border: 1px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 12px;
+            background: white;
+            transition: var(--transition);
+        }
+
+        .labor-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .labor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .scheme-card {
+            background: linear-gradient(135deg, #e8f5e9, white);
+            border: 2px solid var(--success);
+            border-radius: var(--border-radius);
+            padding: 15px;
+            margin-bottom: 12px;
+            transition: var(--transition);
+        }
+
+        .scheme-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 142, 60, 0.2);
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .quick-stat {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: var(--transition);
+        }
+
+        .quick-stat:hover {
+            transform: translateY(-2px);
+        }
+
+        .weather-widget {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .market-widget {
+            background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .transaction-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--primary);
+            background: transparent;
+            color: var(--primary);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.85rem;
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: var(--transition);
+        }
+
+        .transaction-item:hover {
+            background: #f8f9fa;
+        }
+
+        .transaction-date {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .transaction-amount {
+            font-weight: 600;
+        }
+
+        .transaction-amount.income {
+            color: var(--success);
+        }
+
+        .transaction-amount.expense {
+            color: var(--danger);
+        }
+
+        .crop-progress {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e1e5e9;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            transition: width 0.3s ease;
+        }
+
+        .weather-suggestion {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 10px 0;
+            border-left: 4px solid var(--success);
+        }
+
+        .crop-transaction {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            .content-container {
+                padding: 1rem;
+                padding-bottom: 100px;
+            }
+            
+            .financial-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .grid-3 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .grid-4 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .machinery-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .income-source-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .nav-tab {
+                font-size: 0.8rem;
+                padding: 10px 12px;
+                min-width: auto;
+                flex: 1;
+            }
+
+            .quick-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .transaction-filters {
+                flex-direction: column;
+            }
+
+            .filter-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .financial-summary {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connectionStatus">
+        <i class="fas fa-wifi"></i>
+        <span>Checking connection...</span>
+    </div>
+
+    <div class="app-container">
+        <div class="sync-status" id="syncStatus">
+            <i class="fas fa-sync-alt"></i>
+            <span>Ready</span>
+        </div>
+
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-leaf"></i>
+                <h1>FarmPro</h1>
+            </div>
+            <p>Complete Agricultural Financial Management System</p>
+        </div>
+
+        <!-- Messages -->
+        <div class="error-message message" id="errorMessage"></div>
+        <div class="success-message message" id="successMessage"></div>
+        <div class="warning-message message" id="warningMessage"></div>
+
+        <!-- Authentication Page -->
+        <div id="authPage" class="content-container">
+            <div class="auth-container">
+                <div class="auth-tabs">
+                    <div class="auth-tab active" data-auth="phone">
+                        <i class="fas fa-mobile-alt"></i> Phone
+                    </div>
+                    <div class="auth-tab" data-auth="email">
+                        <i class="fas fa-envelope"></i> Email
+                    </div>
+                    <div class="auth-tab" data-auth="google">
+                        <i class="fab fa-google"></i> Google
+                    </div>
+                </div>
+
+                <!-- Phone Authentication -->
+                <div class="auth-form active" id="phoneAuth">
+                    <div class="form-group">
+                        <label for="phoneNumber"><i class="fas fa-mobile-alt"></i> Phone Number</label>
+                        <div class="input-group">
+                            <select class="form-control" id="countryCode" style="max-width: 80px;">
+                                <option value="+91">🇮🇳 +91</option>
+                                <option value="+1">🇺🇸 +1</option>
+                                <option value="+44">🇬🇧 +44</option>
+                            </select>
+                            <input type="tel" class="form-control" id="phoneNumber" placeholder="9876543210" inputmode="numeric">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-full" id="sendOtpBtn">
+                        <i class="fas fa-paper-plane"></i> Send OTP
+                    </button>
+                </div>
+
+                <!-- Email Authentication -->
+                <div class="auth-form" id="emailAuth">
+                    <div class="form-group">
+                        <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" class="form-control" id="email" placeholder="farmer@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="password"><i class="fas fa-lock"></i> Password</label>
+                        <input type="password" class="form-control" id="password" placeholder="Enter password">
+                    </div>
+                    <button class="btn btn-primary btn-full" id="emailLoginBtn">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <button class="btn btn-outline btn-full" id="emailRegisterBtn" style="margin-top: 10px;">
+                        <i class="fas fa-user-plus"></i> Register
+                    </button>
+                </div>
+
+                <!-- Google Authentication -->
+                <div class="auth-form" id="googleAuth">
+                    <div style="text-align: center; padding: 2rem;">
+                        <i class="fab fa-google" style="font-size: 3rem; color: #4285f4; margin-bottom: 1rem;"></i>
+                        <p style="margin-bottom: 1.5rem; color: var(--gray);">Sign in with your Google account for quick access</p>
+                        <button class="btn btn-google btn-full" id="googleSignInBtn">
+                            <i class="fab fa-google"></i> Continue with Google
+                        </button>
+                    </div>
+                </div>
+
+                <!-- OTP Verification -->
+                <div class="auth-form" id="otpVerification" style="display: none;">
+                    <p style="text-align: center; margin-bottom: 1.5rem;">
+                        Enter OTP sent to <span id="phoneDisplay"></span>
+                    </p>
+                    <div style="display: flex; gap: 8px; justify-content: center; margin: 1.5rem 0;">
+                        <input type="text" class="form-control otp-input" maxlength="1" style="width: 50px; text-align: center;" inputmode="numeric">
+                        <input type="text" class="form-control otp-input" maxlength="1" style="width: 50px; text-align: center;" inputmode="numeric">
+                        <input type="text" class="form-control otp-input" maxlength="1" style="width: 50px; text-align: center;" inputmode="numeric">
+                        <input type="text" class="form-control otp-input" maxlength="1" style="width: 50px; text-align: center;" inputmode="numeric">
+                        <input type="text" class="form-control otp-input" maxlength="1" style="width: 50px; text-align: center;" inputmode="numeric">
+                        <input type="text" class="form-control otp-input" maxlength="1" style="width: 50px; text-align: center;" inputmode="numeric">
+                    </div>
+                    <div style="text-align: center; margin: 1rem 0; font-weight: 600; color: var(--primary);" id="countdown">02:00</div>
+                    <button class="btn btn-primary btn-full" id="verifyOtpBtn">
+                        <i class="fas fa-check"></i> Verify OTP
+                    </button>
+                    <button class="btn btn-outline btn-full" id="backToPhoneBtn" style="margin-top: 10px;">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Page -->
+        <div id="registrationPage" class="content-container" style="display: none;">
+            <h2 style="text-align: center; margin-bottom: 2rem; color: var(--primary);">
+                <i class="fas fa-user-plus"></i> Complete Your Profile
+            </h2>
+            
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Full Name</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="regFirstName" placeholder="First Name">
+                    <input type="text" class="form-control" id="regLastName" placeholder="Last Name">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-map-marker-alt"></i> Farm Location</label>
+                <input type="text" class="form-control" id="regFarmLocation" placeholder="Village, District, State">
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-expand-arrows-alt"></i> Total Farm Size</label>
+                <div class="input-group">
+                    <input type="number" class="form-control" id="regFarmAcres" placeholder="Acres" min="0" step="0.1">
+                    <input type="number" class="form-control" id="regFarmCents" placeholder="Cents" min="0" max="99">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-seedling"></i> Primary Crops</label>
+                <div class="grid-3" id="primaryCropsGrid">
+                    <!-- Will be populated dynamically -->
+                </div>
+            </div>
+
+            <button class="btn btn-primary btn-full" id="completeRegistrationBtn">
+                <i class="fas fa-check-circle"></i> Complete Registration
+            </button>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="dashboardPage" class="content-container" style="display: none;">
+            <div class="dashboard-header">
+                <div>
+                    <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+                    <p style="color: var(--gray); margin: 0;" id="welcomeMessage">Welcome back!</p>
+                </div>
+                <button class="btn btn-outline btn-small" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+
+            <div class="financial-summary">
+                <div class="financial-item income">
+                    <div class="financial-label">Total Income</div>
+                    <div class="financial-value" id="totalIncome">₹0</div>
+                    <div class="financial-label">Primary + Secondary</div>
+                </div>
+                <div class="financial-item expense">
+                    <div class="financial-label">Total Expenses</div>
+                    <div class="financial-value" id="totalExpenses">₹0</div>
+                    <div class="financial-label">All farming costs</div>
+                </div>
+                <div class="financial-item profit">
+                    <div class="financial-label">Net Profit</div>
+                    <div class="financial-value" id="netProfit">₹0</div>
+                    <div class="financial-label">This period</div>
+                </div>
+                <div class="financial-item secondary">
+                    <div class="financial-label">Secondary Income</div>
+                    <div class="financial-value" id="secondaryIncome">₹0</div>
+                    <div class="financial-label">From other sources</div>
+                </div>
+            </div>
+
+            <div class="nav-tabs">
+                <div class="nav-tab active" data-tab="overview">
+                    <i class="fas fa-home"></i><br>Overview
+                </div>
+                <div class="nav-tab" data-tab="crops">
+                    <i class="fas fa-seedling"></i><br>Crops
+                </div>
+                <div class="nav-tab" data-tab="secondary">
+                    <i class="fas fa-egg"></i><br>Secondary
+                </div>
+                <div class="nav-tab" data-tab="machinery">
+                    <i class="fas fa-tractor"></i><br>Machinery
+                </div>
+                <div class="nav-tab" data-tab="labor">
+                    <i class="fas fa-users"></i><br>Labor
+                </div>
+                <div class="nav-tab" data-tab="transactions">
+                    <i class="fas fa-receipt"></i><br>Transactions
+                </div>
+                <div class="nav-tab" data-tab="schemes">
+                    <i class="fas fa-landmark"></i><br>Schemes
+                </div>
+                <div class="nav-tab" data-tab="analytics">
+                    <i class="fas fa-chart-line"></i><br>Analytics
+                </div>
+            </div>
+
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overview-tab">
+                <div class="dashboard-card weather-widget">
+                    <h3><i class="fas fa-cloud-sun"></i> Today's Weather & Farming Suggestions</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div><i class="fas fa-thermometer-half" style="color: #ff6b35;"></i></div>
+                            <div><strong id="temperature">28°C</strong></div>
+                            <div>Temperature</div>
+                        </div>
+                        <div class="stat-item">
+                            <div><i class="fas fa-tint" style="color: #4fc3f7;"></i></div>
+                            <div><strong id="humidity">65%</strong></div>
+                            <div>Humidity</div>
+                        </div>
+                        <div class="stat-item">
+                            <div><i class="fas fa-wind" style="color: #66bb6a;"></i></div>
+                            <div><strong id="windSpeed">12 km/h</strong></div>
+                            <div>Wind Speed</div>
+                        </div>
+                        <div class="stat-item">
+                            <div><i class="fas fa-cloud-rain" style="color: #42a5f5;"></i></div>
+                            <div><strong id="rainChance">20%</strong></div>
+                            <div>Rain Chance</div>
+                        </div>
+                    </div>
+                    <div id="weatherSuggestions" class="weather-suggestion">
+                        <h4><i class="fas fa-lightbulb"></i> Today's Farming Suggestions</h4>
+                        <p id="farmingSuggestion">Good weather for farming activities today!</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-card market-widget">
+                    <h3><i class="fas fa-chart-line"></i> Market Prices (Today)</h3>
+                    <div id="marketPrices">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-tasks"></i> Today's Tasks & Reminders</h3>
+                    <div id="todaysTasks">
+                        <!-- Will be populated from crop calendar -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Crops Tab -->
+            <div class="tab-content" id="crops-tab">
+                <div class="dashboard-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3><i class="fas fa-seedling"></i> Crop Management</h3>
+                        <button class="btn btn-success btn-small" id="addCropBtn">
+                            <i class="fas fa-plus"></i> Add Crop
+                        </button>
+                    </div>
+                    
+                    <div class="quick-stats">
+                        <div class="quick-stat">
+                            <div style="color: var(--primary); font-weight: 600;" id="totalCrops">0</div>
+                            <div style="font-size: 0.8rem;">Active Crops</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div style="color: var(--success); font-weight: 600;" id="totalArea">0</div>
+                            <div style="font-size: 0.8rem;">Total Acres</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div style="color: var(--warning); font-weight: 600;" id="avgYield">0</div>
+                            <div style="font-size: 0.8rem;">Avg Yield</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div style="color: var(--secondary); font-weight: 600;" id="cropProfit">₹0</div>
+                            <div style="font-size: 0.8rem;">Crop Profit</div>
+                        </div>
+                    </div>
+
+                    <div id="cropsList">
+                        <!-- Crops will be displayed here -->
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-calendar-alt"></i> Crop Calendar & Rotation</h3>
+                    <div style="margin-bottom: 1rem;">
+                        <button class="btn btn-primary btn-small" id="addCropActivityBtn">
+                            <i class="fas fa-plus"></i> Add Activity
+                        </button>
+                    </div>
+                    <div id="cropCalendar">
+                        <!-- Crop calendar will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Secondary Income Tab -->
+            <div class="tab-content" id="secondary-tab">
+                <div class="dashboard-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3><i class="fas fa-egg"></i> Secondary Income Sources</h3>
+                        <button class="btn btn-success btn-small" id="addSecondaryBtn">
+                            <i class="fas fa-plus"></i> Add Source
+                        </button>
+                    </div>
+
+                    <div id="secondaryIncomeList">
+                        <!-- Active secondary income sources will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Machinery Tab -->
+            <div class="tab-content" id="machinery-tab">
+                <div class="dashboard-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3><i class="fas fa-tractor"></i> Machinery & Tools</h3>
+                        <button class="btn btn-success btn-small" id="addMachineryBtn">
+                            <i class="fas fa-plus"></i> Add Equipment
+                        </button>
+                    </div>
+
+                    <div class="nav-tabs" style="margin-bottom: 1rem;">
+                        <div class="nav-tab active" data-machinery="primary">Primary</div>
+                        <div class="nav-tab" data-machinery="transport">Transport</div>
+                        <div class="nav-tab" data-machinery="sprayers">Sprayers</div>
+                        <div class="nav-tab" data-machinery="irrigation">Irrigation</div>
+                        <div class="nav-tab" data-machinery="technology">Technology</div>
+                    </div>
+
+                    <div class="machinery-content active" id="primary-machinery">
+                        <div class="machinery-grid" id="primaryMachineryGrid"></div>
+                    </div>
+
+                    <div class="machinery-content" id="transport-machinery">
+                        <div class="machinery-grid" id="transportMachineryGrid"></div>
+                    </div>
+
+                    <div class="machinery-content" id="sprayers-machinery">
+                        <div class="machinery-grid" id="sprayersMachineryGrid"></div>
+                    </div>
+
+                    <div class="machinery-content" id="irrigation-machinery">
+                        <div class="machinery-grid" id="irrigationMachineryGrid"></div>
+                    </div>
+
+                    <div class="machinery-content" id="technology-machinery">
+                        <div class="machinery-grid" id="technologyGrid"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Labor Tab -->
+            <div class="tab-content" id="labor-tab">
+                <div class="dashboard-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3><i class="fas fa-users"></i> Labor Management</h3>
+                        <button class="btn btn-success btn-small" id="addLaborBtn">
+                            <i class="fas fa-user-plus"></i> Add Worker
+                        </button>
+                    </div>
+
+                    <div class="quick-stats">
+                        <div class="quick-stat">
+                            <div style="color: var(--primary); font-weight: 600;" id="totalWorkers">0</div>
+                            <div style="font-size: 0.8rem;">Total Workers</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div style="color: var(--success); font-weight: 600;" id="permanentWorkers">0</div>
+                            <div style="font-size: 0.8rem;">Permanent</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div style="color: var(--warning); font-weight: 600;" id="seasonalWorkers">0</div>
+                            <div style="font-size: 0.8rem;">Seasonal</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div style="color: var(--danger); font-weight: 600;" id="monthlyWages">₹0</div>
+                            <div style="font-size: 0.8rem;">Monthly Wages</div>
+                        </div>
+                    </div>
+
+                    <div id="laborList">
+                        <!-- Labor list will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transactions Tab -->
+            <div class="tab-content" id="transactions-tab">
+                <div class="dashboard-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3><i class="fas fa-receipt"></i> Transaction History</h3>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-warning btn-small" id="exportPdfBtn">
+                                <i class="fas fa-file-pdf"></i> Export PDF
+                            </button>
+                            <button class="btn btn-success btn-small" id="addTransactionBtn">
+                                <i class="fas fa-plus"></i> Add Transaction
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="transaction-filters">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="income">Income</button>
+                        <button class="filter-btn" data-filter="expense">Expenses</button>
+                        <button class="filter-btn" data-filter="crop">Crop Related</button>
+                        <button class="filter-btn" data-filter="labor">Labor</button>
+                        <button class="filter-btn" data-filter="machinery">Machinery</button>
+                    </div>
+
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="transactionSearch" placeholder="Search transactions...">
+                    </div>
+
+                    <div id="transactionsList">
+                        <!-- Transactions will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Government Schemes Tab -->
+            <div class="tab-content" id="schemes-tab">
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-landmark"></i> Government Schemes & Insurance</h3>
+                    
+                    <div class="scheme-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4><i class="fas fa-rupee-sign"></i> PM-KISAN</h4>
+                                <p style="color: var(--gray); margin: 0;">₹6,000 annual direct benefit</p>
+                            </div>
+                            <button class="btn btn-success btn-small" id="applyPmKisan">
+                                <i class="fas fa-external-link-alt"></i> Apply
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="scheme-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4><i class="fas fa-shield-alt"></i> Fasal Bima Yojana</h4>
+                                <p style="color: var(--gray); margin: 0;">Crop insurance coverage</p>
+                            </div>
+                            <button class="btn btn-success btn-small" id="applyFasal">
+                                <i class="fas fa-external-link-alt"></i> Apply
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card">
+                        <h4><i class="fas fa-clipboard-list"></i> Your Applications</h4>
+                        <div id="schemeApplications">
+                            <p style="text-align: center; color: var(--gray); padding: 1rem;">No applications yet</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div class="tab-content" id="analytics-tab">
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-chart-pie"></i> Financial Analytics</h3>
+                    <div id="financialCharts">
+                        <!-- Charts will be displayed here -->
+                    </div>
+                </div>
+
+                <div class="dashboard-card">
+                    <h3><i class="fas fa-trending-up"></i> Profit Trends</h3>
+                    <div id="profitTrends">
+                        <!-- Profit trends will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Crop Modal -->
+        <div class="modal" id="cropModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-seedling"></i> <span id="cropModalTitle">Add New Crop</span></h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>Crop Type</label>
+                    <div class="grid-3" id="cropTypeGrid">
+                        <!-- Crop types will be populated here -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-map"></i> Area</label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="cropAcres" placeholder="Acres" min="0" step="0.1">
+                        <input type="number" class="form-control" id="cropCents" placeholder="Cents" min="0" max="99">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-calendar"></i> Sowing Date</label>
+                    <input type="text" class="form-control" id="sowingDate" placeholder="Select date">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-clock"></i> Expected Duration</label>
+                    <select class="form-control" id="cropDuration">
+                        <option value="60">60 days (Short season)</option>
+                        <option value="90">90 days (Medium season)</option>
+                        <option value="120" selected>120 days (Long season)</option>
+                        <option value="180">180 days (Extended season)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-target"></i> Expected Yield (Quintals)</label>
+                    <input type="number" class="form-control" id="expectedYield" placeholder="Expected yield" min="0" step="0.1">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-rupee-sign"></i> Expected Price per Quintal</label>
+                    <input type="number" class="form-control" id="expectedPrice" placeholder="Expected selling price" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-sticky-note"></i> Notes</label>
+                    <textarea class="form-control" id="cropNotes" rows="3" placeholder="Add farming notes..."></textarea>
+                </div>
+
+                <button class="btn btn-primary btn-full" id="saveCropBtn">
+                    <i class="fas fa-save"></i> <span id="saveCropBtnText">Save Crop</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Crop Details Modal -->
+        <div class="modal" id="cropDetailsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-seedling"></i> <span id="cropDetailsTitle">Crop Details</span></h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                
+                <div id="cropDetailsContent">
+                    <!-- Crop details will be populated here -->
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <h4><i class="fas fa-money-bill"></i> Crop Expenses</h4>
+                    <div style="display: flex; gap: 10px; margin: 10px 0;">
+                        <button class="btn btn-success btn-small" id="addCropExpenseBtn">
+                            <i class="fas fa-plus"></i> Add Expense
+                        </button>
+                        <button class="btn btn-warning btn-small" id="editCropBtn">
+                            <i class="fas fa-edit"></i> Edit Crop
+                        </button>
+                    </div>
+                    <div id="cropExpensesList">
+                        <!-- Crop expenses will be displayed here -->
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <h4><i class="fas fa-clipboard-list"></i> Activity History</h4>
+                    <div id="cropActivitiesList">
+                        <!-- Crop activities will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Secondary Income Modal -->
+        <div class="modal" id="secondaryModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-plus-circle"></i> Add Secondary Income</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>Income Type</label>
+                    <select class="form-control" id="incomeType">
+                        <option value="dairy">🐄 Dairy (Milk, Ghee)</option>
+                        <option value="poultry">🥚 Poultry (Eggs, Chicken)</option>
+                        <option value="goat">🐐 Goat/Sheep Rearing</option>
+                        <option value="fish">🐟 Fish Farming</option>
+                        <option value="beekeeping">🐝 Beekeeping</option>
+                        <option value="compost">♻️ Vermicomposting</option>
+                        <option value="tourism">📸 Agro-Tourism</option>
+                        <option value="mushroom">🍄 Mushroom Farming</option>
+                        <option value="nursery">🌱 Plant Nursery</option>
+                        <option value="biogas">🔥 Biogas Plant</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-calendar"></i> Income Frequency</label>
+                    <select class="form-control" id="incomeFrequency">
+                        <option value="daily">Daily (e.g., Milk, Eggs)</option>
+                        <option value="weekly">Weekly (e.g., Vegetables)</option>
+                        <option value="monthly">Monthly (e.g., Fish Harvest)</option>
+                        <option value="seasonal">Seasonal (e.g., Honey)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-rupee-sign"></i> Expected Monthly Income</label>
+                    <input type="number" class="form-control" id="expectedIncome" placeholder="Enter monthly income" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-info-circle"></i> Description</label>
+                    <textarea class="form-control" id="incomeDescription" rows="2" placeholder="Additional details..."></textarea>
+                </div>
+
+                <button class="btn btn-primary btn-full" id="saveSecondaryBtn">
+                    <i class="fas fa-save"></i> Add Income Source
+                </button>
+            </div>
+        </div>
+
+        <!-- Add Machinery Modal -->
+        <div class="modal" id="machineryModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-tractor"></i> Add Machinery/Tool</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>Category</label>
+                    <select class="form-control" id="machineryCategory">
+                        <option value="primary">Primary Machinery</option>
+                        <option value="transport">Transport</option>
+                        <option value="sprayers">Sprayers</option>
+                        <option value="irrigation">Irrigation Tools</option>
+                        <option value="technology">Technology</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-tools"></i> Equipment Type</label>
+                    <select class="form-control" id="equipmentType">
+                        <!-- Will be populated based on category -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-info"></i> Details</label>
+                    <input type="text" class="form-control" id="equipmentDetails" placeholder="e.g., Mahindra 575 DI, 50HP">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-hashtag"></i> Quantity</label>
+                    <input type="number" class="form-control" id="equipmentQuantity" min="1" value="1">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-hand-holding"></i> Ownership Status</label>
+                    <select class="form-control" id="ownershipStatus">
+                        <option value="owned">Owned</option>
+                        <option value="rented">Rented/Leased</option>
+                        <option value="needed">Need to Purchase/Rent</option>
+                        <option value="shared">Shared with Others</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-rupee-sign"></i> Cost/Value</label>
+                    <input type="number" class="form-control" id="equipmentCost" placeholder="Purchase/Rental cost" min="0">
+                </div>
+
+                <button class="btn btn-primary btn-full" id="saveMachineryBtn">
+                    <i class="fas fa-save"></i> Save Equipment
+                </button>
+            </div>
+        </div>
+
+        <!-- Add Labor Modal -->
+        <div class="modal" id="laborModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-user-plus"></i> Add Worker</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Worker Name</label>
+                    <input type="text" class="form-control" id="workerName" placeholder="Enter worker name">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-briefcase"></i> Worker Type</label>
+                    <select class="form-control" id="workerType">
+                        <option value="permanent">Permanent Worker</option>
+                        <option value="seasonal">Seasonal Worker</option>
+                        <option value="daily">Daily Wage Worker</option>
+                        <option value="skilled">Skilled Worker</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-tools"></i> Specialization</label>
+                    <select class="form-control" id="workerSkill">
+                        <option value="general">General Farming</option>
+                        <option value="irrigation">Irrigation Specialist</option>
+                        <option value="machinery">Machinery Operator</option>
+                        <option value="livestock">Livestock Care</option>
+                        <option value="harvest">Harvesting Expert</option>
+                        <option value="organic">Organic Farming</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-rupee-sign"></i> Daily Wage</label>
+                    <input type="number" class="form-control" id="dailyWage" placeholder="Enter daily wage" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-mobile-alt"></i> Contact Number</label>
+                    <input type="tel" class="form-control" id="workerPhone" placeholder="Worker's phone number">
+                </div>
+
+                <button class="btn btn-primary btn-full" id="saveWorkerBtn">
+                    <i class="fas fa-save"></i> Add Worker
+                </button>
+            </div>
+        </div>
+
+        <!-- Add Transaction Modal -->
+        <div class="modal" id="transactionModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-receipt"></i> Add Transaction</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-exchange-alt"></i> Transaction Type</label>
+                    <select class="form-control" id="transactionType">
+                        <option value="income">Income</option>
+                        <option value="expense">Expense</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-tag"></i> Category</label>
+                    <select class="form-control" id="transactionCategory">
+                        <!-- Will be populated based on type -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-info"></i> Description</label>
+                    <input type="text" class="form-control" id="transactionDescription" placeholder="Transaction description">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-rupee-sign"></i> Amount</label>
+                    <input type="number" class="form-control" id="transactionAmount" placeholder="Enter amount" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-calendar"></i> Date</label>
+                    <input type="text" class="form-control" id="transactionDate" placeholder="Select date">
+                </div>
+
+                <div class="form-group" id="cropSelectionGroup" style="display: none;">
+                    <label><i class="fas fa-seedling"></i> Related Crop</label>
+                    <select class="form-control" id="relatedCrop">
+                        <!-- Will be populated with user's crops -->
+                    </select>
+                </div>
+
+                <button class="btn btn-primary btn-full" id="saveTransactionBtn">
+                    <i class="fas fa-save"></i> Save Transaction
+                </button>
+            </div>
+        </div>
+
+        <!-- Add Crop Activity Modal -->
+        <div class="modal" id="cropActivityModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-tasks"></i> Add Crop Activity</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-seedling"></i> Select Crop</label>
+                    <select class="form-control" id="activityCrop">
+                        <!-- Will be populated with user's crops -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-tasks"></i> Activity Type</label>
+                    <select class="form-control" id="activityType">
+                        <option value="plowing">Plowing</option>
+                        <option value="sowing">Sowing</option>
+                        <option value="irrigation">Irrigation</option>
+                        <option value="fertilizer">Fertilizer Application</option>
+                        <option value="pesticide">Pesticide Application</option>
+                        <option value="weeding">Weeding</option>
+                        <option value="harvesting">Harvesting</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-calendar"></i> Activity Date</label>
+                    <input type="text" class="form-control" id="activityDate" placeholder="Select date">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-info-circle"></i> Notes</label>
+                    <textarea class="form-control" id="activityNotes" rows="2" placeholder="Activity details..."></textarea>
+                </div>
+
+                <button class="btn btn-primary btn-full" id="saveCropActivityBtn">
+                    <i class="fas fa-save"></i> Save Activity
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Actions Menu -->
+        <div class="quick-actions-menu" id="quickActionsMenu">
+            <div class="quick-action-item" onclick="openModal('transactionModal')">
+                <i class="fas fa-receipt" style="color: var(--primary);"></i>
+                <span>Add Transaction</span>
+            </div>
+            <div class="quick-action-item" onclick="openModal('cropActivityModal')">
+                <i class="fas fa-tasks" style="color: var(--success);"></i>
+                <span>Log Activity</span>
+            </div>
+            <div class="quick-action-item" onclick="openModal('cropModal')">
+                <i class="fas fa-seedling" style="color: var(--warning);"></i>
+                <span>Add Crop</span>
+            </div>
+            <div class="quick-action-item" onclick="recordQuickIncome()">
+                <i class="fas fa-money-bill" style="color: var(--secondary);"></i>
+                <span>Quick Income</span>
+            </div>
+        </div>
+
+        <!-- Mobile Bottom Navigation -->
+        <div class="mobile-bottom-nav">
+            <a href="#" class="mobile-nav-item active" data-tab="overview">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-tab="crops">
+                <i class="fas fa-seedling"></i>
+                <span>Crops</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-tab="secondary">
+                <i class="fas fa-egg"></i>
+                <span>Income</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-tab="machinery">
+                <i class="fas fa-tractor"></i>
+                <span>Tools</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-tab="labor">
+                <i class="fas fa-users"></i>
+                <span>Labor</span>
+            </a>
+            <a href="#" class="mobile-nav-item" data-tab="transactions">
+                <i class="fas fa-receipt"></i>
+                <span>Records</span>
+            </a>
+        </div>
+
+        <!-- Floating Action Button -->
+        <button class="floating-action-button" id="fabButton">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+
+    <script>
+        // Global application state
+        let currentUser = null;
+        let isOnline = navigator.onLine;
+        let selectedAuthTab = 'phone';
+        let currentPage = 'auth';
+        let currentTab = 'overview';
+        let selectedCrop = '';
+        let selectedSecondarySource = '';
+        let selectedMachineryCategory = 'primary';
+        let currentEditingCrop = null;
+        let currentTransactionFilter = 'all';
+        let weatherData = null;
+        
+        let appData = {
+            user: null,
+            crops: [],
+            secondaryIncome: [],
+            machinery: [],
+            labor: [],
+            expenses: [],
+            income: [],
+            schemes: [],
+            transactions: [],
+            cropActivities: []
+        };
+
+        // Machinery types configuration
+        const machineryTypes = {
+            primary: [
+                { type: 'tractor', name: 'Tractor', icon: 'fa-tractor' },
+                { type: 'plough', name: 'Plough', icon: 'fa-seedling' },
+                { type: 'tiller', name: 'Power Tiller', icon: 'fa-cogs' },
+                { type: 'cultivator', name: 'Cultivator', icon: 'fa-tools' },
+                { type: 'harrow', name: 'Harrow', icon: 'fa-th-large' },
+                { type: 'seeder', name: 'Seed Drill', icon: 'fa-spa' }
+            ],
+            transport: [
+                { type: 'truck', name: 'Truck', icon: 'fa-truck' },
+                { type: 'mini-truck', name: 'Mini Truck', icon: 'fa-truck-pickup' },
+                { type: 'bullock-cart', name: 'Bullock Cart', icon: 'fa-horse-head' },
+                { type: 'trailer', name: 'Trailer', icon: 'fa-trailer' }
+            ],
+            sprayers: [
+                { type: 'fertilizer-sprayer', name: 'Fertilizer Sprayer', icon: 'fa-spray-can' },
+                { type: 'pesticide-sprayer', name: 'Pesticide Sprayer', icon: 'fa-bug' },
+                { type: 'drone', name: 'Agri Drone', icon: 'fa-helicopter' },
+                { type: 'knapsack', name: 'Knapsack Sprayer', icon: 'fa-backpack' }
+            ],
+            irrigation: [
+                { type: 'drip-system', name: 'Drip System', icon: 'fa-tint' },
+                { type: 'sprinkler', name: 'Sprinkler System', icon: 'fa-shower' },
+                { type: 'pump', name: 'Water Pump', icon: 'fa-pump-soap' },
+                { type: 'solar-pump', name: 'Solar Pump', icon: 'fa-sun' }
+            ],
+            technology: [
+                { type: 'soil-kit', name: 'Soil Testing Kit', icon: 'fa-vial' },
+                { type: 'weather-monitor', name: 'Weather Monitor', icon: 'fa-cloud' },
+                { type: 'gps-mapper', name: 'GPS Field Mapper', icon: 'fa-map-marked-alt' },
+                { type: 'moisture-meter', name: 'Soil Moisture Meter', icon: 'fa-thermometer' }
+            ]
+        };
+
+        // Initialize application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            setupEventListeners();
+            initializeDatePickers();
+            loadLocalData();
+            updateConnectionStatus();
+            setupOfflineDetection();
+            fetchWeatherData();
+            
+            // Check if user is logged in
+            if (appData.user && appData.user.profile) {
+                showPage('dashboard');
+                loadDashboard();
+            } else {
+                showPage('auth');
+            }
+        }
+
+        function setupEventListeners() {
+            // Auth tab switching
+            document.querySelectorAll('.auth-tab').forEach(tab => {
+                tab.addEventListener('click', () => switchAuthTab(tab.dataset.auth));
+            });
+
+            // Authentication buttons
+            document.getElementById('sendOtpBtn').addEventListener('click', sendOtp);
+            document.getElementById('verifyOtpBtn').addEventListener('click', verifyOtp);
+            document.getElementById('emailLoginBtn').addEventListener('click', emailLogin);
+            document.getElementById('emailRegisterBtn').addEventListener('click', emailRegister);
+            document.getElementById('googleSignInBtn').addEventListener('click', googleSignIn);
+            document.getElementById('backToPhoneBtn').addEventListener('click', backToPhone);
+
+            // Registration
+            document.getElementById('completeRegistrationBtn').addEventListener('click', completeRegistration);
+
+            // Dashboard buttons
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            document.getElementById('addCropBtn').addEventListener('click', () => openModal('cropModal'));
+            document.getElementById('addSecondaryBtn').addEventListener('click', () => openModal('secondaryModal'));
+            document.getElementById('addMachineryBtn').addEventListener('click', () => openModal('machineryModal'));
+            document.getElementById('addLaborBtn').addEventListener('click', () => openModal('laborModal'));
+            document.getElementById('addTransactionBtn').addEventListener('click', () => openModal('transactionModal'));
+            document.getElementById('addCropActivityBtn').addEventListener('click', () => openModal('cropActivityModal'));
+
+            // Save buttons
+            document.getElementById('saveCropBtn').addEventListener('click', saveCrop);
+            document.getElementById('saveSecondaryBtn').addEventListener('click', saveSecondaryIncome);
+            document.getElementById('saveMachineryBtn').addEventListener('click', saveMachinery);
+            document.getElementById('saveWorkerBtn').addEventListener('click', saveWorker);
+            document.getElementById('saveTransactionBtn').addEventListener('click', saveTransaction);
+            document.getElementById('saveCropActivityBtn').addEventListener('click', saveCropActivity);
+
+            // Export and action buttons
+            document.getElementById('exportPdfBtn').addEventListener('click', exportTransactionsPDF);
+            document.getElementById('addCropExpenseBtn')?.addEventListener('click', addCropExpense);
+            document.getElementById('editCropBtn')?.addEventListener('click', editCurrentCrop);
+
+            // Tab navigation
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+            });
+
+            // Mobile navigation
+            document.querySelectorAll('.mobile-nav-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const tab = item.dataset.tab;
+                    switchTab(tab);
+                    updateMobileNav(tab);
+                });
+            });
+
+            // Modal close functionality
+            document.querySelectorAll('.modal-close').forEach(btn => {
+                btn.addEventListener('click', closeModals);
+            });
+
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) closeModals();
+                });
+            });
+
+            // Floating action button and quick actions
+            document.getElementById('fabButton').addEventListener('click', toggleQuickActions);
+
+            // Machinery category switching
+            document.addEventListener('click', (e) => {
+                if (e.target.dataset.machinery) {
+                    switchMachineryCategory(e.target.dataset.machinery);
+                }
+            });
+
+            // Machinery category change
+            document.getElementById('machineryCategory').addEventListener('change', updateEquipmentTypes);
+
+            // Transaction type change
+            document.getElementById('transactionType').addEventListener('change', updateTransactionCategories);
+
+            // Transaction filters
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('filter-btn')) {
+                    setTransactionFilter(e.target.dataset.filter);
+                }
+            });
+
+            // Transaction search
+            document.getElementById('transactionSearch').addEventListener('input', filterTransactions);
+
+            // Crop selection
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('#cropTypeGrid .selectable-item')) {
+                    selectCropType(e.target.closest('.selectable-item'));
+                }
+                // Crop details view
+                if (e.target.closest('.crop-detail-btn')) {
+                    const cropId = e.target.closest('.crop-detail-btn').dataset.cropId;
+                    showCropDetails(cropId);
+                }
+            });
+
+            // Primary crops selection for registration
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('#primaryCropsGrid .selectable-item')) {
+                    const item = e.target.closest('.selectable-item');
+                    item.classList.toggle('selected');
+                }
+            });
+
+            // OTP input handling
+            document.querySelectorAll('.otp-input').forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1) {
+                        const nextInput = document.querySelectorAll('.otp-input')[index + 1];
+                        if (nextInput) nextInput.focus();
+                    }
+                });
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && e.target.value === '') {
+                        const prevInput = document.querySelectorAll('.otp-input')[index - 1];
+                        if (prevInput) prevInput.focus();
+                    }
+                });
+            });
+
+            // Scheme applications
+            document.getElementById('applyPmKisan').addEventListener('click', () => applyScheme('pm-kisan'));
+            document.getElementById('applyFasal').addEventListener('click', () => applyScheme('fasal-bima'));
+
+            // Click outside to close quick actions
+            document.addEventListener('click', (e) => {
+                const quickActions = document.getElementById('quickActionsMenu');
+                const fab = document.getElementById('fabButton');
+                if (!quickActions.contains(e.target) && !fab.contains(e.target)) {
+                    quickActions.classList.remove('active');
+                }
+            });
+        }
+
+        function initializeDatePickers() {
+            flatpickr('#sowingDate', {
+                dateFormat: "Y-m-d",
+                defaultDate: "today"
+            });
+
+            flatpickr('#transactionDate', {
+                dateFormat: "Y-m-d",
+                defaultDate: "today"
+            });
+
+            flatpickr('#activityDate', {
+                dateFormat: "Y-m-d",
+                defaultDate: "today"
+            });
+        }
+
+        async function fetchWeatherData() {
+            try {
+                // Using OpenWeatherMap API (you'll need to get an API key)
+                // For demo, we'll use mock data
+                const mockWeatherData = {
+                    temperature: Math.round(20 + Math.random() * 15),
+                    humidity: Math.round(40 + Math.random() * 40),
+                    windSpeed: Math.round(5 + Math.random() * 15),
+                    rainChance: Math.round(Math.random() * 100),
+                    description: 'Partly cloudy'
+                };
+
+                weatherData = mockWeatherData;
+                updateWeatherDisplay();
+                generateWeatherSuggestions();
+            } catch (error) {
+                console.error('Failed to fetch weather data:', error);
+            }
+        }
+
+        function updateWeatherDisplay() {
+            if (!weatherData) return;
+
+            document.getElementById('temperature').textContent = `${weatherData.temperature}°C`;
+            document.getElementById('humidity').textContent = `${weatherData.humidity}%`;
+            document.getElementById('windSpeed').textContent = `${weatherData.windSpeed} km/h`;
+            document.getElementById('rainChance').textContent = `${weatherData.rainChance}%`;
+        }
+
+        function generateWeatherSuggestions() {
+            if (!weatherData) return;
+
+            let suggestions = [];
+
+            if (weatherData.rainChance > 70) {
+                suggestions.push("High chance of rain - avoid pesticide spraying today");
+                suggestions.push("Good day for transplanting if rain is expected");
+            } else if (weatherData.rainChance < 20) {
+                suggestions.push("Low rain chance - ensure adequate irrigation");
+                suggestions.push("Good day for harvesting and field operations");
+            }
+
+            if (weatherData.temperature > 35) {
+                suggestions.push("High temperature - avoid midday field work");
+                suggestions.push("Ensure livestock have adequate shade and water");
+            } else if (weatherData.temperature < 15) {
+                suggestions.push("Cool weather - protect sensitive crops from cold");
+            }
+
+            if (weatherData.windSpeed > 20) {
+                suggestions.push("High winds - avoid drone spraying operations");
+            }
+
+            if (weatherData.humidity > 80) {
+                suggestions.push("High humidity - monitor crops for fungal diseases");
+            }
+
+            const suggestionText = suggestions.length > 0 
+                ? suggestions[Math.floor(Math.random() * suggestions.length)]
+                : "Good weather conditions for farming activities!";
+
+            document.getElementById('farmingSuggestion').textContent = suggestionText;
+        }
+
+        function updateConnectionStatus() {
+            const status = document.getElementById('connectionStatus');
+            const syncStatus = document.getElementById('syncStatus');
+            
+            if (isOnline) {
+                status.className = 'connection-status online';
+                status.innerHTML = '<i class="fas fa-wifi"></i><span>Online</span>';
+                syncStatus.className = 'sync-status synced';
+                syncStatus.innerHTML = '<i class="fas fa-check"></i><span>Synced</span>';
+            } else {
+                status.className = 'connection-status offline';
+                status.innerHTML = '<i class="fas fa-wifi-off"></i><span>Offline</span>';
+                syncStatus.className = 'sync-status error';
+                syncStatus.innerHTML = '<i class="fas fa-exclamation"></i><span>Offline</span>';
+            }
+        }
+
+        function setupOfflineDetection() {
+            window.addEventListener('online', () => {
+                isOnline = true;
+                updateConnectionStatus();
+                showSuccess('Connection restored! Syncing data...');
+                fetchWeatherData();
+            });
+
+            window.addEventListener('offline', () => {
+                isOnline = false;
+                updateConnectionStatus();
+                showWarning('You are offline. Data will be saved locally.');
+            });
+        }
+
+        function switchAuthTab(tabName) {
+            selectedAuthTab = tabName;
+            
+            document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+            
+            document.querySelector(`[data-auth="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}Auth`).classList.add('active');
+        }
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+
+            // Load tab-specific data
+            if (tabName === 'secondary') loadSecondaryIncome();
+            else if (tabName === 'machinery') loadMachinery();
+            else if (tabName === 'labor') loadLaborManagement();
+            else if (tabName === 'schemes') loadGovernmentSchemes();
+            else if (tabName === 'analytics') loadAnalytics();
+            else if (tabName === 'transactions') loadTransactions();
+            else if (tabName === 'crops') loadCropsOverview();
+        }
+
+        function switchMachineryCategory(category) {
+            selectedMachineryCategory = category;
+            
+            document.querySelectorAll('[data-machinery]').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.machinery-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`[data-machinery="${category}"]`).classList.add('active');
+            document.getElementById(`${category}-machinery`).classList.add('active');
+        }
+
+        function updateMobileNav(activeTab) {
+            document.querySelectorAll('.mobile-nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`[data-tab="${activeTab}"]`).classList.add('active');
+        }
+
+        function showPage(pageName) {
+            currentPage = pageName;
+            
+            document.getElementById('authPage').style.display = pageName === 'auth' ? 'block' : 'none';
+            document.getElementById('registrationPage').style.display = pageName === 'registration' ? 'block' : 'none';
+            document.getElementById('dashboardPage').style.display = pageName === 'dashboard' ? 'block' : 'none';
+        }
+
+        // Authentication Functions
+        async function sendOtp() {
+            const phone = document.getElementById('phoneNumber').value.trim();
+            const countryCode = document.getElementById('countryCode').value;
+            
+            if (!phone || phone.length !== 10) {
+                showError('Please enter a valid 10-digit phone number');
+                return;
+            }
+
+            document.getElementById('phoneDisplay').textContent = countryCode + phone;
+            showAuthForm('otpVerification');
+            startOtpCountdown();
+            showSuccess('OTP sent successfully! Use 123456 for demo.');
+        }
+
+        function showAuthForm(formName) {
+            document.querySelectorAll('.auth-form').forEach(form => {
+                form.style.display = 'none';
+                form.classList.remove('active');
+            });
+            
+            const targetForm = document.getElementById(formName);
+            targetForm.style.display = 'block';
+            targetForm.classList.add('active');
+        }
+
+        function startOtpCountdown() {
+            let timeLeft = 120;
+            const countdownElement = document.getElementById('countdown');
+            
+            const timer = setInterval(() => {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                countdownElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    countdownElement.textContent = 'OTP Expired';
+                    countdownElement.style.color = 'var(--danger)';
+                }
+                timeLeft--;
+            }, 1000);
+        }
+
+        async function verifyOtp() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            let otp = '';
+            otpInputs.forEach(input => otp += input.value);
+            
+            if (otp.length !== 6) {
+                showError('Please enter complete 6-digit OTP');
+                return;
+            }
+
+            if (otp === '123456') {
+                const phone = document.getElementById('countryCode').value + document.getElementById('phoneNumber').value;
+                currentUser = {
+                    id: 'user_' + Date.now(),
+                    phone: phone,
+                    authMethod: 'phone',
+                    loginTime: new Date().toISOString()
+                };
+
+                if (appData.user && appData.user.profile) {
+                    appData.user = { ...appData.user, ...currentUser };
+                    showPage('dashboard');
+                    loadDashboard();
+                    showSuccess('Welcome back!');
+                } else {
+                    showPage('registration');
+                }
+            } else {
+                showError('Invalid OTP. Use 123456 for demo.');
+            }
+        }
+
+        async function emailLogin() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showError('Please fill all fields');
+                return;
+            }
+
+            currentUser = {
+                id: 'user_' + email.replace('@', '_').replace('.', '_'),
+                email: email,
+                authMethod: 'email',
+                loginTime: new Date().toISOString()
+            };
+
+            if (appData.user && appData.user.profile) {
+                appData.user = { ...appData.user, ...currentUser };
+                showPage('dashboard');
+                loadDashboard();
+                showSuccess('Login successful!');
+            } else {
+                showPage('registration');
+            }
+        }
+
+        async function emailRegister() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showError('Please fill all fields');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters');
+                return;
+            }
+
+            currentUser = {
+                id: 'user_' + email.replace('@', '_').replace('.', '_'),
+                email: email,
+                authMethod: 'email',
+                loginTime: new Date().toISOString()
+            };
+
+            showPage('registration');
+            showSuccess('Account created! Please complete your profile.');
+        }
+
+        async function googleSignIn() {
+            currentUser = {
+                id: 'user_google_' + Date.now(),
+                email: 'farmer@gmail.com',
+                name: 'Demo Farmer',
+                authMethod: 'google',
+                photoURL: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop',
+                loginTime: new Date().toISOString()
+            };
+
+            if (appData.user && appData.user.profile) {
+                appData.user = { ...appData.user, ...currentUser };
+                showPage('dashboard');
+                loadDashboard();
+                showSuccess('Welcome back via Google!');
+            } else {
+                showPage('registration');
+                if (currentUser.name) {
+                    const nameParts = currentUser.name.split(' ');
+                    document.getElementById('regFirstName').value = nameParts[0] || '';
+                    document.getElementById('regLastName').value = nameParts.slice(1).join(' ') || '';
+                }
+            }
+        }
+
+        function backToPhone() {
+            showAuthForm('phoneAuth');
+        }
+
+        async function completeRegistration() {
+            const firstName = document.getElementById('regFirstName').value.trim();
+            const lastName = document.getElementById('regLastName').value.trim();
+            const farmLocation = document.getElementById('regFarmLocation').value.trim();
+            const farmAcres = document.getElementById('regFarmAcres').value;
+            const farmCents = document.getElementById('regFarmCents').value || '0';
+            
+            if (!firstName || !lastName || !farmLocation || !farmAcres) {
+                showError('Please fill all required fields');
+                return;
+            }
+
+            const selectedCrops = Array.from(document.querySelectorAll('#primaryCropsGrid .selectable-item.selected'))
+                .map(item => item.dataset.crop);
+
+            appData.user = {
+                ...currentUser,
+                profile: {
+                    firstName,
+                    lastName,
+                    farmLocation,
+                    totalFarmSize: {
+                        acres: parseFloat(farmAcres),
+                        cents: parseInt(farmCents)
+                    },
+                    primaryCrops: selectedCrops,
+                    registrationDate: new Date().toISOString()
+                }
+            };
+
+            saveLocalData();
+            showPage('dashboard');
+            loadDashboard();
+            showSuccess('Registration completed successfully!');
+        }
+
+        function loadDashboard() {
+            if (!appData.user) return;
+
+            document.getElementById('welcomeMessage').textContent = 
+                `Welcome, ${appData.user.profile?.firstName || 'Farmer'}!`;
+
+            updateFinancialSummary();
+            loadCropsOverview();
+            loadSecondaryIncome();
+            loadMachinery();
+            loadLaborManagement();
+            loadGovernmentSchemes();
+            loadMarketPrices();
+            loadTodaysTasks();
+            populateTransactionSelects();
+        }
+
+        function updateFinancialSummary() {
+            const totalPrimaryIncome = appData.transactions
+                .filter(t => t.type === 'income' && t.category !== 'secondary')
+                .reduce((sum, item) => sum + item.amount, 0);
+            
+            const totalSecondaryIncomeAnnual = appData.secondaryIncome
+                .reduce((sum, item) => sum + (item.monthlyIncome * 12), 0);
+            
+            const secondaryTransactions = appData.transactions
+                .filter(t => t.type === 'income' && t.category === 'secondary')
+                .reduce((sum, item) => sum + item.amount, 0);
+            
+            const totalExpenses = appData.transactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, item) => sum + item.amount, 0);
+            
+            const totalIncome = totalPrimaryIncome + totalSecondaryIncomeAnnual + secondaryTransactions;
+            const netProfit = totalIncome - totalExpenses;
+
+            document.getElementById('totalIncome').textContent = `₹${totalIncome.toLocaleString()}`;
+            document.getElementById('totalExpenses').textContent = `₹${totalExpenses.toLocaleString()}`;
+            document.getElementById('netProfit').textContent = `₹${netProfit.toLocaleString()}`;
+            document.getElementById('secondaryIncome').textContent = `₹${(totalSecondaryIncomeAnnual + secondaryTransactions).toLocaleString()}`;
+
+            const profitElement = document.getElementById('netProfit');
+            profitElement.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+        }
+
+        function loadCropsOverview() {
+            populateCropTypeGrid();
+            updateCropStats();
+            loadCropsList();
+            loadCropCalendar();
+        }
+
+        function populateCropTypeGrid() {
+            const crops = [
+                { name: 'paddy', icon: 'fa-seedling', label: 'Paddy' },
+                { name: 'cotton', icon: 'fa-leaf', label: 'Cotton' },
+                { name: 'maize', icon: 'fa-corn', label: 'Maize' },
+                { name: 'wheat', icon: 'fa-wheat', label: 'Wheat' },
+                { name: 'sugarcane', icon: 'fa-candy-cane', label: 'Sugarcane' },
+                { name: 'soybean', icon: 'fa-spa', label: 'Soybean' },
+                { name: 'chickpea', icon: 'fa-circle', label: 'Chickpea' },
+                { name: 'tomato', icon: 'fa-apple-alt', label: 'Tomato' },
+                { name: 'onion', icon: 'fa-circle', label: 'Onion' }
+            ];
+
+            const grid = document.getElementById('cropTypeGrid');
+            grid.innerHTML = crops.map(crop => `
+                <div class="selectable-item" data-crop="${crop.name}">
+                    <i class="fas ${crop.icon}"></i>
+                    <div>${crop.label}</div>
+                </div>
+            `).join('');
+
+            const primaryGrid = document.getElementById('primaryCropsGrid');
+            if (primaryGrid) {
+                primaryGrid.innerHTML = crops.map(crop => `
+                    <div class="selectable-item" data-crop="${crop.name}">
+                        <i class="fas ${crop.icon}"></i>
+                        <div>${crop.label}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function selectCropType(item) {
+            document.querySelectorAll('#cropTypeGrid .selectable-item').forEach(i => i.classList.remove('selected'));
+            item.classList.add('selected');
+            selectedCrop = item.dataset.crop;
+        }
+
+        function updateCropStats() {
+            document.getElementById('totalCrops').textContent = appData.crops.length;
+            
+            const totalAcres = appData.crops.reduce((sum, crop) => sum + crop.acres + (crop.cents || 0)/100, 0);
+            document.getElementById('totalArea').textContent = totalAcres.toFixed(1);
+            
+            const avgYield = appData.crops.length > 0 ? 
+                appData.crops.reduce((sum, crop) => sum + (crop.actualYield || crop.expectedYield || 0), 0) / appData.crops.length : 0;
+            document.getElementById('avgYield').textContent = avgYield.toFixed(1) + ' Qt';
+            
+            const cropProfit = appData.crops.reduce((sum, crop) => {
+                const income = (crop.actualYield || crop.expectedYield || 0) * (crop.actualPrice || crop.expectedPrice || 0);
+                const expenses = appData.transactions
+                    .filter(t => t.type === 'expense' && t.cropId === crop.id)
+                    .reduce((sum, t) => sum + t.amount, 0);
+                return sum + (income - expenses);
+            }, 0);
+            document.getElementById('cropProfit').textContent = `₹${cropProfit.toLocaleString()}`;
+        }
+
+        function loadCropsList() {
+            const container = document.getElementById('cropsList');
+            if (!appData.crops.length) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 2rem;">No crops added yet. Click "Add Crop" to get started.</p>';
+                return;
+            }
+
+            container.innerHTML = appData.crops.map(crop => {
+                const sowingDate = new Date(crop.sowingDate);
+                const expectedHarvest = new Date(sowingDate.getTime() + (crop.duration * 24 * 60 * 60 * 1000));
+                const today = new Date();
+                const daysElapsed = Math.floor((today - sowingDate) / (1000 * 60 * 60 * 24));
+                const progressPercent = Math.min((daysElapsed / crop.duration) * 100, 100);
+
+                const cropExpenses = appData.transactions
+                    .filter(t => t.type === 'expense' && t.cropId === crop.id)
+                    .reduce((sum, t) => sum + t.amount, 0);
+
+                return `
+                    <div class="dashboard-card" style="margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <div>
+                                <h4><i class="fas fa-seedling"></i> ${crop.type.charAt(0).toUpperCase() + crop.type.slice(1)}</h4>
+                                <p style="color: var(--gray); margin: 5px 0;">${crop.acres + (crop.cents || 0)/100} acres • ${crop.status || 'Active'}</p>
+                                <p style="color: var(--gray); font-size: 0.85rem;">Sowed: ${crop.sowingDate} • Expected harvest: ${expectedHarvest.toDateString()}</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="color: var(--success); font-weight: 600;">₹${((crop.expectedYield || 0) * (crop.expectedPrice || 0) - cropExpenses).toLocaleString()}</div>
+                                <div style="font-size: 0.8rem; color: var(--gray);">Expected Profit</div>
+                                <button class="btn btn-primary btn-small crop-detail-btn" data-crop-id="${crop.id}" style="margin-top: 5px;">
+                                    <i class="fas fa-eye"></i> Details
+                                </button>
+                            </div>
+                        </div>
+                        <div class="crop-progress">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>Growth Progress</span>
+                                <span>${Math.round(progressPercent)}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${progressPercent}%;"></div>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--gray);">
+                                ${daysElapsed} of ${crop.duration} days • ${Math.max(0, crop.duration - daysElapsed)} days remaining
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showCropDetails(cropId) {
+            const crop = appData.crops.find(c => c.id === cropId);
+            if (!crop) return;
+
+            currentEditingCrop = crop;
+            document.getElementById('cropDetailsTitle').textContent = `${crop.type.charAt(0).toUpperCase() + crop.type.slice(1)} Details`;
+
+            const cropExpenses = appData.transactions
+                .filter(t => t.type === 'expense' && t.cropId === cropId)
+                .reduce((sum, t) => sum + t.amount, 0);
+
+            const cropActivities = appData.cropActivities
+                .filter(a => a.cropId === cropId)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            document.getElementById('cropDetailsContent').innerHTML = `
+                <div class="grid-2" style="margin-bottom: 1rem;">
+                    <div>
+                        <strong>Area:</strong> ${crop.acres + (crop.cents || 0)/100} acres
+                    </div>
+                    <div>
+                        <strong>Status:</strong> ${crop.status || 'Active'}
+                    </div>
+                    <div>
+                        <strong>Sowing Date:</strong> ${crop.sowingDate}
+                    </div>
+                    <div>
+                        <strong>Duration:</strong> ${crop.duration} days
+                    </div>
+                    <div>
+                        <strong>Expected Yield:</strong> ${crop.expectedYield || 0} Qt
+                    </div>
+                    <div>
+                        <strong>Expected Price:</strong> ₹${crop.expectedPrice || 0}/Qt
+                    </div>
+                </div>
+                <div style="margin: 1rem 0;">
+                    <strong>Notes:</strong> ${crop.notes || 'No notes added'}
+                </div>
+            `;
+
+            document.getElementById('cropExpensesList').innerHTML = cropExpenses > 0 ? 
+                `<div style="color: var(--danger); font-weight: 600; text-align: center;">Total Expenses: ₹${cropExpenses.toLocaleString()}</div>` :
+                '<p style="text-align: center; color: var(--gray);">No expenses recorded yet</p>';
+
+            document.getElementById('cropActivitiesList').innerHTML = cropActivities.length > 0 ?
+                cropActivities.map(activity => `
+                    <div class="crop-transaction">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${activity.type.charAt(0).toUpperCase() + activity.type.slice(1)}</strong>
+                                <div style="font-size: 0.8rem; color: var(--gray);">${activity.notes}</div>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--gray);">${activity.date}</div>
+                        </div>
+                    </div>
+                `).join('') :
+                '<p style="text-align: center; color: var(--gray);">No activities recorded yet</p>';
+
+            openModal('cropDetailsModal');
+        }
+
+        function addCropExpense() {
+            if (!currentEditingCrop) return;
+            
+            document.getElementById('transactionType').value = 'expense';
+            document.getElementById('relatedCrop').value = currentEditingCrop.id;
+            updateTransactionCategories();
+            closeModals();
+            openModal('transactionModal');
+        }
+
+        function editCurrentCrop() {
+            if (!currentEditingCrop) return;
+
+            // Populate crop modal with current data
+            document.getElementById('cropModalTitle').textContent = 'Edit Crop';
+            document.getElementById('saveCropBtnText').textContent = 'Update Crop';
+            
+            // Select the current crop type
+            selectedCrop = currentEditingCrop.type;
+            setTimeout(() => {
+                const cropItem = document.querySelector(`[data-crop="${currentEditingCrop.type}"]`);
+                if (cropItem) {
+                    selectCropType(cropItem);
+                }
+            }, 100);
+
+            document.getElementById('cropAcres').value = currentEditingCrop.acres;
+            document.getElementById('cropCents').value = currentEditingCrop.cents || 0;
+            document.getElementById('sowingDate').value = currentEditingCrop.sowingDate;
+            document.getElementById('cropDuration').value = currentEditingCrop.duration;
+            document.getElementById('expectedYield').value = currentEditingCrop.expectedYield || '';
+            document.getElementById('expectedPrice').value = currentEditingCrop.expectedPrice || '';
+            document.getElementById('cropNotes').value = currentEditingCrop.notes || '';
+
+            closeModals();
+            openModal('cropModal');
+        }
+
+        function loadCropCalendar() {
+            const container = document.getElementById('cropCalendar');
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            
+            const cropsByMonth = {};
+            appData.crops.forEach(crop => {
+                const sowingMonth = new Date(crop.sowingDate).getMonth();
+                const harvestMonth = new Date(new Date(crop.sowingDate).getTime() + (crop.duration * 24 * 60 * 60 * 1000)).getMonth();
+                
+                if (!cropsByMonth[sowingMonth]) cropsByMonth[sowingMonth] = [];
+                cropsByMonth[sowingMonth].push({ ...crop, activity: 'sowing' });
+                
+                if (!cropsByMonth[harvestMonth]) cropsByMonth[harvestMonth] = [];
+                cropsByMonth[harvestMonth].push({ ...crop, activity: 'harvest' });
+            });
+
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 1rem;">
+                    ${months.map((month, index) => {
+                        const monthCrops = cropsByMonth[index] || [];
+                        return `
+                            <div style="padding: 10px; text-align: center; background: #f8f9fa; border-radius: 8px; min-height: 80px;">
+                                <div style="font-weight: 600; margin-bottom: 5px;">${month}</div>
+                                ${monthCrops.map(crop => `
+                                    <div style="font-size: 0.7rem; color: var(--primary); margin: 2px 0;">
+                                        ${crop.type} (${crop.activity})
+                                    </div>
+                                `).join('')}
+                                ${monthCrops.length === 0 ? '<div style="font-size: 0.7rem; color: var(--gray);">No activities</div>' : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+                <div style="text-align: center;">
+                    <p style="color: var(--gray); margin-bottom: 1rem;">
+                        Plan your crop rotation for optimal yield and soil health
+                    </p>
+                </div>
+            `;
+        }
+
+        function loadTodaysTasks() {
+            const today = new Date().toDateString();
+            const todayActivities = appData.cropActivities
+                .filter(activity => new Date(activity.date).toDateString() === today)
+                .slice(0, 5);
+
+            const upcomingTasks = appData.crops
+                .map(crop => {
+                    const sowingDate = new Date(crop.sowingDate);
+                    const daysSinceSowing = Math.floor((new Date() - sowingDate) / (1000 * 60 * 60 * 24));
+                    
+                    // Generate task suggestions based on crop lifecycle
+                    if (daysSinceSowing < 7) return { crop: crop.type, task: 'Monitor germination', priority: 'high' };
+                    if (daysSinceSowing > 30 && daysSinceSowing < 35) return { crop: crop.type, task: 'Apply fertilizer', priority: 'medium' };
+                    if (daysSinceSowing > crop.duration - 10) return { crop: crop.type, task: 'Prepare for harvest', priority: 'high' };
+                    return null;
+                })
+                .filter(task => task !== null)
+                .slice(0, 3);
+
+            const tasksHTML = [
+                ...todayActivities.map(activity => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0;">
+                        <div>
+                            <i class="fas fa-check-circle" style="color: var(--success); margin-right: 8px;"></i>
+                            <strong>${activity.type} - ${activity.cropType}</strong>
+                        </div>
+                        <div style="color: var(--success);">Completed</div>
+                    </div>
+                `),
+                ...upcomingTasks.map(task => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #f0f0f0;">
+                        <div>
+                            <i class="fas fa-clock" style="color: var(--warning); margin-right: 8px;"></i>
+                            <strong>${task.task} - ${task.crop}</strong>
+                        </div>
+                        <div style="color: var(--warning);">${task.priority === 'high' ? 'Urgent' : 'Soon'}</div>
+                    </div>
+                `)
+            ];
+
+            document.getElementById('todaysTasks').innerHTML = tasksHTML.length > 0 ? 
+                tasksHTML.join('') : 
+                '<p style="text-align: center; color: var(--gray); padding: 1rem;">No tasks for today</p>';
+        }
+
+        function loadSecondaryIncome() {
+            const container = document.getElementById('secondaryIncomeList');
+            if (!appData.secondaryIncome.length) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 2rem;">No secondary income sources added yet.</p>';
+                return;
+            }
+
+            container.innerHTML = appData.secondaryIncome.map(source => {
+                const relatedTransactions = appData.transactions
+                    .filter(t => t.type === 'income' && t.secondarySourceId === source.id)
+                    .reduce((sum, t) => sum + t.amount, 0);
+
+                return `
+                    <div class="dashboard-card" style="margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4><i class="fas fa-${getIncomeIcon(source.type)}"></i> ${source.type.charAt(0).toUpperCase() + source.type.slice(1)}</h4>
+                                <p style="color: var(--gray); margin: 5px 0;">Frequency: ${source.frequency}</p>
+                                <p style="color: var(--gray); font-size: 0.85rem;">${source.description}</p>
+                                <p style="color: var(--success); font-size: 0.85rem;">Actual income: ₹${relatedTransactions.toLocaleString()}</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="color: var(--success); font-weight: 600;">₹${source.monthlyIncome.toLocaleString()}</div>
+                                <div style="font-size: 0.8rem; color: var(--gray);">Expected/Month</div>
+                                <button class="btn btn-success btn-small" onclick="recordSecondaryIncome('${source.id}')" style="margin-top: 5px;">
+                                    <i class="fas fa-plus"></i> Record Income
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function recordSecondaryIncome(sourceId) {
+            const source = appData.secondaryIncome.find(s => s.id === sourceId);
+            if (!source) return;
+
+            document.getElementById('transactionType').value = 'income';
+            document.getElementById('transactionCategory').value = 'secondary';
+            document.getElementById('transactionDescription').value = `${source.type} income`;
+            
+            // Set the source ID as a data attribute
+            document.getElementById('saveTransactionBtn').dataset.secondarySourceId = sourceId;
+            
+            updateTransactionCategories();
+            openModal('transactionModal');
+        }
+
+        function getIncomeIcon(type) {
+            const icons = {
+                'dairy': 'cow',
+                'poultry': 'egg',
+                'goat': 'horse',
+                'fish': 'fish',
+                'beekeeping': 'bug',
+                'compost': 'recycle',
+                'tourism': 'camera',
+                'mushroom': 'umbrella',
+                'nursery': 'spa',
+                'biogas': 'fire'
+            };
+            return icons[type] || 'money-bill';
+        }
+
+        function loadMachinery() {
+            Object.keys(machineryTypes).forEach(category => {
+                loadMachineryByCategory(category);
+            });
+        }
+
+        function loadMachineryByCategory(category) {
+            const container = document.getElementById(`${category}MachineryGrid`);
+            const categoryData = appData.machinery.filter(item => item.category === category);
+            
+            if (!categoryData.length) {
+                container.innerHTML = `
+                    <div style="grid-column: span 2; text-align: center; color: var(--gray); padding: 2rem;">
+                        No ${category} equipment added yet
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = categoryData.map(item => `
+                <div class="machinery-item">
+                    <div class="machinery-header">
+                        <div>
+                            <h4><i class="fas ${getMachineryIcon(item.type)}"></i> ${item.name}</h4>
+                            <p style="color: var(--gray); margin: 5px 0;">${item.details}</p>
+                        </div>
+                        <span class="badge badge-${item.status}">${item.status}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                        <span>Qty: ${item.quantity}</span>
+                        <span style="font-weight: 600;">₹${item.cost.toLocaleString()}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getMachineryIcon(type) {
+            const icons = {
+                'tractor': 'tractor',
+                'plough': 'seedling',
+                'tiller': 'cogs',
+                'cultivator': 'tools',
+                'truck': 'truck',
+                'sprayer': 'spray-can',
+                'pump': 'pump-soap',
+                'drone': 'helicopter'
+            };
+            return icons[type] || 'tools';
+        }
+
+        function loadLaborManagement() {
+            updateLaborStats();
+            loadLaborList();
+        }
+
+        function updateLaborStats() {
+            const totalWorkers = appData.labor.length;
+            const permanentWorkers = appData.labor.filter(worker => worker.type === 'permanent').length;
+            const seasonalWorkers = appData.labor.filter(worker => worker.type === 'seasonal').length;
+            const monthlyWages = appData.labor.reduce((sum, worker) => {
+                const dailyWage = worker.dailyWage || 0;
+                const workingDays = worker.type === 'permanent' ? 30 : 15;
+                return sum + (dailyWage * workingDays);
+            }, 0);
+
+            document.getElementById('totalWorkers').textContent = totalWorkers;
+            document.getElementById('permanentWorkers').textContent = permanentWorkers;
+            document.getElementById('seasonalWorkers').textContent = seasonalWorkers;
+            document.getElementById('monthlyWages').textContent = `₹${monthlyWages.toLocaleString()}`;
+        }
+
+        function loadLaborList() {
+            const container = document.getElementById('laborList');
+            if (!appData.labor.length) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 2rem;">No workers added yet.</p>';
+                return;
+            }
+
+            container.innerHTML = appData.labor.map(worker => `
+                <div class="labor-card">
+                    <div class="labor-header">
+                        <div>
+                            <h4><i class="fas fa-user"></i> ${worker.name}</h4>
+                            <p style="color: var(--gray); margin: 5px 0;">${worker.skill} • ${worker.type}</p>
+                            ${worker.phone ? `
+                                <p style="color: var(--gray); font-size: 0.85rem;">
+                                    <a href="tel:${worker.phone}" style="color: var(--primary); text-decoration: none;">
+                                        <i class="fas fa-phone"></i> ${worker.phone}
+                                    </a>
+                                </p>
+                            ` : '<p style="color: var(--gray); font-size: 0.85rem;">No contact info</p>'}
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="color: var(--primary); font-weight: 600;">₹${worker.dailyWage}/day</div>
+                            <div style="font-size: 0.8rem; color: var(--gray);">Daily Wage</div>
+                            ${worker.phone ? `
+                                <a href="tel:${worker.phone}" class="btn btn-success btn-small" style="margin-top: 5px; text-decoration: none;">
+                                    <i class="fas fa-phone"></i> Call
+                                </a>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadTransactions() {
+            filterTransactions();
+        }
+
+        function filterTransactions() {
+            const searchTerm = document.getElementById('transactionSearch').value.toLowerCase();
+            let filteredTransactions = appData.transactions;
+
+            // Apply filter
+            if (currentTransactionFilter !== 'all') {
+                filteredTransactions = filteredTransactions.filter(t => {
+                    if (currentTransactionFilter === 'crop') {
+                        return t.cropId || t.category === 'seeds' || t.category === 'fertilizer' || t.category === 'pesticide';
+                    }
+                    return t.type === currentTransactionFilter || t.category === currentTransactionFilter;
+                });
+            }
+
+            // Apply search
+            if (searchTerm) {
+                filteredTransactions = filteredTransactions.filter(t => 
+                    t.description.toLowerCase().includes(searchTerm) ||
+                    t.category.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            // Sort by date (newest first)
+            filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const container = document.getElementById('transactionsList');
+            if (!filteredTransactions.length) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 2rem;">No transactions found.</p>';
+                return;
+            }
+
+            container.innerHTML = filteredTransactions.map(transaction => {
+                const crop = transaction.cropId ? appData.crops.find(c => c.id === transaction.cropId) : null;
+                const secondarySource = transaction.secondarySourceId ? 
+                    appData.secondaryIncome.find(s => s.id === transaction.secondarySourceId) : null;
+
+                return `
+                    <div class="transaction-item">
+                        <div>
+                            <div style="font-weight: 600;">
+                                <i class="fas fa-${transaction.type === 'income' ? 'arrow-up' : 'arrow-down'}" 
+                                   style="color: var(--${transaction.type === 'income' ? 'success' : 'danger'});"></i>
+                                ${transaction.description}
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--gray);">
+                                ${transaction.category}
+                                ${crop ? ` • ${crop.type}` : ''}
+                                ${secondarySource ? ` • ${secondarySource.type}` : ''}
+                            </div>
+                            <div class="transaction-date">${transaction.date}</div>
+                        </div>
+                        <div class="transaction-amount ${transaction.type}">
+                            ${transaction.type === 'income' ? '+' : '-'}₹${transaction.amount.toLocaleString()}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setTransactionFilter(filter) {
+            currentTransactionFilter = filter;
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-filter="${filter}"]`).classList.add('active');
+            
+            filterTransactions();
+        }
+
+        function exportTransactionsPDF() {
+            if (!appData.transactions.length) {
+                showError('No transactions to export');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Title
+            doc.setFontSize(20);
+            doc.text('FarmPro - Transaction History', 20, 20);
+
+            // Date range
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 35);
+            doc.text(`Total Transactions: ${appData.transactions.length}`, 20, 45);
+
+            // Prepare table data
+            const tableData = appData.transactions.map(t => [
+                t.date,
+                t.type.charAt(0).toUpperCase() + t.type.slice(1),
+                t.category,
+                t.description,
+                `₹${t.amount.toLocaleString()}`
+            ]);
+
+            // Add table
+            doc.autoTable({
+                head: [['Date', 'Type', 'Category', 'Description', 'Amount']],
+                body: tableData,
+                startY: 55,
+                styles: { fontSize: 10 },
+                headStyles: { fillColor: [46, 125, 50] }
+            });
+
+            // Summary
+            const totalIncome = appData.transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const totalExpenses = appData.transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            const netProfit = totalIncome - totalExpenses;
+
+            const finalY = doc.lastAutoTable.finalY || 55;
+            doc.text(`Total Income: ₹${totalIncome.toLocaleString()}`, 20, finalY + 20);
+            doc.text(`Total Expenses: ₹${totalExpenses.toLocaleString()}`, 20, finalY + 30);
+            doc.text(`Net Profit: ₹${netProfit.toLocaleString()}`, 20, finalY + 40);
+
+            doc.save(`FarmPro_Transactions_${new Date().toISOString().split('T')[0]}.pdf`);
+            showSuccess('PDF exported successfully!');
+        }
+
+        function loadGovernmentSchemes() {
+            const container = document.getElementById('schemeApplications');
+            if (!appData.schemes.length) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray); padding: 1rem;">No scheme applications yet</p>';
+                return;
+            }
+
+            container.innerHTML = appData.schemes.map(scheme => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f0f0f0;">
+                    <div>
+                        <div style="font-weight: 600;">${scheme.name}</div>
+                        <div style="color: var(--gray); font-size: 0.9rem;">Applied: ${scheme.appliedDate}</div>
+                    </div>
+                    <div style="color: var(--warning); font-weight: 600;">${scheme.status}</div>
+                </div>
+            `).join('');
+        }
+
+        function loadMarketPrices() {
+            const crops = ['Paddy', 'Cotton', 'Maize', 'Wheat', 'Sugarcane', 'Soybean'];
+            const basePrices = [2850, 7200, 2100, 2250, 3500, 4200];
+            
+            // Add some random variation to simulate live prices
+            const prices = basePrices.map(price => Math.round(price + (Math.random() - 0.5) * 200));
+            
+            document.getElementById('marketPrices').innerHTML = crops.map((crop, index) => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.3);">
+                    <span>${crop}</span>
+                    <span style="font-weight: 600;">₹${prices[index].toLocaleString()}/Qt</span>
+                </div>
+            `).join('');
+        }
+
+        function loadAnalytics() {
+            const monthlyData = calculateMonthlyData();
+            
+            document.getElementById('financialCharts').innerHTML = `
+                <div class="grid-2">
+                    <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                        <h4>This Month</h4>
+                        <div style="color: var(--success); font-size: 1.5rem; font-weight: 600;">₹${monthlyData.income.toLocaleString()}</div>
+                        <div style="color: var(--gray);">Income</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                        <h4>This Month</h4>
+                        <div style="color: var(--danger); font-size: 1.5rem; font-weight: 600;">₹${monthlyData.expenses.toLocaleString()}</div>
+                        <div style="color: var(--gray);">Expenses</div>
+                    </div>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <h4>Expense Breakdown</h4>
+                    ${generateExpenseBreakdown()}
+                </div>
+            `;
+
+            document.getElementById('profitTrends').innerHTML = `
+                <div style="text-align: center; padding: 2rem;">
+                    <div style="color: ${monthlyData.profit >= 0 ? 'var(--success)' : 'var(--danger)'}; font-size: 2rem; font-weight: 600;">
+                        ₹${monthlyData.profit.toLocaleString()}
+                    </div>
+                    <div style="color: var(--gray);">Net Profit This Month</div>
+                    <div style="margin-top: 1rem; font-size: 0.9rem; color: var(--gray);">
+                        ${monthlyData.profit >= 0 ? 'Profitable farming operations' : 'Focus on cost optimization'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function calculateMonthlyData() {
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            
+            const monthlyTransactions = appData.transactions.filter(t => {
+                const transactionDate = new Date(t.date);
+                return transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear;
+            });
+
+            const income = monthlyTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const expenses = monthlyTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+
+            return {
+                income,
+                expenses,
+                profit: income - expenses
+            };
+        }
+
+        function generateExpenseBreakdown() {
+            const expenseCategories = {};
+            appData.transactions.filter(t => t.type === 'expense').forEach(t => {
+                expenseCategories[t.category] = (expenseCategories[t.category] || 0) + t.amount;
+            });
+
+            return Object.entries(expenseCategories)
+                .sort((a, b) => b[1] - a[1])
+                .map(([category, amount]) => `
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                        <span>${category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                        <span style="font-weight: 600;">₹${amount.toLocaleString()}</span>
+                    </div>
+                `).join('');
+        }
+
+        // Save Functions
+        async function saveCrop() {
+            if (!selectedCrop) {
+                showError('Please select a crop type');
+                return;
+            }
+
+            const acres = parseFloat(document.getElementById('cropAcres').value);
+            const cents = parseInt(document.getElementById('cropCents').value || '0');
+            const sowingDate = document.getElementById('sowingDate').value;
+            const duration = document.getElementById('cropDuration').value;
+            const expectedYield = parseFloat(document.getElementById('expectedYield').value || '0');
+            const expectedPrice = parseFloat(document.getElementById('expectedPrice').value || '0');
+            const notes = document.getElementById('cropNotes').value;
+
+            if (!acres || !sowingDate) {
+                showError('Please fill all required fields');
+                return;
+            }
+
+            const cropData = {
+                type: selectedCrop,
+                acres: acres,
+                cents: cents,
+                sowingDate: sowingDate,
+                duration: parseInt(duration),
+                expectedYield: expectedYield,
+                expectedPrice: expectedPrice,
+                notes: notes,
+                status: 'planted',
+                updatedAt: new Date().toISOString()
+            };
+
+            if (currentEditingCrop) {
+                // Update existing crop
+                const index = appData.crops.findIndex(c => c.id === currentEditingCrop.id);
+                appData.crops[index] = { ...appData.crops[index], ...cropData };
+                showSuccess('Crop updated successfully!');
+            } else {
+                // Add new crop
+                const newCrop = {
+                    id: generateId(),
+                    ...cropData,
+                    createdAt: new Date().toISOString()
+                };
+                appData.crops.push(newCrop);
+                showSuccess('Crop added successfully!');
+            }
+
+            saveLocalData();
+            closeModals();
+            loadCropsOverview();
+            updateFinancialSummary();
+            resetCropModal();
+        }
+
+        function resetCropModal() {
+            currentEditingCrop = null;
+            document.getElementById('cropModalTitle').textContent = 'Add New Crop';
+            document.getElementById('saveCropBtnText').textContent = 'Save Crop';
+        }
+
+        async function saveSecondaryIncome() {
+            const type = document.getElementById('incomeType').value;
+            const frequency = document.getElementById('incomeFrequency').value;
+            const monthlyIncome = parseFloat(document.getElementById('expectedIncome').value);
+            const description = document.getElementById('incomeDescription').value;
+
+            if (!monthlyIncome) {
+                showError('Please enter expected monthly income');
+                return;
+            }
+
+            const newSource = {
+                id: generateId(),
+                type: type,
+                frequency: frequency,
+                monthlyIncome: monthlyIncome,
+                description: description,
+                createdAt: new Date().toISOString()
+            };
+
+            appData.secondaryIncome.push(newSource);
+            saveLocalData();
+            closeModals();
+            loadSecondaryIncome();
+            updateFinancialSummary();
+            showSuccess('Secondary income source added!');
+        }
+
+        async function saveMachinery() {
+            const category = document.getElementById('machineryCategory').value;
+            const type = document.getElementById('equipmentType').value;
+            const details = document.getElementById('equipmentDetails').value;
+            const quantity = parseInt(document.getElementById('equipmentQuantity').value);
+            const status = document.getElementById('ownershipStatus').value;
+            const cost = parseFloat(document.getElementById('equipmentCost').value || '0');
+
+            if (!type || !details || !quantity) {
+                showError('Please fill all required fields');
+                return;
+            }
+
+            const newMachinery = {
+                id: generateId(),
+                category: category,
+                type: type,
+                name: type.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                details: details,
+                quantity: quantity,
+                status: status,
+                cost: cost,
+                createdAt: new Date().toISOString()
+            };
+
+            appData.machinery.push(newMachinery);
+            saveLocalData();
+            closeModals();
+            loadMachinery();
+            showSuccess('Equipment added successfully!');
+        }
+
+        async function saveWorker() {
+            const name = document.getElementById('workerName').value.trim();
+            const type = document.getElementById('workerType').value;
+            const skill = document.getElementById('workerSkill').value;
+            const dailyWage = parseFloat(document.getElementById('dailyWage').value);
+            const phone = document.getElementById('workerPhone').value.trim();
+
+            if (!name || !dailyWage) {
+                showError('Please fill all required fields');
+                return;
+            }
+
+            const newWorker = {
+                id: generateId(),
+                name: name,
+                type: type,
+                skill: skill,
+                dailyWage: dailyWage,
+                phone: phone,
+                createdAt: new Date().toISOString()
+            };
+
+            appData.labor.push(newWorker);
+            saveLocalData();
+            closeModals();
+            loadLaborManagement();
+            showSuccess('Worker added successfully!');
+        }
+
+        async function saveTransaction() {
+            const type = document.getElementById('transactionType').value;
+            const category = document.getElementById('transactionCategory').value;
+            const description = document.getElementById('transactionDescription').value.trim();
+            const amount = parseFloat(document.getElementById('transactionAmount').value);
+            const date = document.getElementById('transactionDate').value;
+            const cropId = document.getElementById('relatedCrop').value;
+            const secondarySourceId = document.getElementById('saveTransactionBtn').dataset.secondarySourceId;
+
+            if (!description || !amount || !date) {
+                showError('Please fill all required fields');
+                return;
+            }
+
+            const newTransaction = {
+                id: generateId(),
+                type: type,
+                category: category,
+                description: description,
+                amount: amount,
+                date: date,
+                cropId: cropId || null,
+                secondarySourceId: secondarySourceId || null,
+                createdAt: new Date().toISOString()
+            };
+
+            appData.transactions.push(newTransaction);
+            
+            // Add to income or expenses for backward compatibility
+            if (type === 'income') {
+                appData.income.push(newTransaction);
+            } else {
+                appData.expenses.push(newTransaction);
+            }
+
+            saveLocalData();
+            closeModals();
+            updateFinancialSummary();
+            if (currentTab === 'transactions') loadTransactions();
+            showSuccess('Transaction recorded successfully!');
+
+            // Clear secondary source ID
+            delete document.getElementById('saveTransactionBtn').dataset.secondarySourceId;
+        }
+
+        async function saveCropActivity() {
+            const cropId = document.getElementById('activityCrop').value;
+            const type = document.getElementById('activityType').value;
+            const date = document.getElementById('activityDate').value;
+            const notes = document.getElementById('activityNotes').value;
+
+            if (!cropId || !type || !date) {
+                showError('Please fill all required fields');
+                return;
+            }
+
+            const crop = appData.crops.find(c => c.id === cropId);
+            if (!crop) {
+                showError('Selected crop not found');
+                return;
+            }
+
+            const newActivity = {
+                id: generateId(),
+                cropId: cropId,
+                cropType: crop.type,
+                type: type,
+                date: date,
+                notes: notes,
+                createdAt: new Date().toISOString()
+            };
+
+            appData.cropActivities.push(newActivity);
+            saveLocalData();
+            closeModals();
+            loadCropCalendar();
+            loadTodaysTasks();
+            showSuccess('Crop activity recorded successfully!');
+        }
+
+        function populateTransactionSelects() {
+            // Populate crop selection
+            const cropSelect = document.getElementById('relatedCrop');
+            const activityCropSelect = document.getElementById('activityCrop');
+            
+            const cropOptions = appData.crops.map(crop => 
+                `<option value="${crop.id}">${crop.type.charAt(0).toUpperCase() + crop.type.slice(1)} (${crop.acres} acres)</option>`
+            ).join('');
+
+            cropSelect.innerHTML = '<option value="">Select crop (optional)</option>' + cropOptions;
+            activityCropSelect.innerHTML = '<option value="">Select crop</option>' + cropOptions;
+        }
+
+        function updateTransactionCategories() {
+            const type = document.getElementById('transactionType').value;
+            const categorySelect = document.getElementById('transactionCategory');
+            const cropGroup = document.getElementById('cropSelectionGroup');
+
+            let categories = [];
+            if (type === 'income') {
+                categories = ['crop-sale', 'secondary', 'government-subsidy', 'other'];
+                cropGroup.style.display = 'block';
+            } else {
+                categories = ['seeds', 'fertilizer', 'pesticide', 'labor', 'machinery', 'fuel', 'irrigation', 'other'];
+                cropGroup.style.display = 'block';
+            }
+
+            categorySelect.innerHTML = categories.map(cat => 
+                `<option value="${cat}">${cat.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</option>`
+            ).join('');
+        }
+
+        function updateEquipmentTypes() {
+            const category = document.getElementById('machineryCategory').value;
+            const typeSelect = document.getElementById('equipmentType');
+            const types = machineryTypes[category] || [];
+            
+            typeSelect.innerHTML = types.map(item => 
+                `<option value="${item.type}">${item.name}</option>`
+            ).join('');
+        }
+
+        function applyScheme(schemeType) {
+            const schemes = {
+                'pm-kisan': 'PM-KISAN Direct Benefit Scheme',
+                'fasal-bima': 'Pradhan Mantri Fasal Bima Yojana'
+            };
+
+            const newApplication = {
+                id: generateId(),
+                name: schemes[schemeType],
+                type: schemeType,
+                appliedDate: new Date().toLocaleDateString(),
+                status: 'Under Review',
+                createdAt: new Date().toISOString()
+            };
+
+            appData.schemes.push(newApplication);
+            saveLocalData();
+            loadGovernmentSchemes();
+            showSuccess(`Application submitted for ${schemes[schemeType]}!`);
+        }
+
+        function toggleQuickActions() {
+            const menu = document.getElementById('quickActionsMenu');
+            menu.classList.toggle('active');
+        }
+
+        function recordQuickIncome() {
+            document.getElementById('transactionType').value = 'income';
+            updateTransactionCategories();
+            document.getElementById('quickActionsMenu').classList.remove('active');
+            openModal('transactionModal');
+        }
+
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            if (modalId === 'machineryModal') {
+                updateEquipmentTypes();
+            } else if (modalId === 'transactionModal') {
+                updateTransactionCategories();
+                populateTransactionSelects();
+            } else if (modalId === 'cropActivityModal') {
+                populateTransactionSelects();
+            }
+        }
+
+        function closeModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('active');
+            });
+            document.body.style.overflow = 'auto';
+            resetModalForms();
+            resetCropModal();
+        }
+
+        function resetModalForms() {
+            document.querySelectorAll('.modal input, .modal textarea, .modal select').forEach(input => {
+                if (input.type !== 'hidden' && input.id !== 'transactionDate' && input.id !== 'activityDate') {
+                    input.value = input.defaultValue || '';
+                }
+            });
+            
+            document.querySelectorAll('.selectable-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            selectedCrop = '';
+            selectedSecondarySource = '';
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function saveLocalData() {
+            localStorage.setItem('farmpro_data', JSON.stringify(appData));
+        }
+
+        function loadLocalData() {
+            const saved = localStorage.getItem('farmpro_data');
+            if (saved) {
+                try {
+                    const parsedData = JSON.parse(saved);
+                    appData = { ...appData, ...parsedData };
+                } catch (error) {
+                    console.error('Error loading saved data:', error);
+                }
+            }
+        }
+
+        function showError(message) {
+            showMessage('error', message);
+        }
+
+        function showSuccess(message) {
+            showMessage('success', message);
+        }
+
+        function showWarning(message) {
+            showMessage('warning', message);
+        }
+
+        function showMessage(type, message) {
+            hideAllMessages();
+            const messageElement = document.getElementById(`${type}Message`);
+            messageElement.textContent = message;
+            messageElement.style.display = 'block';
+            
+            setTimeout(() => {
+                messageElement.style.display = 'none';
+            }, type === 'warning' ? 8000 : 5000);
+        }
+
+        function hideAllMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('warningMessage').style.display = 'none';
+        }
+
+        async function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                currentUser = null;
+                appData.user = null;
+                saveLocalData();
+                showPage('auth');
+                showSuccess('Logged out successfully!');
+                resetCropModal();
+            }
+        }
+
+        // Auto-refresh weather data every 30 minutes
+        setInterval(fetchWeatherData, 30 * 60 * 1000);
+        
+        // Auto-save data every 5 minutes
+        setInterval(saveLocalData, 5 * 60 * 1000);
+    </script>
+</body>
+</html>
