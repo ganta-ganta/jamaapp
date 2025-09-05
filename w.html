@@ -166,6 +166,42 @@
             margin-bottom: 10px;
         }
         
+        .rain-alert {
+            background: rgba(0, 119, 255, 0.3);
+            border-left: 5px solid #0077ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .rain-alert.rain-detected {
+            background: rgba(0, 119, 255, 0.3);
+            border-left: 5px solid #0077ff;
+        }
+        
+        .rain-alert.no-rain {
+            background: rgba(76, 175, 80, 0.3);
+            border-left: 5px solid #4CAF50;
+        }
+        
+        .rain-alert i {
+            font-size: 1.8rem;
+        }
+        
+        .rain-probability {
+            font-weight: bold;
+            margin-top: 5px;
+            font-size: 1.2rem;
+        }
+        
+        .rain-intensity {
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+        
         .forecast {
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(10px);
@@ -190,6 +226,7 @@
             padding: 15px;
             border-radius: 15px;
             text-align: center;
+            position: relative;
         }
         
         .forecast-day {
@@ -205,6 +242,20 @@
         .forecast-temp {
             font-size: 1.5rem;
             font-weight: bold;
+        }
+        
+        .rain-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 119, 255, 0.3);
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
         }
         
         .hourly-forecast {
@@ -234,6 +285,7 @@
             border-radius: 15px;
             text-align: center;
             min-width: 120px;
+            position: relative;
         }
         
         .hourly-time {
@@ -249,6 +301,11 @@
         .hourly-temp {
             font-size: 1.2rem;
             font-weight: bold;
+        }
+        
+        .hourly-rain {
+            margin-top: 5px;
+            font-size: 0.9rem;
         }
         
         .footer {
@@ -309,7 +366,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>Weather Forecast</h1>
+            <h1>Jama App</h1>
             <p>Get accurate weather information using your current location</p>
         </header>
         
@@ -319,11 +376,9 @@
                 <button id="search-btn"><i class="fas fa-search"></i> Search</button>
             </div>
             <div class="location-buttons">
-                <button data-location="New York">New York</button>
-                <button data-location="London">London</button>
-                <button data-location="Tokyo">Tokyo</button>
-                <button data-location="Sydney">Sydney</button>
-                <button data-location="Paris">Paris</button>
+                <button data-location="Guntur">Guntur</button>
+                <button data-location="London">Hydrabad</button>
+                
             </div>
         </div>
         
@@ -470,6 +525,50 @@
                 const weatherCode = current.weatherCode;
                 const { description, icon } = getWeatherInfo(weatherCode);
                 
+                // Check if it's currently raining
+                const isRaining = current.rainIntensity > 0;
+                const rainProbability = Math.round(current.precipitationProbability * 100);
+                const rainIntensity = current.rainIntensity;
+                
+                // Generate rain alert HTML
+                let rainAlertHTML = '';
+                if (isRaining) {
+                    let intensityLevel = 'Light';
+                    if (rainIntensity > 2.5) intensityLevel = 'Heavy';
+                    else if (rainIntensity > 0.5) intensityLevel = 'Moderate';
+                    
+                    rainAlertHTML = `
+                        <div class="rain-alert rain-detected">
+                            <i class="fas fa-cloud-rain"></i>
+                            <div>
+                                <p>Rain detected right now</p>
+                                <div class="rain-probability">${rainProbability}% chance of rain</div>
+                                <div class="rain-intensity">${intensityLevel} rain (${rainIntensity.toFixed(1)} mm/h)</div>
+                            </div>
+                        </div>
+                    `;
+                } else if (rainProbability > 30) {
+                    rainAlertHTML = `
+                        <div class="rain-alert">
+                            <i class="fas fa-cloud-sun"></i>
+                            <div>
+                                <p>No rain currently</p>
+                                <div class="rain-probability">${rainProbability}% chance of rain later</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    rainAlertHTML = `
+                        <div class="rain-alert no-rain">
+                            <i class="fas fa-sun"></i>
+                            <div>
+                                <p>No rain expected</p>
+                                <div class="rain-probability">${rainProbability}% chance of rain</div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
                 // Update UI with weather data
                 weatherResults.innerHTML = `
                     <div class="weather-display">
@@ -480,6 +579,7 @@
                                 <div class="weather-icon"><i class="fas fa-${icon}"></i></div>
                             </div>
                             <p>${description}</p>
+                            ${rainAlertHTML}
                             <div class="weather-details">
                                 <div class="detail">
                                     <i class="fas fa-wind"></i>
@@ -507,8 +607,16 @@
                                     const date = new Date(day.time);
                                     const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
                                     const dayWeather = getWeatherInfo(day.values.weatherCodeMax);
+                                    const rainProb = Math.round(day.values.precipitationProbabilityAvg * 100);
+                                    
+                                    let rainIndicator = '';
+                                    if (rainProb > 30) {
+                                        rainIndicator = `<div class="rain-indicator">${rainProb}%</div>`;
+                                    }
+                                    
                                     return `
                                         <div class="forecast-card">
+                                            ${rainIndicator}
                                             <div class="forecast-day">${dayName}</div>
                                             <div class="forecast-icon"><i class="fas fa-${dayWeather.icon}"></i></div>
                                             <div class="forecast-temp">${Math.round(day.values.temperatureApparentAvg)}°C</div>
@@ -526,11 +634,19 @@
                                 const date = new Date(hour.time);
                                 const time = date.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true });
                                 const hourWeather = getWeatherInfo(hour.values.weatherCode);
+                                const rainProb = Math.round(hour.values.precipitationProbability * 100);
+                                
+                                let rainHTML = '';
+                                if (rainProb > 20) {
+                                    rainHTML = `<div class="hourly-rain">${rainProb}% 💧</div>`;
+                                }
+                                
                                 return `
                                     <div class="hourly-card">
                                         <div class="hourly-time">${time}</div>
                                         <div class="hourly-icon"><i class="fas fa-${hourWeather.icon}"></i></div>
                                         <div class="hourly-temp">${Math.round(hour.values.temperature)}°C</div>
+                                        ${rainHTML}
                                     </div>
                                 `;
                             }).join('')}
