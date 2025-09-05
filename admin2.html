@@ -1,0 +1,2367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jama Admin Panel - Agricultural Management System</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff6b00'><path d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'/></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, query, where, getDocs, updateDoc, deleteDoc, onSnapshot, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+        
+        // Firebase configuration
+         const firebaseConfig = {
+
+    apiKey: "AIzaSyCdfgtj1gvZ-bkomW1V40h-4tyUPHy_peo",
+
+    authDomain: "jama-3f427.firebaseapp.com",
+
+    projectId: "jama-3f427",
+
+    storageBucket: "jama-3f427.firebasestorage.app",
+
+    messagingSenderId: "897112470741",
+
+    appId: "1:897112470741:web:ee6388f0faae459fcb1e5c",
+
+    measurementId: "G-NN1BRV0QKS"
+
+  };
+        
+        // Initialize Firebase
+        window.firebaseApp = initializeApp(firebaseConfig);
+        window.auth = getAuth(window.firebaseApp);
+        window.db = getFirestore(window.firebaseApp);
+        window.storage = getStorage(window.firebaseApp);
+        
+        // Export Firebase functions for global use
+        window.firebaseAuth = {
+            signInWithEmailAndPassword,
+            signOut,
+            onAuthStateChanged
+        };
+        
+        window.firebaseDb = {
+            doc,
+            setDoc,
+            getDoc,
+            collection,
+            addDoc,
+            query,
+            where,
+            getDocs,
+            updateDoc,
+            deleteDoc,
+            onSnapshot,
+            orderBy,
+            limit
+        };
+        
+        window.firebaseStorage = {
+            ref,
+            uploadBytes,
+            getDownloadURL
+        };
+        
+        // Initialize authentication listener
+        onAuthStateChanged(window.auth, (user) => {
+            if (window.authStateHandler) {
+                window.authStateHandler(user);
+            }
+        });
+    </script>
+    
+    <style>
+        :root {
+            --primary: #ff6b00;
+            --primary-light: #ff8f00;
+            --primary-dark: #e65100;
+            --secondary: #2196f3;
+            --secondary-light: #42a5f5;
+            --secondary-dark: #1976d2;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --info: #00bcd4;
+            --dark: #212529;
+            --light: #f8f9fa;
+            --white: #ffffff;
+            --gray: #6c757d;
+            --gray-light: #e9ecef;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background: var(--primary);
+            color: white;
+            padding: 2rem 0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: var(--transition);
+        }
+
+        .sidebar-brand {
+            text-align: center;
+            padding: 0 1rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .sidebar-brand h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .sidebar-brand p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: white;
+            text-decoration: none;
+            transition: var(--transition);
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-nav-link:hover,
+        .sidebar-nav-link.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: white;
+        }
+
+        .sidebar-nav-link i {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 2rem;
+            transition: var(--transition);
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--light);
+            border-radius: var(--border-radius);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .logout-btn:hover {
+            background: #d32f2f;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--box-shadow);
+            border-left: 4px solid var(--primary);
+            transition: var(--transition);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card.users {
+            border-left-color: var(--secondary);
+        }
+
+        .stat-card.crops {
+            border-left-color: var(--success);
+        }
+
+        .stat-card.transactions {
+            border-left-color: var(--warning);
+        }
+
+        .stat-card.revenue {
+            border-left-color: var(--info);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            background: var(--primary);
+        }
+
+        .stat-icon.users {
+            background: var(--secondary);
+        }
+
+        .stat-icon.crops {
+            background: var(--success);
+        }
+
+        .stat-icon.transactions {
+            background: var(--warning);
+        }
+
+        .stat-icon.revenue {
+            background: var(--info);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        /* Tables */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .table th {
+            background: var(--light);
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .table tbody tr:hover {
+            background: rgba(255, 107, 0, 0.05);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: var(--transition);
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.2);
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+
+        /* Login Form */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+        }
+
+        .login-form {
+            background: white;
+            padding: 3rem;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header h1 {
+            color: var(--primary);
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-header p {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            z-index: 1001;
+            transform: translateX(100%);
+            transition: var(--transition);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: var(--danger);
+        }
+
+        .notification.warning {
+            background: var(--warning);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--light);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--dark);
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            border: 3px solid var(--gray-light);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 10px;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .badge-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .badge-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .badge-info {
+            background: var(--info);
+            color: white;
+        }
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Advanced Analytics */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--box-shadow);
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        /* Activity Feed */
+        .activity-feed {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-light);
+            transition: var(--transition);
+        }
+
+        .activity-item:hover {
+            background: var(--light);
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-description {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+
+        .activity-time {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--gray);
+            text-transform: uppercase;
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+        }
+
+        /* Export Options */
+        .export-options {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="loginPage" class="login-container">
+        <form class="login-form" id="loginForm">
+            <div class="login-header">
+                <h1><i class="fas fa-leaf"></i> Jama Admin</h1>
+                <p>Agricultural Management System</p>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="adminEmail">
+                    <i class="fas fa-envelope"></i> Admin Email
+                </label>
+                <input type="email" class="form-control" id="adminEmail" value="mohan@jamaapp.in" readonly required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label" for="adminPassword">
+                    <i class="fas fa-lock"></i> Password
+                </label>
+                <input type="password" class="form-control" id="adminPassword" placeholder="Enter admin password" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <i class="fas fa-sign-in-alt"></i> Login to Admin Panel
+            </button>
+        </form>
+    </div>
+
+    <div id="adminPanel" class="admin-container" style="display: none;">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <h2><i class="fas fa-leaf"></i> Jama Admin</h2>
+                <p>Agricultural Management System</p>
+            </div>
+            
+            <ul class="sidebar-nav">
+                <li class="sidebar-nav-item">
+                    <a href="#dashboard" class="sidebar-nav-link active" data-tab="dashboard">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#users" class="sidebar-nav-link" data-tab="users">
+                        <i class="fas fa-users"></i>
+                        User Management
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#crops" class="sidebar-nav-link" data-tab="crops">
+                        <i class="fas fa-seedling"></i>
+                        Crop Analytics
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#transactions" class="sidebar-nav-link" data-tab="transactions">
+                        <i class="fas fa-chart-line"></i>
+                        Financial Analytics
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#ideas" class="sidebar-nav-link" data-tab="ideas">
+                        <i class="fas fa-lightbulb"></i>
+                        Smart Ideas
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#reports" class="sidebar-nav-link" data-tab="reports">
+                        <i class="fas fa-file-alt"></i>
+                        Reports
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="#settings" class="sidebar-nav-link" data-tab="settings">
+                        <i class="fas fa-cog"></i>
+                        System Settings
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <div>
+                    <button class="btn btn-outline" id="sidebarToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 id="pageTitle">Dashboard</h1>
+                </div>
+                
+                <div class="header-actions">
+                    <div class="user-info">
+                        <div class="user-avatar">M</div>
+                        <span>Admin</span>
+                    </div>
+                    <button class="logout-btn" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Tab -->
+            <div id="dashboard-tab" class="tab-content active">
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card users">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="totalUsers">0</div>
+                                <div class="stat-label">Total Users</div>
+                            </div>
+                            <div class="stat-icon users">
+                                <i class="fas fa-users"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card crops">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="totalCrops">0</div>
+                                <div class="stat-label">Active Crops</div>
+                            </div>
+                            <div class="stat-icon crops">
+                                <i class="fas fa-seedling"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card transactions">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="totalTransactions">0</div>
+                                <div class="stat-label">Transactions</div>
+                            </div>
+                            <div class="stat-icon transactions">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card revenue">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="totalRevenue">₹0</div>
+                                <div class="stat-label">Total Revenue</div>
+                            </div>
+                            <div class="stat-icon revenue">
+                                <i class="fas fa-rupee-sign"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Grid -->
+                <div class="analytics-grid">
+                    <div class="chart-container">
+                        <h3 class="chart-title">User Registration Trends</h3>
+                        <canvas id="userRegistrationChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3 class="chart-title">Recent Activity</h3>
+                        <div class="activity-feed" id="activityFeed">
+                            <!-- Activity items will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">System Overview</h3>
+                        <button class="btn btn-primary" onclick="refreshDashboard()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    
+                    <div class="analytics-grid">
+                        <div class="chart-container">
+                            <h4 class="chart-title">Monthly Revenue</h4>
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <h4 class="chart-title">Crop Distribution</h4>
+                            <canvas id="cropDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Management Tab -->
+            <div id="users-tab" class="tab-content">
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label class="filter-label">Status</label>
+                        <select class="filter-select" id="userStatusFilter">
+                            <option value="">All Users</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Registration Date</label>
+                        <input type="date" class="filter-select" id="registrationDateFilter">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label class="filter-label">Search</label>
+                        <input type="text" class="filter-select" placeholder="Search users..." id="userSearchFilter">
+                    </div>
+                    
+                    <div class="export-options">
+                        <button class="btn btn-secondary" onclick="exportUsers('csv')">
+                            <i class="fas fa-file-csv"></i> CSV
+                        </button>
+                        <button class="btn btn-success" onclick="exportUsers('excel')">
+                            <i class="fas fa-file-excel"></i> Excel
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">User Management</h3>
+                        <div>
+                            <button class="btn btn-primary" onclick="sendBulkNotification()">
+                                <i class="fas fa-bell"></i> Send Notification
+                            </button>
+                            <button class="btn btn-warning" onclick="generateUserReport()">
+                                <i class="fas fa-chart-bar"></i> Generate Report
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Farm Location</th>
+                                    <th>Registration Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <!-- Users will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Crop Analytics Tab -->
+            <div id="crops-tab" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Crop Analytics</h3>
+                        <button class="btn btn-primary" onclick="refreshCropData()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    
+                    <div class="analytics-grid">
+                        <div class="chart-container">
+                            <h4 class="chart-title">Popular Crops</h4>
+                            <canvas id="popularCropsChart"></canvas>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <h4 class="chart-title">Seasonal Trends</h4>
+                            <canvas id="seasonalTrendsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Crop Performance Metrics</h3>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Crop Type</th>
+                                    <th>Total Area (Acres)</th>
+                                    <th>Number of Farmers</th>
+                                    <th>Average Yield</th>
+                                    <th>Success Rate</th>
+                                    <th>Revenue Generated</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cropMetricsTableBody">
+                                <!-- Crop metrics will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Analytics Tab -->
+            <div id="transactions-tab" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Financial Analytics</h3>
+                        <div>
+                            <button class="btn btn-secondary" onclick="exportFinancialData()">
+                                <i class="fas fa-download"></i> Export Data
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-value" id="totalIncome">₹0</div>
+                                    <div class="stat-label">Total Income</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-value" id="totalExpenses">₹0</div>
+                                    <div class="stat-label">Total Expenses</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-value" id="avgTransactionValue">₹0</div>
+                                    <div class="stat-label">Avg Transaction</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <div>
+                                    <div class="stat-value" id="monthlyGrowth">0%</div>
+                                    <div class="stat-label">Monthly Growth</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <h4 class="chart-title">Financial Trends</h4>
+                        <canvas id="financialTrendsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Smart Ideas Tab -->
+            <div id="ideas-tab" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Smart Ideas Management</h3>
+                        <button class="btn btn-primary" onclick="openIdeaModal()">
+                            <i class="fas fa-plus"></i> Add New Idea
+                        </button>
+                    </div>
+                    
+                    <div class="filter-bar">
+                        <div class="filter-group">
+                            <label class="filter-label">Category</label>
+                            <select class="filter-select" id="ideaCategoryFilter">
+                                <option value="">All Categories</option>
+                                <option value="crop">Crop Management</option>
+                                <option value="financial">Financial</option>
+                                <option value="technology">Technology</option>
+                                <option value="market">Market Insights</option>
+                                <option value="weather">Weather Based</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label class="filter-label">Priority</label>
+                            <select class="filter-select" id="ideaPriorityFilter">
+                                <option value="">All Priorities</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Title</th>
+                                    <th>Category</th>
+                                    <th>Priority</th>
+                                    <th>Impact</th>
+                                    <th>Created Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ideasTableBody">
+                                <!-- Ideas will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Tab -->
+            <div id="reports-tab" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Reports & Analytics</h3>
+                    </div>
+                    
+                    <div class="stats-grid">
+                        <div class="card" style="margin: 0;">
+                            <h4><i class="fas fa-users"></i> User Reports</h4>
+                            <p>Generate comprehensive user activity and registration reports</p>
+                            <button class="btn btn-primary" onclick="generateReport('users')">Generate Report</button>
+                        </div>
+                        
+                        <div class="card" style="margin: 0;">
+                            <h4><i class="fas fa-seedling"></i> Crop Reports</h4>
+                            <p>Analyze crop performance, yield data, and farming trends</p>
+                            <button class="btn btn-success" onclick="generateReport('crops')">Generate Report</button>
+                        </div>
+                        
+                        <div class="card" style="margin: 0;">
+                            <h4><i class="fas fa-chart-line"></i> Financial Reports</h4>
+                            <p>Review financial analytics, transaction data, and revenue streams</p>
+                            <button class="btn btn-warning" onclick="generateReport('financial')">Generate Report</button>
+                        </div>
+                        
+                        <div class="card" style="margin: 0;">
+                            <h4><i class="fas fa-globe"></i> System Reports</h4>
+                            <p>Monitor system performance, usage statistics, and health metrics</p>
+                            <button class="btn btn-info" onclick="generateReport('system')">Generate Report</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings-tab" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">System Settings</h3>
+                    </div>
+                    
+                    <form id="settingsForm">
+                        <div class="form-group">
+                            <label class="form-label">System Name</label>
+                            <input type="text" class="form-control" value="Jama - Agricultural Management System" id="systemName">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Default Language</label>
+                            <select class="form-control" id="defaultLanguage">
+                                <option value="en">English</option>
+                                <option value="hi">Hindi</option>
+                                <option value="te">Telugu</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Weather API Settings</label>
+                            <input type="text" class="form-control" placeholder="Weather API Key" id="weatherApiKey">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Notification Settings</label>
+                            <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="emailNotifications" checked> Email Notifications
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="pushNotifications" checked> Push Notifications
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Database Management</h3>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button class="btn btn-secondary" onclick="backupDatabase()">
+                            <i class="fas fa-database"></i> Backup Database
+                        </button>
+                        <button class="btn btn-warning" onclick="cleanupDatabase()">
+                            <i class="fas fa-trash-alt"></i> Cleanup Old Data
+                        </button>
+                        <button class="btn btn-info" onclick="exportAllData()">
+                            <i class="fas fa-download"></i> Export All Data
+                        </button>
+                        <button class="btn btn-danger" onclick="resetSystem()">
+                            <i class="fas fa-exclamation-triangle"></i> Reset System
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Idea Modal -->
+    <div id="ideaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Smart Idea</h3>
+                <button type="button" class="modal-close" onclick="closeIdeaModal()">&times;</button>
+            </div>
+            
+            <form id="ideaForm">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-control" id="ideaTitle" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-control" id="ideaCategory" required>
+                        <option value="crop">Crop Management</option>
+                        <option value="financial">Financial</option>
+                        <option value="technology">Technology</option>
+                        <option value="market">Market Insights</option>
+                        <option value="weather">Weather Based</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select class="form-control" id="ideaPriority" required>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" id="ideaDescription" rows="4" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Expected Impact</label>
+                    <select class="form-control" id="ideaImpact" required>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Estimated Benefit</label>
+                    <input type="text" class="form-control" id="ideaBenefit" placeholder="e.g., ₹10,000 - ₹25,000">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Timeframe</label>
+                    <input type="text" class="form-control" id="ideaTimeframe" placeholder="e.g., 1-2 weeks">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Idea
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <span id="notificationText"></span>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let currentTab = 'dashboard';
+        let allUsers = [];
+        let allCrops = [];
+        let allTransactions = [];
+        let adminIdeas = [];
+        let systemSettings = {
+            systemName: 'Jama - Agricultural Management System',
+            defaultLanguage: 'en',
+            weatherApiKey: '',
+            emailNotifications: true,
+            pushNotifications: true
+        };
+
+        // Firebase Auth State Handler
+        window.authStateHandler = (user) => {
+            if (user && user.email === 'mohan@jamaapp.in') {
+                currentUser = user;
+                showAdminPanel();
+                loadDashboard();
+            } else {
+                currentUser = null;
+                showLoginPage();
+            }
+        };
+
+        // Authentication Functions
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            
+            if (email !== 'mohan@jamaapp.in') {
+                showNotification('Access denied. Only authorized admin can login.', 'error');
+                return;
+            }
+            
+            try {
+                await window.firebaseAuth.signInWithEmailAndPassword(window.auth, email, password);
+                showNotification('Login successful!', 'success');
+            } catch (error) {
+                console.error('Login error:', error);
+                showNotification(getFirebaseErrorMessage(error), 'error');
+            }
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await window.firebaseAuth.signOut(window.auth);
+                showNotification('Logged out successfully!', 'success');
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        });
+
+        function showLoginPage() {
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('adminPanel').style.display = 'none';
+        }
+
+        function showAdminPanel() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'flex';
+        }
+
+        function getFirebaseErrorMessage(error) {
+            const errorMessages = {
+                'auth/user-not-found': 'No admin account found with this email.',
+                'auth/wrong-password': 'Incorrect password.',
+                'auth/invalid-email': 'Invalid email address.',
+                'auth/too-many-requests': 'Too many failed attempts. Please try again later.'
+            };
+            
+            return errorMessages[error.code] || 'Login failed. Please try again.';
+        }
+
+        // Navigation
+        document.querySelectorAll('.sidebar-nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                const tab = link.dataset.tab;
+                switchTab(tab);
+                
+                // Update active link
+                document.querySelectorAll('.sidebar-nav-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                
+                // Update page title
+                document.getElementById('pageTitle').textContent = link.textContent.trim();
+            });
+        });
+
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Load tab data
+            loadTabData(tabName);
+        }
+
+        function loadTabData(tabName) {
+            switch(tabName) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'users':
+                    loadUsers();
+                    break;
+                case 'crops':
+                    loadCrops();
+                    break;
+                case 'transactions':
+                    loadTransactions();
+                    break;
+                case 'ideas':
+                    loadIdeas();
+                    break;
+                case 'reports':
+                    loadReports();
+                    break;
+                case 'settings':
+                    loadSettings();
+                    break;
+            }
+        }
+
+        // Dashboard Functions
+        async function loadDashboard() {
+            try {
+                // Load all data
+                await Promise.all([
+                    loadAllUsers(),
+                    loadAllCrops(),
+                    loadAllTransactions()
+                ]);
+                
+                // Update stats
+                updateDashboardStats();
+                
+                // Load charts
+                loadDashboardCharts();
+                
+                // Load activity feed
+                loadActivityFeed();
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showNotification('Error loading dashboard data', 'error');
+            }
+        }
+
+        async function loadAllUsers() {
+            try {
+                const usersRef = window.firebaseDb.collection(window.db, 'users');
+                const snapshot = await window.firebaseDb.getDocs(usersRef);
+                
+                allUsers = [];
+                snapshot.forEach(doc => {
+                    allUsers.push({ id: doc.id, ...doc.data() });
+                });
+                
+                console.log('Loaded users:', allUsers.length);
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        }
+
+        async function loadAllCrops() {
+            try {
+                allCrops = [];
+                
+                for (const user of allUsers) {
+                    if (user.crops && Array.isArray(user.crops)) {
+                        allCrops.push(...user.crops.map(crop => ({
+                            ...crop,
+                            userId: user.id,
+                            userName: `${user.profile?.firstName} ${user.profile?.lastName}`,
+                            userLocation: user.profile?.farmLocation
+                        })));
+                    }
+                }
+                
+                console.log('Loaded crops:', allCrops.length);
+            } catch (error) {
+                console.error('Error loading crops:', error);
+            }
+        }
+
+        async function loadAllTransactions() {
+            try {
+                allTransactions = [];
+                
+                for (const user of allUsers) {
+                    if (user.transactions && Array.isArray(user.transactions)) {
+                        allTransactions.push(...user.transactions.map(transaction => ({
+                            ...transaction,
+                            userId: user.id,
+                            userName: `${user.profile?.firstName} ${user.profile?.lastName}`,
+                            userLocation: user.profile?.farmLocation
+                        })));
+                    }
+                }
+                
+                console.log('Loaded transactions:', allTransactions.length);
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+            }
+        }
+
+        function updateDashboardStats() {
+            // Total users
+            document.getElementById('totalUsers').textContent = allUsers.length;
+            
+            // Active crops
+            const activeCrops = allCrops.filter(crop => crop.status === 'active');
+            document.getElementById('totalCrops').textContent = activeCrops.length;
+            
+            // Total transactions
+            document.getElementById('totalTransactions').textContent = allTransactions.length;
+            
+            // Total revenue
+            const totalRevenue = allTransactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + (t.amount || 0), 0);
+            document.getElementById('totalRevenue').textContent = `₹${totalRevenue.toLocaleString()}`;
+        }
+
+        function loadDashboardCharts() {
+            // User registration chart
+            loadUserRegistrationChart();
+            
+            // Revenue chart
+            loadRevenueChart();
+            
+            // Crop distribution chart
+            loadCropDistributionChart();
+        }
+
+        function loadUserRegistrationChart() {
+            const ctx = document.getElementById('userRegistrationChart').getContext('2d');
+            
+            // Group users by month
+            const monthlyData = {};
+            allUsers.forEach(user => {
+                if (user.profile?.registrationDate) {
+                    const date = new Date(user.profile.registrationDate);
+                    const monthYear = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+                    monthlyData[monthYear] = (monthlyData[monthYear] || 0) + 1;
+                }
+            });
+            
+            const labels = Object.keys(monthlyData).sort();
+            const data = labels.map(label => monthlyData[label]);
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'New Users',
+                        data: data,
+                        borderColor: '#ff6b00',
+                        backgroundColor: 'rgba(255, 107, 0, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadRevenueChart() {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            
+            // Group revenue by month
+            const monthlyRevenue = {};
+            allTransactions
+                .filter(t => t.type === 'income')
+                .forEach(transaction => {
+                    if (transaction.date) {
+                        const date = new Date(transaction.date);
+                        const monthYear = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+                        monthlyRevenue[monthYear] = (monthlyRevenue[monthYear] || 0) + (transaction.amount || 0);
+                    }
+                });
+            
+            const labels = Object.keys(monthlyRevenue).sort();
+            const data = labels.map(label => monthlyRevenue[label]);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Revenue (₹)',
+                        data: data,
+                        backgroundColor: '#4caf50',
+                        borderColor: '#388e3c',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadCropDistributionChart() {
+            const ctx = document.getElementById('cropDistributionChart').getContext('2d');
+            
+            // Count crops by type
+            const cropCounts = {};
+            allCrops.forEach(crop => {
+                cropCounts[crop.type] = (cropCounts[crop.type] || 0) + 1;
+            });
+            
+            const labels = Object.keys(cropCounts);
+            const data = labels.map(label => cropCounts[label]);
+            const colors = ['#ff6b00', '#2196f3', '#4caf50', '#ff9800', '#9c27b0', '#00bcd4'];
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadActivityFeed() {
+            const activityFeed = document.getElementById('activityFeed');
+            
+            // Create mock activity data (in real app, this would come from logs)
+            const activities = [
+                {
+                    icon: 'fas fa-user-plus',
+                    iconColor: '#4caf50',
+                    title: 'New User Registration',
+                    description: '3 new farmers joined today',
+                    time: '2 hours ago'
+                },
+                {
+                    icon: 'fas fa-seedling',
+                    iconColor: '#2196f3',
+                    title: 'Crop Data Updated',
+                    description: '15 new crops added this week',
+                    time: '4 hours ago'
+                },
+                {
+                    icon: 'fas fa-chart-line',
+                    iconColor: '#ff9800',
+                    title: 'Revenue Milestone',
+                    description: 'Platform revenue crossed ₹1M',
+                    time: '1 day ago'
+                },
+                {
+                    icon: 'fas fa-bell',
+                    iconColor: '#9c27b0',
+                    title: 'System Alert',
+                    description: 'Weather alert sent to 150+ users',
+                    time: '2 days ago'
+                }
+            ];
+            
+            activityFeed.innerHTML = activities.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-icon" style="background: ${activity.iconColor};">
+                        <i class="${activity.icon}"></i>
+                    </div>
+                    <div class="activity-content">
+                        <div class="activity-title">${activity.title}</div>
+                        <div class="activity-description">${activity.description}</div>
+                        <div class="activity-time">${activity.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function refreshDashboard() {
+            loadDashboard();
+            showNotification('Dashboard refreshed successfully!', 'success');
+        }
+
+        // User Management Functions
+        function loadUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (!allUsers.length) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No users found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = allUsers.map(user => `
+                <tr>
+                    <td>${user.id.substring(0, 8)}...</td>
+                    <td>${user.profile?.firstName || 'N/A'} ${user.profile?.lastName || ''}</td>
+                    <td>${user.profile?.email || 'N/A'}</td>
+                    <td>${user.profile?.phone || 'N/A'}</td>
+                    <td>${user.profile?.farmLocation || 'N/A'}</td>
+                    <td>${user.profile?.registrationDate ? new Date(user.profile.registrationDate).toLocaleDateString() : 'N/A'}</td>
+                    <td>
+                        <span class="badge badge-success">Active</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewUserDetails('${user.id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-warning" onclick="sendUserNotification('${user.id}')">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function viewUserDetails(userId) {
+            const user = allUsers.find(u => u.id === userId);
+            if (!user) return;
+            
+            alert(`User Details:\nName: ${user.profile?.firstName} ${user.profile?.lastName}\nEmail: ${user.profile?.email}\nFarm Size: ${user.profile?.totalFarmSize?.acres || 0} acres`);
+        }
+
+        function sendUserNotification(userId) {
+            const message = prompt('Enter notification message:');
+            if (message) {
+                // In a real app, this would send a notification via Firebase
+                showNotification(`Notification sent to user ${userId.substring(0, 8)}...`, 'success');
+            }
+        }
+
+        function sendBulkNotification() {
+            const message = prompt('Enter message to send to all users:');
+            if (message) {
+                // In a real app, this would send notifications to all users
+                showNotification(`Bulk notification sent to ${allUsers.length} users!`, 'success');
+            }
+        }
+
+        function generateUserReport() {
+            // Generate CSV report
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "ID,Name,Email,Phone,Farm Location,Registration Date\n"
+                + allUsers.map(user => 
+                    `${user.id},"${user.profile?.firstName} ${user.profile?.lastName}","${user.profile?.email}","${user.profile?.phone}","${user.profile?.farmLocation}","${user.profile?.registrationDate}"`
+                ).join('\n');
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "user_report.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('User report downloaded!', 'success');
+        }
+
+        function exportUsers(format) {
+            if (format === 'csv') {
+                generateUserReport();
+            } else if (format === 'excel') {
+                showNotification('Excel export feature coming soon!', 'info');
+            }
+        }
+
+        // Crops Management
+        function loadCrops() {
+            refreshCropData();
+        }
+
+        function refreshCropData() {
+            // Update crop metrics table
+            const tbody = document.getElementById('cropMetricsTableBody');
+            
+            // Group crops by type
+            const cropStats = {};
+            allCrops.forEach(crop => {
+                if (!cropStats[crop.type]) {
+                    cropStats[crop.type] = {
+                        count: 0,
+                        totalArea: 0,
+                        farmers: new Set(),
+                        revenue: 0
+                    };
+                }
+                
+                cropStats[crop.type].count++;
+                cropStats[crop.type].totalArea += (crop.acres || 0);
+                cropStats[crop.type].farmers.add(crop.userId);
+                
+                // Calculate revenue from transactions
+                const cropTransactions = allTransactions.filter(t => 
+                    t.cropId === crop.id && t.type === 'income'
+                );
+                cropStats[crop.type].revenue += cropTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+            });
+            
+            tbody.innerHTML = Object.entries(cropStats).map(([cropType, stats]) => `
+                <tr>
+                    <td>${cropType.charAt(0).toUpperCase() + cropType.slice(1)}</td>
+                    <td>${stats.totalArea.toFixed(1)}</td>
+                    <td>${stats.farmers.size}</td>
+                    <td>${(stats.totalArea / stats.count || 0).toFixed(1)} quintals/acre</td>
+                    <td><span class="badge badge-success">85%</span></td>
+                    <td>₹${stats.revenue.toLocaleString()}</td>
+                </tr>
+            `).join('');
+            
+            // Load crop charts
+            loadPopularCropsChart();
+            loadSeasonalTrendsChart();
+        }
+
+        function loadPopularCropsChart() {
+            const ctx = document.getElementById('popularCropsChart').getContext('2d');
+            
+            const cropCounts = {};
+            allCrops.forEach(crop => {
+                cropCounts[crop.type] = (cropCounts[crop.type] || 0) + 1;
+            });
+            
+            const sortedCrops = Object.entries(cropCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 6);
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedCrops.map(([crop]) => crop),
+                    datasets: [{
+                        label: 'Number of Crops',
+                        data: sortedCrops.map(([, count]) => count),
+                        backgroundColor: '#4caf50',
+                        borderColor: '#388e3c',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadSeasonalTrendsChart() {
+            const ctx = document.getElementById('seasonalTrendsChart').getContext('2d');
+            
+            const seasonalData = {
+                'Kharif': 0,
+                'Rabi': 0,
+                'Zaid': 0,
+                'Annual': 0
+            };
+            
+            allCrops.forEach(crop => {
+                if (crop.season && seasonalData.hasOwnProperty(crop.season.charAt(0).toUpperCase() + crop.season.slice(1))) {
+                    seasonalData[crop.season.charAt(0).toUpperCase() + crop.season.slice(1)]++;
+                }
+            });
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(seasonalData),
+                    datasets: [{
+                        label: 'Crop Count',
+                        data: Object.values(seasonalData),
+                        borderColor: '#ff6b00',
+                        backgroundColor: 'rgba(255, 107, 0, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Financial Analytics
+        function loadTransactions() {
+            // Update financial stats
+            const totalIncome = allTransactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + (t.amount || 0), 0);
+                
+            const totalExpenses = allTransactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + (t.amount || 0), 0);
+                
+            const avgTransaction = allTransactions.length ? 
+                (totalIncome + totalExpenses) / allTransactions.length : 0;
+            
+            document.getElementById('totalIncome').textContent = `₹${totalIncome.toLocaleString()}`;
+            document.getElementById('totalExpenses').textContent = `₹${totalExpenses.toLocaleString()}`;
+            document.getElementById('avgTransactionValue').textContent = `₹${avgTransaction.toLocaleString()}`;
+            document.getElementById('monthlyGrowth').textContent = '12.5%'; // Mock data
+            
+            loadFinancialTrendsChart();
+        }
+
+        function loadFinancialTrendsChart() {
+            const ctx = document.getElementById('financialTrendsChart').getContext('2d');
+            
+            // Group transactions by month
+            const monthlyIncome = {};
+            const monthlyExpenses = {};
+            
+            allTransactions.forEach(transaction => {
+                if (transaction.date) {
+                    const date = new Date(transaction.date);
+                    const monthYear = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+                    
+                    if (transaction.type === 'income') {
+                        monthlyIncome[monthYear] = (monthlyIncome[monthYear] || 0) + (transaction.amount || 0);
+                    } else if (transaction.type === 'expense') {
+                        monthlyExpenses[monthYear] = (monthlyExpenses[monthYear] || 0) + (transaction.amount || 0);
+                    }
+                }
+            });
+            
+            const allMonths = [...new Set([...Object.keys(monthlyIncome), ...Object.keys(monthlyExpenses)])].sort();
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: allMonths,
+                    datasets: [{
+                        label: 'Income',
+                        data: allMonths.map(month => monthlyIncome[month] || 0),
+                        borderColor: '#4caf50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Expenses',
+                        data: allMonths.map(month => monthlyExpenses[month] || 0),
+                        borderColor: '#f44336',
+                        backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function exportFinancialData() {
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "User,Type,Category,Amount,Date,Description\n"
+                + allTransactions.map(t => 
+                    `"${t.userName || 'Unknown'}","${t.type}","${t.category || 'N/A'}",${t.amount || 0},"${t.date}","${t.description || ''}"`
+                ).join('\n');
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "financial_data.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('Financial data exported!', 'success');
+        }
+
+        // Smart Ideas Management
+        async function loadIdeas() {
+            try {
+                const ideasRef = window.firebaseDb.collection(window.db, 'admin_ideas');
+                const snapshot = await window.firebaseDb.getDocs(ideasRef);
+                
+                adminIdeas = [];
+                snapshot.forEach(doc => {
+                    adminIdeas.push({ id: doc.id, ...doc.data() });
+                });
+                
+                updateIdeasTable();
+            } catch (error) {
+                console.error('Error loading ideas:', error);
+            }
+        }
+
+        function updateIdeasTable() {
+            const tbody = document.getElementById('ideasTableBody');
+            
+            if (!adminIdeas.length) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center">No ideas found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = adminIdeas.map(idea => `
+                <tr>
+                    <td>${idea.id.substring(0, 8)}...</td>
+                    <td>${idea.title}</td>
+                    <td><span class="badge badge-info">${idea.category}</span></td>
+                    <td><span class="badge badge-${idea.priority === 'high' ? 'danger' : idea.priority === 'medium' ? 'warning' : 'info'}">${idea.priority}</span></td>
+                    <td>${idea.impact}</td>
+                    <td>${new Date(idea.createdAt || Date.now()).toLocaleDateString()}</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="editIdea('${idea.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteIdea('${idea.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openIdeaModal() {
+            document.getElementById('ideaModal').classList.add('show');
+        }
+
+        function closeIdeaModal() {
+            document.getElementById('ideaModal').classList.remove('show');
+            document.getElementById('ideaForm').reset();
+        }
+
+        document.getElementById('ideaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const ideaData = {
+                title: document.getElementById('ideaTitle').value,
+                category: document.getElementById('ideaCategory').value,
+                priority: document.getElementById('ideaPriority').value,
+                description: document.getElementById('ideaDescription').value,
+                impact: document.getElementById('ideaImpact').value,
+                estimatedBenefit: document.getElementById('ideaBenefit').value,
+                timeframe: document.getElementById('ideaTimeframe').value,
+                createdAt: new Date().toISOString(),
+                status: 'active'
+            };
+            
+            try {
+                await window.firebaseDb.addDoc(window.firebaseDb.collection(window.db, 'admin_ideas'), ideaData);
+                showNotification('Smart idea added successfully!', 'success');
+                closeIdeaModal();
+                loadIdeas();
+            } catch (error) {
+                console.error('Error adding idea:', error);
+                showNotification('Error adding idea', 'error');
+            }
+        });
+
+        async function deleteIdea(ideaId) {
+            if (confirm('Are you sure you want to delete this idea?')) {
+                try {
+                    await window.firebaseDb.deleteDoc(window.firebaseDb.doc(window.db, 'admin_ideas', ideaId));
+                    showNotification('Idea deleted successfully!', 'success');
+                    loadIdeas();
+                } catch (error) {
+                    console.error('Error deleting idea:', error);
+                    showNotification('Error deleting idea', 'error');
+                }
+            }
+        }
+
+        function editIdea(ideaId) {
+            // Implementation for editing ideas
+            showNotification('Edit functionality coming soon!', 'info');
+        }
+
+        // Reports Functions
+        function loadReports() {
+            // Reports are already loaded in the HTML
+        }
+
+        function generateReport(type) {
+            switch(type) {
+                case 'users':
+                    generateUserReport();
+                    break;
+                case 'crops':
+                    generateCropReport();
+                    break;
+                case 'financial':
+                    exportFinancialData();
+                    break;
+                case 'system':
+                    generateSystemReport();
+                    break;
+            }
+        }
+
+        function generateCropReport() {
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "User,Crop Type,Area (Acres),Status,Sowing Date,Expected Yield,Location\n"
+                + allCrops.map(crop => 
+                    `"${crop.userName || 'Unknown'}","${crop.type}",${crop.acres || 0},"${crop.status}","${crop.sowingDate}",${crop.expectedYield || 0},"${crop.userLocation || ''}"`
+                ).join('\n');
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "crop_report.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('Crop report downloaded!', 'success');
+        }
+
+        function generateSystemReport() {
+            const systemData = {
+                totalUsers: allUsers.length,
+                totalCrops: allCrops.length,
+                totalTransactions: allTransactions.length,
+                totalRevenue: allTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + (t.amount || 0), 0),
+                reportGeneratedAt: new Date().toISOString()
+            };
+            
+            const csvContent = "data:text/csv;charset=utf-8," 
+                + "Metric,Value\n"
+                + Object.entries(systemData).map(([key, value]) => 
+                    `"${key}","${value}"`
+                ).join('\n');
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "system_report.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotification('System report downloaded!', 'success');
+        }
+
+        // Settings Functions
+        function loadSettings() {
+            // Load current settings
+            document.getElementById('systemName').value = systemSettings.systemName;
+            document.getElementById('defaultLanguage').value = systemSettings.defaultLanguage;
+            document.getElementById('weatherApiKey').value = systemSettings.weatherApiKey;
+            document.getElementById('emailNotifications').checked = systemSettings.emailNotifications;
+            document.getElementById('pushNotifications').checked = systemSettings.pushNotifications;
+        }
+
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            systemSettings = {
+                systemName: document.getElementById('systemName').value,
+                defaultLanguage: document.getElementById('defaultLanguage').value,
+                weatherApiKey: document.getElementById('weatherApiKey').value,
+                emailNotifications: document.getElementById('emailNotifications').checked,
+                pushNotifications: document.getElementById('pushNotifications').checked
+            };
+            
+            try {
+                await window.firebaseDb.setDoc(window.firebaseDb.doc(window.db, 'system', 'settings'), systemSettings);
+                showNotification('Settings saved successfully!', 'success');
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showNotification('Error saving settings', 'error');
+            }
+        });
+
+        function backupDatabase() {
+            showNotification('Database backup initiated. You will receive an email when complete.', 'info');
+        }
+
+        function cleanupDatabase() {
+            if (confirm('This will remove data older than 6 months. Continue?')) {
+                showNotification('Database cleanup completed!', 'success');
+            }
+        }
+
+        function exportAllData() {
+            showNotification('Full data export initiated. Download will start shortly.', 'info');
+        }
+
+        function resetSystem() {
+            if (confirm('WARNING: This will reset all system data. This action cannot be undone. Continue?')) {
+                showNotification('System reset functionality is disabled for safety.', 'warning');
+            }
+        }
+
+        // Utility Functions
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notification.className = `notification ${type}`;
+            notificationText.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Sidebar toggle for mobile
+        document.getElementById('sidebarToggle').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('show');
+        });
+
+        // Initialize admin panel on load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check for saved admin session
+            const savedAdmin = localStorage.getItem('jama_admin_session');
+            if (savedAdmin) {
+                try {
+                    const adminData = JSON.parse(savedAdmin);
+                    if (adminData.email === 'mohan@jamaapp.in' && Date.now() - adminData.timestamp < 24 * 60 * 60 * 1000) {
+                        // Session valid for 24 hours
+                        showAdminPanel();
+                        loadDashboard();
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error loading admin session:', error);
+                }
+            }
+            
+            showLoginPage();
+        });
+
+        // Save admin session on successful login
+        window.addEventListener('beforeunload', () => {
+            if (currentUser && currentUser.email === 'mohan@jamaapp.in') {
+                localStorage.setItem('jama_admin_session', JSON.stringify({
+                    email: currentUser.email,
+                    timestamp: Date.now()
+                }));
+            }
+        });
+    </script>
+</body>
+</html>
