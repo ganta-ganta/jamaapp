@@ -1,0 +1,4043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jama - Smart Agricultural Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #4caf50;
+            --primary-dark: #1b5e20;
+            --secondary: #ffa000;
+            --secondary-light: #ffc107;
+            --secondary-dark: #ff6f00;
+            --accent: #00acc1;
+            --text-light: #f5f5f5;
+            --text-dark: #333;
+            --bg-light: #f8f9fa;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2d2d2d;
+            --success: #388e3c;
+            --warning: #f57c00;
+            --danger: #d32f2f;
+            --info: #1976d2;
+            --gray: #78909c;
+            --border-radius: 16px;
+            --box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            --box-shadow-dark: 0 6px 20px rgba(0, 0, 0, 0.3);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --button-press: scale(0.95);
+        }
+
+        [data-theme="dark"] {
+            --text-dark: #f5f5f5;
+            --bg-light: var(--bg-dark);
+            --box-shadow: var(--box-shadow-dark);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: var(--transition);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Enhanced button touch responses */
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: rgba(0,0,0,0);
+        }
+
+        .btn:active {
+            transform: var(--button-press);
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: width 0.3s, height 0.3s, top 0.3s, left 0.3s;
+            transform: translate(-50%, -50%);
+            z-index: 0;
+        }
+
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Enhanced card-based alerts */
+        .alert-card {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 400px;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            z-index: 3000;
+            transform: translateX(450px);
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            border-left: 5px solid;
+        }
+
+        .alert-card.show {
+            transform: translateX(0);
+        }
+
+        .alert-card.success {
+            background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+            border-left-color: var(--success);
+            color: #2e7d32;
+        }
+
+        .alert-card.error {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            border-left-color: var(--danger);
+            color: #c62828;
+        }
+
+        .alert-card.warning {
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            border-left-color: var(--warning);
+            color: #ef6c00;
+        }
+
+        .alert-card.info {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            border-left-color: var(--info);
+            color: #1565c0;
+        }
+
+        .alert-icon {
+            font-size: 24px;
+            margin-top: 2px;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 700;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+
+        .alert-message {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .alert-close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            opacity: 0.7;
+            padding: 4px;
+            border-radius: 50%;
+            transition: var(--transition);
+            color: inherit;
+        }
+
+        .alert-close:hover {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Location permission modal */
+        .location-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 4000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .location-modal.show {
+            display: flex;
+        }
+
+        .location-card {
+            background: white;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            max-width: 400px;
+            margin: 20px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        [data-theme="dark"] .location-card {
+            background: var(--card-dark);
+        }
+
+        .location-icon {
+            font-size: 60px;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+
+        .location-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .location-description {
+            color: var(--gray);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .location-benefits {
+            background: rgba(46, 125, 50, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .location-benefits h4 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .location-benefits ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .location-benefits li {
+            padding: 5px 0;
+            color: var(--text-dark);
+        }
+
+        .location-benefits li::before {
+            content: "✓";
+            color: var(--success);
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        /* Weather widget */
+        .weather-widget {
+            background: linear-gradient(135deg, #87ceeb, #4682b4);
+            color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .weather-widget::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20px;
+            width: 100px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(45deg);
+        }
+
+        .weather-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .weather-location {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .weather-temp {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .weather-detail {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .weather-detail-value {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .weather-detail-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* Crop growth stages */
+        .crop-growth-stage {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .growth-stage-icon {
+            font-size: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: white;
+        }
+
+        .growth-stage-info {
+            flex: 1;
+        }
+
+        .growth-stage-name {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 2px;
+        }
+
+        .growth-stage-description {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        /* Enhanced mobile touch */
+        @media (max-width: 768px) {
+            .btn {
+                padding: 16px 20px;
+                font-size: 16px;
+                min-height: 48px;
+            }
+
+            .mobile-nav-item {
+                min-height: 60px;
+                padding: 8px 6px;
+                -webkit-tap-highlight-color: rgba(0,0,0,0);
+            }
+
+            .mobile-nav-item:active {
+                transform: scale(0.95);
+                background: rgba(46, 125, 50, 0.2);
+            }
+
+            .card:active,
+            .dashboard-card:active,
+            .crop-card:active,
+            .asset-card:active {
+                transform: scale(0.98);
+            }
+        }
+
+        /* Inventory stock alerts */
+        .stock-alert {
+            position: relative;
+        }
+
+        .stock-alert::after {
+            content: '⚠️';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--warning);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            animation: pulse 2s infinite;
+        }
+
+        .stock-alert.out-of-stock::after {
+            content: '❌';
+            background: var(--danger);
+        }
+
+        /* Loading states */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 5000;
+            backdrop-filter: blur(2px);
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(46, 125, 50, 0.1);
+            border-left: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Existing styles continue... */
+        .app-container {
+            width: 100%;
+            max-width: 100vw;
+            background: var(--bg-light);
+            min-height: 100vh;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .logo-animation {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: spin 2s linear infinite;
+        }
+
+        .app-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .app-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .loading-bar {
+            width: 200px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .loading-progress {
+            width: 0%;
+            height: 100%;
+            background: white;
+            border-radius: 2px;
+            animation: loadingProgress 2s ease-in-out forwards;
+        }
+
+        .loading-text {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        @keyframes loadingProgress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            font-size: 1.8rem;
+        }
+
+        .logo h1 {
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .header-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Content */
+        .content-container {
+            padding: 1rem;
+            padding-bottom: 80px;
+            min-height: calc(100vh - 60px);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Authentication */
+        .auth-container {
+            max-width: 400px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-header .logo {
+            justify-content: center;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .auth-subtitle {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            font-size: 0.9rem;
+            background: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        [data-theme="dark"] .auth-tab {
+            background: var(--card-dark);
+            color: var(--text-dark);
+        }
+
+        .auth-tab.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+            background: rgba(46, 125, 50, 0.05);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        [data-theme="dark"] .form-group label {
+            color: var(--primary-light);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+            background: white;
+        }
+
+        [data-theme="dark"] .form-control {
+            background: var(--card-dark);
+            border-color: #444;
+            color: var(--text-dark);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .country-code {
+            max-width: 80px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+        }
+
+        .btn-google {
+            background: #4285f4;
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-info {
+            background: var(--info);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        /* Dashboard Cards */
+        .dashboard-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .dashboard-card {
+            background: var(--card-dark);
+            color: var(--text-dark);
+        }
+
+        .dashboard-card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .dashboard-card h3 {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-dark);
+        }
+
+        [data-theme="dark"] .dashboard-card h3 {
+            color: var(--primary-light);
+        }
+
+        /* Financial Summary */
+        .financial-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .financial-summary-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 1.2rem;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        [data-theme="dark"] .financial-summary-card {
+            background: var(--card-dark);
+        }
+
+        .financial-summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .financial-summary-card.income::before {
+            background: var(--success);
+        }
+
+        .financial-summary-card.expense::before {
+            background: var(--danger);
+        }
+
+        .financial-summary-card.profit::before {
+            background: var(--secondary);
+        }
+
+        .financial-summary-card.loan::before {
+            background: var(--info);
+        }
+
+        .financial-summary-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .card-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0.5rem 0;
+            color: var(--text-dark);
+        }
+
+        .card-label {
+            font-size: 0.85rem;
+            color: var(--gray);
+            font-weight: 500;
+        }
+
+        /* Mobile Navigation */
+        .mobile-bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 4px;
+            z-index: 1000;
+        }
+
+        [data-theme="dark"] .mobile-bottom-nav {
+            background: var(--card-dark);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+        }
+
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--gray);
+            font-size: 0.7rem;
+            transition: var(--transition);
+            padding: 6px 8px;
+            border-radius: 8px;
+            min-width: 50px;
+            position: relative;
+        }
+
+        .mobile-nav-item.active {
+            color: var(--primary);
+            background: rgba(46, 125, 50, 0.1);
+        }
+
+        .mobile-nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+
+        .notification-dot {
+            position: absolute;
+            top: 2px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            background: var(--danger);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            backdrop-filter: blur(2px);
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            width: 95%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        [data-theme="dark"] .modal-content {
+            background: var(--card-dark);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        [data-theme="dark"] .modal-header {
+            border-bottom-color: #444;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+            transition: var(--transition);
+            padding: 4px;
+            border-radius: 50%;
+        }
+
+        .modal-close:hover {
+            color: var(--danger);
+            background: rgba(211, 47, 47, 0.1);
+        }
+
+        /* Tab Navigation */
+        .tab-navigation {
+            display: flex;
+            background: white;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            overflow-x: auto;
+            box-shadow: var(--box-shadow);
+        }
+
+        [data-theme="dark"] .tab-navigation {
+            background: var(--card-dark);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            font-size: 0.85rem;
+            background: transparent;
+            border: none;
+            color: var(--text-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 100px;
+        }
+
+        .tab-btn.active {
+            border-bottom-color: var(--primary);
+            color: var(--primary);
+            background: rgba(46, 125, 50, 0.05);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        /* Settings in Profile */
+        .settings-section {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        [data-theme="dark"] .settings-section {
+            background: var(--card-dark);
+        }
+
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        [data-theme="dark"] .settings-item {
+            border-bottom-color: #444;
+        }
+
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+
+        .settings-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .settings-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(46, 125, 50, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 20px;
+        }
+
+        .settings-text h4 {
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+
+        .settings-text p {
+            color: var(--gray);
+            font-size: 0.85rem;
+            margin: 0;
+        }
+
+        .settings-toggle {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: #ccc;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .settings-toggle.active {
+            background: var(--primary);
+        }
+
+        .settings-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .settings-toggle.active::after {
+            transform: translateX(26px);
+        }
+
+        .language-selector {
+            display: flex;
+            gap: 8px;
+        }
+
+        .language-option {
+            padding: 8px 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        [data-theme="dark"] .language-option {
+            border-color: #444;
+            color: var(--text-dark);
+        }
+
+        .language-option.active {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .content-container {
+                padding: 0.5rem;
+                padding-bottom: 80px;
+            }
+            
+            .financial-summary-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.8rem;
+            }
+            
+            .modal-content {
+                width: 98%;
+                padding: 1rem;
+                margin: 1rem;
+            }
+
+            .dashboard-card {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .tab-navigation {
+                overflow-x: auto;
+            }
+
+            .tab-btn {
+                min-width: 80px;
+                font-size: 0.75rem;
+                padding: 10px 8px;
+            }
+
+            .alert-card {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+
+            .weather-details {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Empty States */
+        .empty-state {
+            text-align: center;
+            color: var(--gray);
+            padding: 3rem 1rem;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+
+        /* Hidden elements */
+        .hidden {
+            display: none !important;
+        }
+
+        .invisible {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="logo-animation">
+            <i class="fas fa-leaf"></i>
+        </div>
+        <h1 class="app-title">Jama</h1>
+        <p class="app-subtitle" data-translate="subtitle">Smart Agricultural Management System</p>
+        <div class="loading-bar">
+            <div class="loading-progress"></div>
+        </div>
+        <p class="loading-text" data-translate="loading">Loading your farm data...</p>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Location Permission Modal -->
+    <div class="location-modal" id="locationModal">
+        <div class="location-card">
+            <div class="location-icon">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <h2 class="location-title" data-translate="enable_location">Enable Location</h2>
+            <p class="location-description" data-translate="location_description">
+                Allow Jama to access your location for personalized farming insights and weather updates
+            </p>
+            <div class="location-benefits">
+                <h4 data-translate="location_benefits">Benefits:</h4>
+                <ul>
+                    <li data-translate="benefit_weather">Accurate weather forecasts</li>
+                    <li data-translate="benefit_alerts">Crop-specific alerts and warnings</li>
+                    <li data-translate="benefit_suggestions">Location-based farming suggestions</li>
+                    <li data-translate="benefit_market">Local market price updates</li>
+                </ul>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-outline btn-full" onclick="denyLocation()">
+                    <i class="fas fa-times"></i>
+                    <span data-translate="not_now">Not Now</span>
+                </button>
+                <button class="btn btn-primary btn-full" onclick="requestLocation()">
+                    <i class="fas fa-check"></i>
+                    <span data-translate="allow">Allow</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Cards Container -->
+    <div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 3000; width: 400px; max-width: calc(100vw - 40px);"></div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <div class="header" id="appHeader" style="display: none;">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-leaf"></i>
+                    <h1>Jama</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="header-btn" id="headerLocationBtn" onclick="requestLocation()" style="display: none;">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Authentication Page -->
+        <div id="authPage" class="content-container">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <div class="logo">
+                        <i class="fas fa-leaf"></i>
+                        <h1>Jama</h1>
+                    </div>
+                    <p class="auth-subtitle" data-translate="subtitle">Smart Agricultural Management System</p>
+                </div>
+
+                <div class="auth-tabs">
+                    <button class="auth-tab active" data-auth="email">
+                        <i class="fas fa-envelope"></i>
+                        <span data-translate="email">Email</span>
+                    </button>
+                    <button class="auth-tab" data-auth="phone">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span data-translate="phone">Phone</span>
+                    </button>
+                    <button class="auth-tab" data-auth="google">
+                        <i class="fab fa-google"></i>
+                        <span data-translate="google">Google</span>
+                    </button>
+                </div>
+
+                <!-- Email Authentication -->
+                <div class="auth-form active" id="emailAuth">
+                    <div class="form-group">
+                        <label for="email">
+                            <i class="fas fa-envelope"></i>
+                            <span data-translate="email">Email</span>
+                        </label>
+                        <input type="email" class="form-control" id="email" placeholder="farmer@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">
+                            <i class="fas fa-lock"></i>
+                            <span data-translate="password">Password</span>
+                        </label>
+                        <input type="password" class="form-control" id="password" placeholder="Enter password" required>
+                    </div>
+                    <button class="btn btn-primary btn-full" id="emailLoginBtn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span data-translate="login">Login</span>
+                    </button>
+                    <button class="btn btn-outline btn-full" id="emailRegisterBtn" style="margin-top: 0.5rem;">
+                        <i class="fas fa-user-plus"></i>
+                        <span data-translate="register">Register</span>
+                    </button>
+                </div>
+
+                <!-- Phone Authentication -->
+                <div class="auth-form" id="phoneAuth">
+                    <div class="form-group">
+                        <label for="phoneNumber">
+                            <i class="fas fa-mobile-alt"></i>
+                            <span data-translate="phone_number">Phone Number</span>
+                        </label>
+                        <div class="input-group">
+                            <select class="form-control country-code" id="countryCode">
+                                <option value="+91">🇮🇳 +91</option>
+                                <option value="+1">🇺🇸 +1</option>
+                                <option value="+44">🇬🇧 +44</option>
+                            </select>
+                            <input type="tel" class="form-control" id="phoneNumber" placeholder="9876543210" inputmode="numeric" required>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-full" id="sendOtpBtn">
+                        <i class="fas fa-paper-plane"></i>
+                        <span data-translate="send_otp">Send OTP</span>
+                    </button>
+                </div>
+
+                <!-- Google Authentication -->
+                <div class="auth-form" id="googleAuth">
+                    <div class="google-auth" style="text-align: center; padding: 2rem 0;">
+                        <div class="google-icon" style="margin-bottom: 1rem;">
+                            <i class="fab fa-google" style="font-size: 3rem; color: #4285f4;"></i>
+                        </div>
+                        <p data-translate="google_signin_text">Sign in with your Google account</p>
+                        <button class="btn btn-google btn-full" id="googleSignInBtn">
+                            <i class="fab fa-google"></i>
+                            <span data-translate="continue_google">Continue with Google</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- OTP Verification -->
+                <div class="auth-form" id="otpVerification">
+                    <p class="otp-instruction" style="text-align: center; margin-bottom: 1rem; color: var(--gray);">
+                        <span data-translate="otp_instruction">Enter OTP sent to</span> <span id="phoneDisplay"></span>
+                    </p>
+                    <div class="otp-inputs" style="display: flex; gap: 8px; justify-content: center; margin: 1.5rem 0;">
+                        <input type="text" class="form-control otp-input" maxlength="1" inputmode="numeric" style="width: 45px !important; height: 45px; text-align: center; font-size: 1.2rem; font-weight: 600;">
+                        <input type="text" class="form-control otp-input" maxlength="1" inputmode="numeric" style="width: 45px !important; height: 45px; text-align: center; font-size: 1.2rem; font-weight: 600;">
+                        <input type="text" class="form-control otp-input" maxlength="1" inputmode="numeric" style="width: 45px !important; height: 45px; text-align: center; font-size: 1.2rem; font-weight: 600;">
+                        <input type="text" class="form-control otp-input" maxlength="1" inputmode="numeric" style="width: 45px !important; height: 45px; text-align: center; font-size: 1.2rem; font-weight: 600;">
+                        <input type="text" class="form-control otp-input" maxlength="1" inputmode="numeric" style="width: 45px !important; height: 45px; text-align: center; font-size: 1.2rem; font-weight: 600;">
+                        <input type="text" class="form-control otp-input" maxlength="1" inputmode="numeric" style="width: 45px !important; height: 45px; text-align: center; font-size: 1.2rem; font-weight: 600;">
+                    </div>
+                    <div class="countdown" id="countdown" style="text-align: center; margin: 1rem 0; font-weight: 600; color: var(--primary); font-size: 1.1rem;">02:00</div>
+                    <button class="btn btn-primary btn-full" id="verifyOtpBtn">
+                        <i class="fas fa-check"></i>
+                        <span data-translate="verify_otp">Verify OTP</span>
+                    </button>
+                    <button class="btn btn-outline btn-full" id="backToPhoneBtn" style="margin-top: 0.5rem;">
+                        <i class="fas fa-arrow-left"></i>
+                        <span data-translate="back">Back</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Page -->
+        <div id="registrationPage" class="content-container" style="display: none;">
+            <div class="auth-container" style="max-width: 600px;">
+                <h2 style="text-align: center; margin-bottom: 1.5rem; color: var(--primary);">
+                    <i class="fas fa-user-plus"></i>
+                    <span data-translate="complete_profile">Complete Profile</span>
+                </h2>
+                
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-user"></i>
+                        <span data-translate="full_name">Full Name</span>
+                    </label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="regFirstName" data-translate-placeholder="first_name" placeholder="First Name" required>
+                        <input type="text" class="form-control" id="regLastName" data-translate-placeholder="last_name" placeholder="Last Name" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span data-translate="farm_location">Farm Location</span>
+                    </label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="regFarmLocation" data-translate-placeholder="farm_location_placeholder" placeholder="Village, District, State" required>
+                        <button type="button" class="btn btn-outline" id="getCurrentLocationBtn" style="max-width: 120px;">
+                            <i class="fas fa-crosshairs"></i>
+                            <span data-translate="current">Current</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-expand-arrows-alt"></i>
+                        <span data-translate="total_farm_size">Total Farm Size</span>
+                    </label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="regFarmAcres" placeholder="Acres" min="0" step="0.1" required>
+                        <input type="number" class="form-control" id="regFarmCents" placeholder="Cents" min="0" max="99">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-seedling"></i>
+                        <span data-translate="primary_crops">Primary Crops</span>
+                    </label>
+                    <div class="crop-selection-grid" id="primaryCropsGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin: 1rem 0;">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-full" id="completeRegistrationBtn">
+                    <i class="fas fa-check-circle"></i>
+                    <span data-translate="complete_registration">Complete Registration</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="dashboardPage" class="content-container" style="display: none;">
+            
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overview-tab">
+                <!-- Weather Widget -->
+                <div class="weather-widget" id="weatherWidget" style="display: none;">
+                    <div class="weather-header">
+                        <div class="weather-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span id="weatherLocationName">Loading...</span>
+                        </div>
+                        <div class="weather-temp" id="weatherTemp">--°C</div>
+                    </div>
+                    <div id="weatherCondition">Loading weather...</div>
+                    <div class="weather-details">
+                        <div class="weather-detail">
+                            <div class="weather-detail-value" id="weatherHumidity">--%</div>
+                            <div class="weather-detail-label" data-translate="humidity">Humidity</div>
+                        </div>
+                        <div class="weather-detail">
+                            <div class="weather-detail-value" id="weatherWindSpeed">-- km/h</div>
+                            <div class="weather-detail-label" data-translate="wind">Wind</div>
+                        </div>
+                        <div class="weather-detail">
+                            <div class="weather-detail-value" id="weatherRainChance">--%</div>
+                            <div class="weather-detail-label" data-translate="rain">Rain</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Summary -->
+                <div class="financial-summary-grid">
+                    <div class="financial-summary-card income">
+                        <div class="card-header">
+                            <div class="card-icon" style="background: rgba(56, 142, 60, 0.1); color: var(--success);">
+                                <i class="fas fa-trending-up"></i>
+                            </div>
+                        </div>
+                        <div class="card-label" data-translate="total_income">Total Income</div>
+                        <div class="card-value" id="totalIncome">₹0</div>
+                    </div>
+                    <div class="financial-summary-card expense">
+                        <div class="card-header">
+                            <div class="card-icon" style="background: rgba(211, 47, 47, 0.1); color: var(--danger);">
+                                <i class="fas fa-trending-down"></i>
+                            </div>
+                        </div>
+                        <div class="card-label" data-translate="total_expenses">Total Expenses</div>
+                        <div class="card-value" id="totalExpenses">₹0</div>
+                    </div>
+                    <div class="financial-summary-card profit">
+                        <div class="card-header">
+                            <div class="card-icon" style="background: rgba(255, 160, 0, 0.1); color: var(--secondary);">
+                                <i class="fas fa-dollar-sign"></i>
+                            </div>
+                        </div>
+                        <div class="card-label" data-translate="net_profit">Net Profit</div>
+                        <div class="card-value" id="netProfit">₹0</div>
+                    </div>
+                    <div class="financial-summary-card loan">
+                        <div class="card-header">
+                            <div class="card-icon" style="background: rgba(25, 118, 210, 0.1); color: var(--info);">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                        </div>
+                        <div class="card-label" data-translate="active_loans">Active Loans</div>
+                        <div class="card-value" id="activeLoans">₹0</div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="dashboard-card">
+                    <h3>
+                        <i class="fas fa-bolt"></i>
+                        <span data-translate="quick_actions">Quick Actions</span>
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                        <button class="btn btn-success" onclick="openModal('transactionModal')">
+                            <i class="fas fa-plus"></i>
+                            <span data-translate="add_transaction">Add Transaction</span>
+                        </button>
+                        <button class="btn btn-primary" onclick="openModal('cropModal')">
+                            <i class="fas fa-seedling"></i>
+                            <span data-translate="add_crop">Add Crop</span>
+                        </button>
+                        <button class="btn btn-info" onclick="switchTab('assets')">
+                            <i class="fas fa-tractor"></i>
+                            <span data-translate="manage_assets">Manage Assets</span>
+                        </button>
+                        <button class="btn btn-warning" id="exportDataBtn">
+                            <i class="fas fa-download"></i>
+                            <span data-translate="export_data">Export Data</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="dashboard-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3>
+                            <i class="fas fa-receipt"></i>
+                            <span data-translate="recent_transactions">Recent Transactions</span>
+                        </h3>
+                        <button class="btn btn-outline btn-small" onclick="switchTab('money')">
+                            <span data-translate="view_all">View All</span>
+                        </button>
+                    </div>
+                    <div id="recentTransactionsList">
+                        <!-- Recent transactions will be displayed here -->
+                    </div>
+                </div>
+
+                <!-- Notifications & Alerts -->
+                <div class="dashboard-card">
+                    <h3>
+                        <i class="fas fa-bell"></i>
+                        <span data-translate="notifications_alerts">Notifications & Alerts</span>
+                    </h3>
+                    <div id="notificationsList">
+                        <!-- Notifications will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Crops Tab -->
+            <div class="tab-content" id="crops-tab">
+                <div class="tab-navigation">
+                    <button class="tab-btn active" data-crop-tab="overview">
+                        <i class="fas fa-chart-pie"></i>
+                        <span data-translate="overview">Overview</span>
+                    </button>
+                    <button class="tab-btn" data-crop-tab="active">
+                        <i class="fas fa-seedling"></i>
+                        <span data-translate="active">Active</span>
+                    </button>
+                    <button class="tab-btn" data-crop-tab="harvested">
+                        <i class="fas fa-cut"></i>
+                        <span data-translate="harvested">Harvested</span>
+                    </button>
+                </div>
+
+                <!-- Crop Overview -->
+                <div class="crop-tab-content active" id="crop-overview-tab">
+                    <div id="cropOverviewContent">
+                        <!-- Will be populated with crop overview -->
+                    </div>
+                </div>
+
+                <!-- Active Crops -->
+                <div class="crop-tab-content" id="crop-active-tab">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3>
+                            <i class="fas fa-seedling"></i>
+                            <span data-translate="active_crops">Active Crops</span>
+                        </h3>
+                        <button class="btn btn-success btn-small" onclick="openModal('cropModal')">
+                            <i class="fas fa-plus"></i>
+                            <span data-translate="add">Add</span>
+                        </button>
+                    </div>
+                    <div id="activeCropsList">
+                        <!-- Active crops will be displayed here -->
+                    </div>
+                </div>
+
+                <!-- Harvested Crops -->
+                <div class="crop-tab-content" id="crop-harvested-tab">
+                    <h3>
+                        <i class="fas fa-cut"></i>
+                        <span data-translate="harvested_crops">Harvested Crops</span>
+                    </h3>
+                    <div id="harvestedCropsList">
+                        <!-- Harvested crops will be displayed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assets Tab -->
+            <div class="tab-content" id="assets-tab">
+                <div class="tab-navigation">
+                    <button class="tab-btn active" data-asset-tab="equipment">
+                        <i class="fas fa-tractor"></i>
+                        <span data-translate="equipment">Equipment</span>
+                    </button>
+                    <button class="tab-btn" data-asset-tab="livestock">
+                        <i class="fas fa-cow"></i>
+                        <span data-translate="livestock">Livestock</span>
+                    </button>
+                    <button class="tab-btn" data-asset-tab="land">
+                        <i class="fas fa-map"></i>
+                        <span data-translate="land">Land</span>
+                    </button>
+                    <button class="tab-btn" data-asset-tab="inventory">
+                        <i class="fas fa-warehouse"></i>
+                        <span data-translate="inventory">Inventory</span>
+                    </button>
+                </div>
+
+                <div class="asset-tab-content active" id="asset-equipment-tab">
+                    <div id="equipmentContent">
+                        <!-- Equipment content will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="asset-tab-content" id="asset-livestock-tab">
+                    <div id="livestockContent">
+                        <!-- Livestock content will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="asset-tab-content" id="asset-land-tab">
+                    <div id="landContent">
+                        <!-- Land content will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="asset-tab-content" id="asset-inventory-tab">
+                    <div id="inventoryContent">
+                        <!-- Inventory content will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ideas Tab -->
+            <div class="tab-content" id="ideas-tab">
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <h2>
+                        <i class="fas fa-lightbulb"></i>
+                        <span data-translate="smart_farming_ideas">Smart Farming Ideas</span>
+                    </h2>
+                    <p style="color: var(--gray); font-size: 0.9rem;" data-translate="ai_suggestions">
+                        AI-powered suggestions to optimize your farm operations
+                    </p>
+                </div>
+
+                <div id="suggestionsList">
+                    <!-- Smart suggestions will be displayed here -->
+                </div>
+            </div>
+
+            <!-- Profile Tab -->
+            <div class="tab-content" id="profile-tab">
+                <!-- User Profile Card -->
+                <div class="dashboard-card">
+                    <div style="display: flex; align-items: center; gap: 1rem;">
+                        <div style="width: 80px; height: 80px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 600;" id="userAvatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <h2 id="userFullName" style="margin-bottom: 0.3rem; color: var(--primary-dark);">Farmer Name</h2>
+                            <p id="userEmail" style="color: var(--gray); margin: 0; font-size: 0.9rem;">farmer@example.com</p>
+                            <p id="userLocation" style="color: var(--gray); margin: 0; font-size: 0.9rem;">Farm Location</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div class="settings-section">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-dark);">
+                        <i class="fas fa-cog"></i>
+                        <span data-translate="settings">Settings</span>
+                    </h3>
+                    
+                    <!-- Theme Toggle -->
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-icon">
+                                <i class="fas fa-moon" id="themeIcon"></i>
+                            </div>
+                            <div class="settings-text">
+                                <h4 data-translate="dark_mode">Dark Mode</h4>
+                                <p data-translate="dark_mode_desc">Switch between light and dark themes</p>
+                            </div>
+                        </div>
+                        <div class="settings-toggle" id="themeToggle" onclick="toggleTheme()">
+                        </div>
+                    </div>
+
+                    <!-- Language Selection -->
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-icon">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <div class="settings-text">
+                                <h4 data-translate="language">Language</h4>
+                                <p data-translate="language_desc">Choose your preferred language</p>
+                            </div>
+                        </div>
+                        <div class="language-selector">
+                            <div class="language-option active" data-lang="en" onclick="changeLanguage('en')">EN</div>
+                            <div class="language-option" data-lang="hi" onclick="changeLanguage('hi')">हिं</div>
+                            <div class="language-option" data-lang="te" onclick="changeLanguage('te')">తె</div>
+                        </div>
+                    </div>
+
+                    <!-- Location Services -->
+                    <div class="settings-item">
+                        <div class="settings-info">
+                            <div class="settings-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="settings-text">
+                                <h4 data-translate="location_services">Location Services</h4>
+                                <p data-translate="location_desc">Enable for weather and crop suggestions</p>
+                            </div>
+                        </div>
+                        <div class="settings-toggle" id="locationToggle" onclick="toggleLocationServices()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Actions -->
+                <div class="dashboard-card">
+                    <h3>
+                        <i class="fas fa-user-cog"></i>
+                        <span data-translate="account">Account</span>
+                    </h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+                        <button class="btn btn-info btn-full" onclick="openModal('profileModal')">
+                            <i class="fas fa-edit"></i>
+                            <span data-translate="edit_profile">Edit Profile</span>
+                        </button>
+                        <button class="btn btn-outline btn-full" id="exportAllDataBtn">
+                            <i class="fas fa-download"></i>
+                            <span data-translate="export_data">Export All Data</span>
+                        </button>
+                        <button class="btn btn-danger btn-full" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span data-translate="logout">Logout</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- About Section -->
+                <div class="dashboard-card">
+                    <h3>
+                        <i class="fas fa-info-circle"></i>
+                        <span data-translate="about_jama">About Jama</span>
+                    </h3>
+                    <p style="color: var(--gray); line-height: 1.5; margin-bottom: 1rem;" data-translate="about_description">
+                        Jama helps farmers manage their agricultural operations with advanced features for crop tracking, financial management, asset management, and smart suggestions.
+                    </p>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: var(--gray); font-size: 0.8rem;">Version 5.0 • 2025</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <!-- Transaction Modal -->
+        <div class="modal" id="transactionModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>
+                        <i class="fas fa-receipt"></i>
+                        <span data-translate="add_transaction">Add Transaction</span>
+                    </h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-exchange-alt"></i>
+                        <span data-translate="transaction_type">Type</span>
+                    </label>
+                    <select class="form-control" id="transactionType" required>
+                        <option value="income">💰 Income</option>
+                        <option value="expense">💸 Expense</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-tag"></i>
+                        <span data-translate="category">Category</span>
+                    </label>
+                    <select class="form-control" id="transactionCategory" required>
+                        <!-- Will be populated based on type -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-edit"></i>
+                        <span data-translate="description">Description</span>
+                    </label>
+                    <input type="text" class="form-control" id="transactionDescription" data-translate-placeholder="transaction_description" placeholder="Transaction description" required>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-rupee-sign"></i>
+                        <span data-translate="amount">Amount</span>
+                    </label>
+                    <input type="number" class="form-control" id="transactionAmount" placeholder="Enter amount" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-calendar"></i>
+                        <span data-translate="date">Date</span>
+                    </label>
+                    <input type="date" class="form-control" id="transactionDate" required>
+                </div>
+
+                <div class="form-group" id="cropSelectionGroup" style="display: none;">
+                    <label>
+                        <i class="fas fa-seedling"></i>
+                        <span data-translate="related_crop">Related Crop</span>
+                    </label>
+                    <select class="form-control" id="relatedCrop">
+                        <option value="">Select crop (optional)</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary btn-full" id="saveTransactionBtn">
+                    <i class="fas fa-save"></i>
+                    <span data-translate="save_transaction">Save Transaction</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Crop Modal -->
+        <div class="modal" id="cropModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>
+                        <i class="fas fa-seedling"></i>
+                        <span data-translate="add_crop">Add Crop</span>
+                    </h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                
+                <div class="form-group">
+                    <label data-translate="crop_type">Crop Type</label>
+                    <div class="crop-selection-grid" id="cropTypeGrid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem;">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-expand-arrows-alt"></i>
+                        <span data-translate="area">Area</span>
+                    </label>
+                    <div class="input-group">
+                        <input type="number" class="form-control" id="cropAcres" placeholder="Acres" min="0" step="0.1" required>
+                        <input type="number" class="form-control" id="cropCents" placeholder="Cents" min="0" max="99">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span data-translate="crop_location">Crop Location</span>
+                    </label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="cropLocation" data-translate-placeholder="crop_location_placeholder" placeholder="Field/Survey number" required>
+                        <button type="button" class="btn btn-outline" id="getCropLocationBtn" style="max-width: 100px;">
+                            <i class="fas fa-map-pin"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-calendar"></i>
+                        <span data-translate="sowing_date">Sowing Date</span>
+                    </label>
+                    <input type="date" class="form-control" id="sowingDate" required>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-clock"></i>
+                        <span data-translate="duration">Duration (Days)</span>
+                    </label>
+                    <input type="number" class="form-control" id="cropDuration" placeholder="Growth duration" min="30" max="365" value="120" required>
+                </div>
+
+                <button class="btn btn-primary btn-full" id="saveCropBtn">
+                    <i class="fas fa-save"></i>
+                    <span data-translate="save_crop">Save Crop</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Profile Edit Modal -->
+        <div class="modal" id="profileModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>
+                        <i class="fas fa-user-edit"></i>
+                        <span data-translate="edit_profile">Edit Profile</span>
+                    </h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-user"></i>
+                        <span data-translate="full_name">Full Name</span>
+                    </label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="editFirstName" placeholder="First Name" required>
+                        <input type="text" class="form-control" id="editLastName" placeholder="Last Name" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-envelope"></i>
+                        <span data-translate="email">Email</span>
+                    </label>
+                    <input type="email" class="form-control" id="editEmail" placeholder="Email address" required>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span data-translate="farm_location">Farm Location</span>
+                    </label>
+                    <input type="text" class="form-control" id="editFarmLocation" placeholder="Village, District, State" required>
+                </div>
+
+                <button class="btn btn-primary btn-full" id="saveProfileBtn">
+                    <i class="fas fa-save"></i>
+                    <span data-translate="save_profile">Save Profile</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation -->
+        <div class="mobile-bottom-nav" id="mobileNav" style="display: none;">
+            <button class="mobile-nav-item active" data-tab="overview">
+                <i class="fas fa-home"></i>
+                <span data-translate="home">Home</span>
+            </button>
+            <button class="mobile-nav-item" data-tab="crops">
+                <i class="fas fa-seedling"></i>
+                <span data-translate="crops">Crops</span>
+            </button>
+            <button class="mobile-nav-item" data-tab="assets">
+                <i class="fas fa-warehouse"></i>
+                <span data-translate="assets">Assets</span>
+                <div class="notification-dot" id="assetNotification" style="display: none;"></div>
+            </button>
+            <button class="mobile-nav-item" data-tab="ideas">
+                <i class="fas fa-lightbulb"></i>
+                <span data-translate="ideas">Ideas</span>
+            </button>
+            <button class="mobile-nav-item" data-tab="profile">
+                <i class="fas fa-user"></i>
+                <span data-translate="profile">Profile</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Global application state
+        let currentUser = null;
+        let userLocation = null;
+        let weatherData = null;
+        let isOnline = navigator.onLine;
+        let selectedAuthTab = 'email';
+        let currentPage = 'auth';
+        let currentTab = 'overview';
+        let currentCropTab = 'overview';
+        let currentAssetTab = 'equipment';
+        let selectedCrop = '';
+        let currentLanguage = 'en';
+        let isDarkMode = false;
+        
+        let appData = {
+            crops: [],
+            transactions: [],
+            equipment: [],
+            livestock: [],
+            land: [],
+            inventory: [],
+            profile: null,
+            notifications: [],
+            settings: {
+                theme: 'light',
+                language: 'en',
+                locationEnabled: false,
+                notifications: true
+            }
+        };
+
+        // Enhanced language translations
+        const translations = {
+            en: {
+                // Common
+                'subtitle': 'Smart Agricultural Management System',
+                'loading': 'Loading your farm data...',
+                'email': 'Email',
+                'phone': 'Phone',
+                'google': 'Google',
+                'password': 'Password',
+                'login': 'Login',
+                'register': 'Register',
+                'back': 'Back',
+                'save': 'Save',
+                'cancel': 'Cancel',
+                'add': 'Add',
+                'edit': 'Edit',
+                'delete': 'Delete',
+                'view_all': 'View All',
+                
+                // Location
+                'enable_location': 'Enable Location',
+                'location_description': 'Allow Jama to access your location for personalized farming insights and weather updates',
+                'location_benefits': 'Benefits:',
+                'benefit_weather': 'Accurate weather forecasts',
+                'benefit_alerts': 'Crop-specific alerts and warnings',
+                'benefit_suggestions': 'Location-based farming suggestions',
+                'benefit_market': 'Local market price updates',
+                'not_now': 'Not Now',
+                'allow': 'Allow',
+                
+                // Dashboard
+                'quick_actions': 'Quick Actions',
+                'add_transaction': 'Add Transaction',
+                'add_crop': 'Add Crop',
+                'manage_assets': 'Manage Assets',
+                'export_data': 'Export Data',
+                'recent_transactions': 'Recent Transactions',
+                'notifications_alerts': 'Notifications & Alerts',
+                'total_income': 'Total Income',
+                'total_expenses': 'Total Expenses',
+                'net_profit': 'Net Profit',
+                'active_loans': 'Active Loans',
+                
+                // Navigation
+                'home': 'Home',
+                'crops': 'Crops',
+                'assets': 'Assets',
+                'ideas': 'Ideas',
+                'profile': 'Profile',
+                'overview': 'Overview',
+                'active': 'Active',
+                'harvested': 'Harvested',
+                'equipment': 'Equipment',
+                'livestock': 'Livestock',
+                'land': 'Land',
+                'inventory': 'Inventory',
+                
+                // Forms
+                'complete_profile': 'Complete Profile',
+                'full_name': 'Full Name',
+                'farm_location': 'Farm Location',
+                'total_farm_size': 'Total Farm Size',
+                'primary_crops': 'Primary Crops',
+                'complete_registration': 'Complete Registration',
+                'transaction_type': 'Transaction Type',
+                'category': 'Category',
+                'description': 'Description',
+                'amount': 'Amount',
+                'date': 'Date',
+                'related_crop': 'Related Crop',
+                'save_transaction': 'Save Transaction',
+                'crop_type': 'Crop Type',
+                'area': 'Area',
+                'crop_location': 'Crop Location',
+                'sowing_date': 'Sowing Date',
+                'duration': 'Duration (Days)',
+                'save_crop': 'Save Crop',
+                
+                // Settings
+                'settings': 'Settings',
+                'dark_mode': 'Dark Mode',
+                'dark_mode_desc': 'Switch between light and dark themes',
+                'language': 'Language',
+                'language_desc': 'Choose your preferred language',
+                'location_services': 'Location Services',
+                'location_desc': 'Enable for weather and crop suggestions',
+                'account': 'Account',
+                'edit_profile': 'Edit Profile',
+                'logout': 'Logout',
+                'about_jama': 'About Jama',
+                'about_description': 'Jama helps farmers manage their agricultural operations with advanced features for crop tracking, financial management, asset management, and smart suggestions.',
+                
+                // Weather
+                'humidity': 'Humidity',
+                'wind': 'Wind',
+                'rain': 'Rain',
+                
+                // Smart Ideas
+                'smart_farming_ideas': 'Smart Farming Ideas',
+                'ai_suggestions': 'AI-powered suggestions to optimize your farm operations',
+                
+                // Placeholders
+                'first_name': 'First Name',
+                'last_name': 'Last Name',
+                'farm_location_placeholder': 'Village, District, State',
+                'current': 'Current',
+                'transaction_description': 'Transaction description',
+                'crop_location_placeholder': 'Field/Survey number',
+                'save_profile': 'Save Profile',
+                
+                // OTP
+                'phone_number': 'Phone Number',
+                'send_otp': 'Send OTP',
+                'otp_instruction': 'Enter OTP sent to',
+                'verify_otp': 'Verify OTP',
+                'google_signin_text': 'Sign in with your Google account',
+                'continue_google': 'Continue with Google',
+                
+                // Crops
+                'active_crops': 'Active Crops',
+                'harvested_crops': 'Harvested Crops',
+            },
+            hi: {
+                // Common
+                'subtitle': 'स्मार्ट कृषि प्रबंधन प्रणाली',
+                'loading': 'आपका फार्म डेटा लोड हो रहा है...',
+                'email': 'ईमेल',
+                'phone': 'फोन',
+                'google': 'गूगल',
+                'password': 'पासवर्ड',
+                'login': 'लॉगिन',
+                'register': 'पंजीकरण',
+                'back': 'वापस',
+                'save': 'सेव करें',
+                'cancel': 'रद्द करें',
+                'add': 'जोड़ें',
+                'edit': 'संपादित करें',
+                'delete': 'हटाएं',
+                'view_all': 'सभी देखें',
+                
+                // Location
+                'enable_location': 'स्थान सक्षम करें',
+                'location_description': 'व्यक्तिगत कृषि अंतर्दृष्टि और मौसम अपडेट के लिए जामा को अपना स्थान एक्सेस करने की अनुमति दें',
+                'location_benefits': 'लाभ:',
+                'benefit_weather': 'सटीक मौसम पूर्वानुमान',
+                'benefit_alerts': 'फसल-विशिष्ट अलर्ट और चेतावनियां',
+                'benefit_suggestions': 'स्थान-आधारित कृषि सुझाव',
+                'benefit_market': 'स्थानीय बाजार मूल्य अपडेट',
+                'not_now': 'अभी नहीं',
+                'allow': 'अनुमति दें',
+                
+                // Dashboard
+                'quick_actions': 'त्वरित कार्य',
+                'add_transaction': 'लेनदेन जोड़ें',
+                'add_crop': 'फसल जोड़ें',
+                'manage_assets': 'संपत्ति प्रबंधित करें',
+                'export_data': 'डेटा निर्यात करें',
+                'recent_transactions': 'हाल की लेनदेन',
+                'notifications_alerts': 'सूचनाएं और अलर्ट',
+                'total_income': 'कुल आय',
+                'total_expenses': 'कुल खर्च',
+                'net_profit': 'शुद्ध लाभ',
+                'active_loans': 'सक्रिय ऋण',
+                
+                // Navigation
+                'home': 'होम',
+                'crops': 'फसल',
+                'assets': 'संपत्ति',
+                'ideas': 'सुझाव',
+                'profile': 'प्रोफाइल',
+                'overview': 'अवलोकन',
+                'active': 'सक्रिय',
+                'harvested': 'कटी हुई',
+                'equipment': 'उपकरण',
+                'livestock': 'पशुधन',
+                'land': 'भूमि',
+                'inventory': 'इन्वेंटरी',
+                
+                // Forms
+                'complete_profile': 'प्रोफाइल पूरा करें',
+                'full_name': 'पूरा नाम',
+                'farm_location': 'खेत का स्थान',
+                'total_farm_size': 'कुल खेत का आकार',
+                'primary_crops': 'मुख्य फसलें',
+                'complete_registration': 'पंजीकरण पूरा करें',
+                'transaction_type': 'लेनदेन प्रकार',
+                'category': 'श्रेणी',
+                'description': 'विवरण',
+                'amount': 'राशि',
+                'date': 'तारीख',
+                'related_crop': 'संबंधित फसल',
+                'save_transaction': 'लेनदेन सेव करें',
+                'crop_type': 'फसल प्रकार',
+                'area': 'क्षेत्र',
+                'crop_location': 'फसल स्थान',
+                'sowing_date': 'बुआई की तारीख',
+                'duration': 'अवधि (दिन)',
+                'save_crop': 'फसल सेव करें',
+                
+                // Settings
+                'settings': 'सेटिंग्स',
+                'dark_mode': 'डार्क मोड',
+                'dark_mode_desc': 'लाइट और डार्क थीम के बीच स्विच करें',
+                'language': 'भाषा',
+                'language_desc': 'अपनी पसंदीदा भाषा चुनें',
+                'location_services': 'स्थान सेवाएं',
+                'location_desc': 'मौसम और फसल सुझावों के लिए सक्षम करें',
+                'account': 'खाता',
+                'edit_profile': 'प्रोफाइल संपादित करें',
+                'logout': 'लॉगआउट',
+                'about_jama': 'जामा के बारे में',
+                'about_description': 'जामा किसानों को फसल ट्रैकिंग, वित्तीय प्रबंधन, संपत्ति प्रबंधन, और स्मार्ट सुझावों की उन्नत सुविधाओं के साथ अपने कृषि संचालन का प्रबंधन करने में मदद करता है।',
+                
+                // Weather
+                'humidity': 'नमी',
+                'wind': 'हवा',
+                'rain': 'बारिश',
+                
+                // Smart Ideas
+                'smart_farming_ideas': 'स्मार्ट कृषि सुझाव',
+                'ai_suggestions': 'आपके कृषि संचालन को अनुकूलित करने के लिए AI-संचालित सुझाव',
+                
+                // Additional Hindi translations
+                'active_crops': 'सक्रिय फसलें',
+                'harvested_crops': 'कटी हुई फसलें',
+            },
+            te: {
+                // Common
+                'subtitle': 'స్మార్ట్ వ్యవసాయ నిర్వహణ వ్యవస్థ',
+                'loading': 'మీ వ్యవసాయ డేటాను లోడ్ చేస్తోంది...',
+                'email': 'ఇమెయిల్',
+                'phone': 'ఫోన్',
+                'google': 'గూగుల్',
+                'password': 'పాస్‌వర్డ్',
+                'login': 'లాగిన్',
+                'register': 'నమోదు',
+                'back': 'వెనుకకు',
+                'save': 'సేవ్ చేయండి',
+                'cancel': 'రద్దు చేయండి',
+                'add': 'జోడించండి',
+                'edit': 'సవరించండి',
+                'delete': 'తొలగించండి',
+                'view_all': 'అన్నింటిని చూడండి',
+                
+                // Location
+                'enable_location': 'లొకేషన్ ప్రారంభించండి',
+                'location_description': 'వ్యక్తిగత వ్యవసాయ అంతర్దృష్టులు మరియు వాతావరణ నవీకరణల కోసం జామాకు మీ లొకేషన్‌ను యాక్సెస్ చేయడానికి అనుమతి ఇవ్వండి',
+                'location_benefits': 'ప్రయోజనాలు:',
+                'benefit_weather': 'ఖచ్చితమైన వాతావరణ సూచనలు',
+                'benefit_alerts': 'పంట-నిర్దిష్ట హెచ్చరికలు మరియు హెచ్చరికలు',
+                'benefit_suggestions': 'లొకేషన్-ఆధారిత వ్యవసాయ సూచనలు',
+                'benefit_market': 'స్థానిక మార్కెట్ ధర నవీకరణలు',
+                'not_now': 'ఇప్పుడు కాదు',
+                'allow': 'అనుమతించండి',
+                
+                // Dashboard
+                'quick_actions': 'త్వరిత చర్యలు',
+                'add_transaction': 'లావాదేవీ జోడించండి',
+                'add_crop': 'పంట జోడించండి',
+                'manage_assets': 'ఆస్తులను నిర్వహించండి',
+                'export_data': 'డేటా ఎగుమతి చేయండి',
+                'recent_transactions': 'ఇటీవలి లావాదేవీలు',
+                'notifications_alerts': 'నోటిఫికేషన్‌లు మరియు అలర్ట్‌లు',
+                'total_income': 'మొత్తం ఆదాయం',
+                'total_expenses': 'మొత్తం ఖర్చులు',
+                'net_profit': 'నెట్ లాభం',
+                'active_loans': 'క్రియాశీల రుణాలు',
+                
+                // Navigation
+                'home': 'హోమ్',
+                'crops': 'పంటలు',
+                'assets': 'ఆస్తులు',
+                'ideas': 'ఆలోచనలు',
+                'profile': 'ప్రొఫైల్',
+                'overview': 'సమీక్ష',
+                'active': 'క్రియాశీలం',
+                'harvested': 'కోసినవి',
+                'equipment': 'పరికరాలు',
+                'livestock': 'పశువులు',
+                'land': 'భూమి',
+                'inventory': 'జాబితా',
+                
+                // Additional Telugu translations
+                'active_crops': 'క్రియాశీల పంటలు',
+                'harvested_crops': 'కోసిన పంటలు',
+                'settings': 'సెట్టింగ్స్',
+                'language': 'భాష',
+                'account': 'ఖాతా',
+            }
+        };
+
+        // Crop types with Telugu names
+        const cropTypes = [
+            { name: 'paddy', icon: '🌾', label: { en: 'Paddy/Rice', hi: 'धान/चावल', te: 'వరి' }, duration: 120, season: 'kharif' },
+            { name: 'wheat', icon: '🌾', label: { en: 'Wheat', hi: 'गेहूं', te: 'గోధుమ' }, duration: 150, season: 'rabi' },
+            { name: 'cotton', icon: '🌿', label: { en: 'Cotton', hi: 'कपास', te: 'పత్తి' }, duration: 180, season: 'kharif' },
+            { name: 'maize', icon: '🌽', label: { en: 'Maize/Corn', hi: 'मक्का', te: 'మొక్కజొన్న' }, duration: 100, season: 'kharif' },
+            { name: 'sugarcane', icon: '🎋', label: { en: 'Sugarcane', hi: 'गन्ना', te: 'చెరకు' }, duration: 365, season: 'annual' },
+            { name: 'soybean', icon: '🌱', label: { en: 'Soybean', hi: 'सोयाबीन', te: 'సోయాబీన్' }, duration: 100, season: 'kharif' },
+            { name: 'tomato', icon: '🍅', label: { en: 'Tomato', hi: 'टमाटर', te: 'టమాటో' }, duration: 75, season: 'zaid' },
+            { name: 'onion', icon: '🧅', label: { en: 'Onion', hi: 'प्याज', te: 'ఉల్లిపాయ' }, duration: 120, season: 'rabi' },
+            { name: 'potato', icon: '🥔', label: { en: 'Potato', hi: 'आलू', te: 'బంగాళాదుంప' }, duration: 90, season: 'rabi' },
+            { name: 'chili', icon: '🌶️', label: { en: 'Chili', hi: 'मिर्च', te: 'మిర్చి' }, duration: 120, season: 'kharif' },
+            { name: 'groundnut', icon: '🥜', label: { en: 'Groundnut', hi: 'मूंगफली', te: 'వేరుశనగ' }, duration: 110, season: 'kharif' },
+            { name: 'sunflower', icon: '🌻', label: { en: 'Sunflower', hi: 'सूरजमुखी', te: 'సూర్యకాంతి' }, duration: 90, season: 'rabi' }
+        ];
+
+        // Transaction categories
+        const transactionCategories = {
+            income: [
+                { value: 'crop-sale', label: { en: '🌾 Crop Sale', hi: '🌾 फसल बिक्री', te: '🌾 పంట అమ్మకం' } },
+                { value: 'milk-sale', label: { en: '🥛 Milk Sale', hi: '🥛 दूध बिक्री', te: '🥛 పాల అమ్మకం' } },
+                { value: 'egg-sale', label: { en: '🥚 Egg Sale', hi: '🥚 अंडे की बिक्री', te: '🥚 గుడ్డు అమ్మకం' } },
+                { value: 'livestock-sale', label: { en: '🐄 Livestock Sale', hi: '🐄 पशु बिक्री', te: '🐄 పశువుల అమ్మకం' } },
+                { value: 'vegetable-sale', label: { en: '🥕 Vegetable Sale', hi: '🥕 सब्जी बिक्री', te: '🥕 కూరగాయల అమ్మకం' } },
+                { value: 'subsidy', label: { en: '🏛️ Government Subsidy', hi: '🏛️ सरकारी सब्सिडी', te: '🏛️ ప్రభుత్వ రాయితీ' } },
+                { value: 'other-income', label: { en: '💰 Other Income', hi: '💰 अन्य आय', te: '💰 ఇతర ఆదాయం' } }
+            ],
+            expense: [
+                { value: 'seeds', label: { en: '🌱 Seeds & Planting', hi: '🌱 बीज और रोपण', te: '🌱 విత్తనాలు మరియు నాట్లు' } },
+                { value: 'fertilizer', label: { en: '🧪 Fertilizers', hi: '🧪 उर्वरक', te: '🧪 ఎరువులు' } },
+                { value: 'pesticide', label: { en: '🐛 Pesticides', hi: '🐛 कीटनाशक', te: '🐛 పురుగుమందులు' } },
+                { value: 'labor', label: { en: '👷 Labor Wages', hi: '👷 मजदूरी', te: '👷 కూలీ వేతనాలు' } },
+                { value: 'fuel', label: { en: '⛽ Fuel & Diesel', hi: '⛽ ईंधन और डीजल', te: '⛽ ఇంధనం మరియు డీజిల్' } },
+                { value: 'machinery', label: { en: '🚜 Machinery', hi: '🚜 मशीनरी', te: '🚜 యంత్రాలు' } },
+                { value: 'maintenance', label: { en: '🔧 Maintenance', hi: '🔧 रखरखाव', te: '🔧 నిర్వహణ' } },
+                { value: 'feed', label: { en: '🌾 Animal Feed', hi: '🌾 पशु आहार', te: '🌾 పశు ఆహారం' } },
+                { value: 'medical', label: { en: '💊 Medical/Veterinary', hi: '💊 चिकित्सा/पशु चिकित्सा', te: '💊 వైద్య/పశు వైద్యం' } },
+                { value: 'transport', label: { en: '🚛 Transport', hi: '🚛 परिवहन', te: '🚛 రవాణా' } },
+                { value: 'other-expense', label: { en: '💸 Other Expense', hi: '💸 अन्य खर्च', te: '💸 ఇతర ఖర్చు' } }
+            ]
+        };
+
+        // Firebase configuration (Replace with your actual config)
+        const firebaseConfig = {
+            // Add your Firebase config here
+            apiKey: "demo-api-key",
+            authDomain: "jama-farm-demo.firebaseapp.com",
+            projectId: "jama-farm-demo",
+            storageBucket: "jama-farm-demo.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "demo-app-id"
+        };
+
+        // Initialize Firebase (commented out for demo)
+        // firebase.initializeApp(firebaseConfig);
+        // const auth = firebase.auth();
+        // const db = firebase.firestore();
+
+        // Tomorrow.io Weather API key
+        const TOMORROW_API_KEY = "1G7YyF7MlPU3v0bx8oAL36JWwDziEgH5";
+
+        // Initialize application
+        function initializeApp() {
+            setTimeout(() => {
+                hideLoadingScreen();
+                setupEventListeners();
+                initializeDatePickers();
+                setupOfflineDetection();
+                populateCropTypeGrid();
+                checkLocalAuth();
+                setCurrentDate();
+                loadSavedSettings();
+                setTimeout(requestLocationPermission, 1000);
+            }, 2500);
+        }
+
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.classList.add('hidden');
+            
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+                showAppElements();
+            }, 500);
+        }
+
+        function showAppElements() {
+            document.getElementById('appHeader').style.display = 'block';
+            document.getElementById('mobileNav').style.display = 'flex';
+        }
+
+        function setupEventListeners() {
+            // Authentication
+            document.getElementById('emailLoginBtn').addEventListener('click', emailLogin);
+            document.getElementById('emailRegisterBtn').addEventListener('click', emailRegister);
+            document.getElementById('googleSignInBtn').addEventListener('click', googleSignIn);
+            document.getElementById('sendOtpBtn').addEventListener('click', sendOtp);
+            document.getElementById('verifyOtpBtn').addEventListener('click', verifyOtp);
+            document.getElementById('backToPhoneBtn').addEventListener('click', backToPhone);
+
+            // Registration
+            document.getElementById('completeRegistrationBtn').addEventListener('click', completeRegistration);
+            document.getElementById('getCurrentLocationBtn').addEventListener('click', getCurrentLocation);
+
+            // Save buttons
+            document.getElementById('saveCropBtn').addEventListener('click', saveCrop);
+            document.getElementById('saveTransactionBtn').addEventListener('click', saveTransaction);
+            document.getElementById('saveProfileBtn').addEventListener('click', saveProfile);
+
+            // User actions
+            document.getElementById('exportAllDataBtn').addEventListener('click', exportAllData);
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+
+            // Auth tab switching
+            document.querySelectorAll('.auth-tab').forEach(tab => {
+                tab.addEventListener('click', () => switchAuthTab(tab.dataset.auth));
+            });
+
+            // Mobile navigation
+            document.querySelectorAll('.mobile-nav-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const tab = item.dataset.tab;
+                    switchTab(tab);
+                    updateMobileNav(tab);
+                });
+            });
+
+            // Tab switching
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('[data-crop-tab]')) {
+                    switchCropTab(e.target.closest('[data-crop-tab]').dataset.cropTab);
+                }
+                if (e.target.closest('[data-asset-tab]')) {
+                    switchAssetTab(e.target.closest('[data-asset-tab]').dataset.assetTab);
+                }
+            });
+
+            // Modal functionality
+            document.querySelectorAll('.modal-close').forEach(btn => {
+                btn.addEventListener('click', closeModals);
+            });
+
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) closeModals();
+                });
+            });
+
+            // Form dependencies
+            document.getElementById('transactionType').addEventListener('change', updateTransactionForm);
+
+            // Selection handlers
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('#cropTypeGrid .selectable-item')) {
+                    selectCropType(e.target.closest('.selectable-item'));
+                }
+                if (e.target.closest('#primaryCropsGrid .selectable-item')) {
+                    const item = e.target.closest('.selectable-item');
+                    item.classList.toggle('selected');
+                }
+            });
+
+            // OTP input handling
+            document.querySelectorAll('.otp-input').forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1 && index < 5) {
+                        document.querySelectorAll('.otp-input')[index + 1].focus();
+                    }
+                });
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                        document.querySelectorAll('.otp-input')[index - 1].focus();
+                    }
+                });
+            });
+        }
+
+        // Enhanced alert system with card-based design
+        function showAlert(type, title, message, duration = 5000) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertId = 'alert-' + Date.now();
+            
+            const alertCard = document.createElement('div');
+            alertCard.className = `alert-card ${type}`;
+            alertCard.id = alertId;
+            
+            const getIcon = () => {
+                switch(type) {
+                    case 'success': return 'fas fa-check-circle';
+                    case 'error': return 'fas fa-times-circle';
+                    case 'warning': return 'fas fa-exclamation-triangle';
+                    case 'info': return 'fas fa-info-circle';
+                    default: return 'fas fa-info-circle';
+                }
+            };
+            
+            alertCard.innerHTML = `
+                <div class="alert-icon">
+                    <i class="${getIcon()}"></i>
+                </div>
+                <div class="alert-content">
+                    <div class="alert-title">${t(title) || title}</div>
+                    <div class="alert-message">${t(message) || message}</div>
+                </div>
+                <button class="alert-close" onclick="closeAlert('${alertId}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            alertContainer.appendChild(alertCard);
+            
+            // Trigger animation
+            setTimeout(() => alertCard.classList.add('show'), 100);
+            
+            // Auto remove after duration
+            setTimeout(() => closeAlert(alertId), duration);
+            
+            // Add haptic feedback for mobile
+            if ('vibrate' in navigator) {
+                navigator.vibrate(type === 'error' ? [100, 50, 100] : [50]);
+            }
+        }
+
+        function closeAlert(alertId) {
+            const alertCard = document.getElementById(alertId);
+            if (alertCard) {
+                alertCard.classList.remove('show');
+                setTimeout(() => alertCard.remove(), 300);
+            }
+        }
+
+        function showSuccess(title, message = '') {
+            showAlert('success', title, message);
+        }
+
+        function showError(title, message = '') {
+            showAlert('error', title, message);
+        }
+
+        function showWarning(title, message = '') {
+            showAlert('warning', title, message);
+        }
+
+        function showInfo(title, message = '') {
+            showAlert('info', title, message);
+        }
+
+        // Location services
+        function requestLocationPermission() {
+            if (!appData.settings.locationEnabled && 'geolocation' in navigator) {
+                document.getElementById('locationModal').classList.add('show');
+            }
+        }
+
+        function requestLocation() {
+            document.getElementById('locationModal').classList.remove('show');
+            showLoadingOverlay();
+            
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        userLocation = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude
+                        };
+                        
+                        appData.settings.locationEnabled = true;
+                        await saveUserData();
+                        
+                        showSuccess('Location Enabled', 'Location services activated successfully');
+                        await fetchWeatherData();
+                        generateLocationBasedSuggestions();
+                        hideLoadingOverlay();
+                    },
+                    (error) => {
+                        console.error('Location error:', error);
+                        showError('Location Error', 'Unable to access location. Please enable location services.');
+                        hideLoadingOverlay();
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 300000
+                    }
+                );
+            } else {
+                showError('Location Not Supported', 'Geolocation is not supported by this browser');
+                hideLoadingOverlay();
+            }
+        }
+
+        function denyLocation() {
+            document.getElementById('locationModal').classList.remove('show');
+            showInfo('Location Denied', 'You can enable location services later in settings for better experience');
+        }
+
+        function getCurrentLocation() {
+            if ('geolocation' in navigator) {
+                showLoadingOverlay();
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        try {
+                            const response = await fetch(
+                                `https://api.opencagedata.com/geocode/v1/json?q=${position.coords.latitude}+${position.coords.longitude}&key=demo-key`
+                            );
+                            
+                            // For demo, set a sample location
+                            const locationName = "Hyderabad, Telangana, India";
+                            document.getElementById('regFarmLocation').value = locationName;
+                            showSuccess('Location Found', 'Current location set successfully');
+                        } catch (error) {
+                            // Fallback location for demo
+                            document.getElementById('regFarmLocation').value = "Hyderabad, Telangana, India";
+                            showSuccess('Location Set', 'Demo location set');
+                        }
+                        hideLoadingOverlay();
+                    },
+                    (error) => {
+                        showError('Location Error', 'Unable to get current location');
+                        hideLoadingOverlay();
+                    }
+                );
+            }
+        }
+
+        // Weather integration using Tomorrow.io API
+        async function fetchWeatherData() {
+            if (!userLocation) return;
+            
+            try {
+                const response = await fetch(
+                    `https://api.tomorrow.io/v4/weather/forecast?location=${userLocation.latitude},${userLocation.longitude}&apikey=${TOMORROW_API_KEY}`
+                );
+                
+                if (response.ok) {
+                    weatherData = await response.json();
+                    updateWeatherWidget();
+                    generateWeatherBasedAlerts();
+                } else {
+                    // Fallback with demo data
+                    weatherData = {
+                        current: {
+                            temperature: 28,
+                            humidity: 65,
+                            windSpeed: 12,
+                            precipitationProbability: 20,
+                            weatherCode: 1000,
+                            condition: 'Partly Cloudy'
+                        },
+                        location: 'Your Location'
+                    };
+                    updateWeatherWidget();
+                }
+            } catch (error) {
+                console.error('Weather fetch error:', error);
+                // Use demo weather data
+                weatherData = {
+                    current: {
+                        temperature: 28,
+                        humidity: 65,
+                        windSpeed: 12,
+                        precipitationProbability: 20,
+                        condition: 'Partly Cloudy'
+                    },
+                    location: 'Demo Location'
+                };
+                updateWeatherWidget();
+            }
+        }
+
+        function updateWeatherWidget() {
+            if (!weatherData) return;
+            
+            const widget = document.getElementById('weatherWidget');
+            const current = weatherData.current;
+            
+            document.getElementById('weatherLocationName').textContent = weatherData.location || 'Your Location';
+            document.getElementById('weatherTemp').textContent = `${Math.round(current.temperature)}°C`;
+            document.getElementById('weatherCondition').textContent = current.condition;
+            document.getElementById('weatherHumidity').textContent = `${current.humidity}%`;
+            document.getElementById('weatherWindSpeed').textContent = `${current.windSpeed} km/h`;
+            document.getElementById('weatherRainChance').textContent = `${current.precipitationProbability}%`;
+            
+            widget.style.display = 'block';
+        }
+
+        function generateWeatherBasedAlerts() {
+            if (!weatherData || !appData.crops) return;
+            
+            const current = weatherData.current;
+            const alerts = [];
+            
+            // High temperature alert
+            if (current.temperature > 35) {
+                alerts.push({
+                    type: 'warning',
+                    title: 'High Temperature Alert',
+                    message: 'Temperature is above 35°C. Increase watering frequency for crops.',
+                    cropAction: 'increase_watering'
+                });
+            }
+            
+            // Rain probability alert
+            if (current.precipitationProbability > 70) {
+                alerts.push({
+                    type: 'info',
+                    title: 'Rain Expected',
+                    message: 'High chance of rain today. Postpone fertilizer application.',
+                    cropAction: 'postpone_fertilizer'
+                });
+            }
+            
+            // Low humidity alert
+            if (current.humidity < 40) {
+                alerts.push({
+                    type: 'warning',
+                    title: 'Low Humidity',
+                    message: 'Low humidity may stress crops. Consider irrigation.',
+                    cropAction: 'consider_irrigation'
+                });
+            }
+            
+            // Strong wind alert
+            if (current.windSpeed > 25) {
+                alerts.push({
+                    type: 'warning',
+                    title: 'Strong Winds',
+                    message: 'Strong winds detected. Secure lightweight farm structures.',
+                    cropAction: 'secure_structures'
+                });
+            }
+            
+            alerts.forEach(alert => {
+                showAlert(alert.type, alert.title, alert.message, 8000);
+            });
+        }
+
+        // Enhanced theme functionality
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+            
+            const themeIcon = document.getElementById('themeIcon');
+            const themeToggle = document.getElementById('themeToggle');
+            
+            themeIcon.className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
+            themeToggle.classList.toggle('active', isDarkMode);
+            
+            appData.settings.theme = isDarkMode ? 'dark' : 'light';
+            saveUserData();
+            
+            showSuccess('Theme Changed', `Switched to ${isDarkMode ? 'dark' : 'light'} mode`);
+        }
+
+        // Enhanced language functionality
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            appData.settings.language = lang;
+            
+            // Update active language selector
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.classList.toggle('active', option.dataset.lang === lang);
+            });
+            
+            updateLanguage();
+            populateCropTypeGrid(); // Refresh crop grid with new language
+            saveUserData();
+            
+            const langNames = { en: 'English', hi: 'हिंदी', te: 'తెలుగు' };
+            showSuccess('Language Changed', `Switched to ${langNames[lang]}`);
+        }
+
+        function updateLanguage() {
+            const t = translations[currentLanguage] || translations.en;
+            
+            // Update all elements with data-translate attribute
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (t[key]) {
+                    element.textContent = t[key];
+                }
+            });
+            
+            // Update placeholder attributes
+            document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
+                const key = element.getAttribute('data-translate-placeholder');
+                if (t[key]) {
+                    element.placeholder = t[key];
+                }
+            });
+        }
+
+        function t(key) {
+            return translations[currentLanguage]?.[key] || translations.en?.[key] || key;
+        }
+
+        // Settings management
+        function loadSavedSettings() {
+            if (appData.settings) {
+                // Apply theme
+                if (appData.settings.theme === 'dark') {
+                    isDarkMode = true;
+                    document.body.setAttribute('data-theme', 'dark');
+                    document.getElementById('themeToggle').classList.add('active');
+                    document.getElementById('themeIcon').className = 'fas fa-sun';
+                }
+                
+                // Apply language
+                if (appData.settings.language) {
+                    currentLanguage = appData.settings.language;
+                    document.querySelectorAll('.language-option').forEach(option => {
+                        option.classList.toggle('active', option.dataset.lang === currentLanguage);
+                    });
+                    updateLanguage();
+                }
+                
+                // Apply location settings
+                if (appData.settings.locationEnabled) {
+                    document.getElementById('locationToggle').classList.add('active');
+                }
+            }
+        }
+
+        function toggleLocationServices() {
+            const toggle = document.getElementById('locationToggle');
+            const isEnabled = toggle.classList.contains('active');
+            
+            if (!isEnabled) {
+                requestLocation();
+            } else {
+                toggle.classList.remove('active');
+                appData.settings.locationEnabled = false;
+                userLocation = null;
+                weatherData = null;
+                document.getElementById('weatherWidget').style.display = 'none';
+                saveUserData();
+                showInfo('Location Disabled', 'Location services have been disabled');
+            }
+        }
+
+        // Enhanced crop management with growth stages
+        function getCropGrowthStage(crop) {
+            const sowingDate = new Date(crop.sowingDate);
+            const today = new Date();
+            const daysElapsed = Math.floor((today - sowingDate) / (1000 * 60 * 60 * 24));
+            const progressPercent = (daysElapsed / crop.duration) * 100;
+            
+            if (progressPercent < 10) {
+                return {
+                    stage: 'seeding',
+                    icon: '🌱',
+                    name: t('seeding') || 'Seeding',
+                    description: t('seeding_desc') || 'Seeds have been planted'
+                };
+            } else if (progressPercent < 25) {
+                return {
+                    stage: 'germination',
+                    icon: '🌿',
+                    name: t('germination') || 'Germination',
+                    description: t('germination_desc') || 'Seeds are sprouting'
+                };
+            } else if (progressPercent < 50) {
+                return {
+                    stage: 'vegetative',
+                    icon: '🍃',
+                    name: t('vegetative') || 'Vegetative Growth',
+                    description: t('vegetative_desc') || 'Plant is growing leaves and stems'
+                };
+            } else if (progressPercent < 75) {
+                return {
+                    stage: 'flowering',
+                    icon: '🌸',
+                    name: t('flowering') || 'Flowering',
+                    description: t('flowering_desc') || 'Plant is flowering'
+                };
+            } else if (progressPercent < 90) {
+                return {
+                    stage: 'fruiting',
+                    icon: '🍅',
+                    name: t('fruiting') || 'Fruiting',
+                    description: t('fruiting_desc') || 'Fruits are developing'
+                };
+            } else {
+                return {
+                    stage: 'harvest_ready',
+                    icon: '🌾',
+                    name: t('harvest_ready') || 'Harvest Ready',
+                    description: t('harvest_ready_desc') || 'Ready for harvest'
+                };
+            }
+        }
+
+        // Initialize date pickers
+        function initializeDatePickers() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            const dateInputs = ['transactionDate', 'sowingDate'];
+            dateInputs.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.value = today;
+            });
+        }
+
+        function setCurrentDate() {
+            // Set current date as default for forms
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('transactionDate').value = today;
+            document.getElementById('sowingDate').value = today;
+        }
+
+        // Authentication functions
+        async function emailLogin() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showError('Missing Information', 'Please fill all fields');
+                return;
+            }
+
+            showLoadingOverlay();
+            try {
+                // In production, use Firebase Auth
+                await demoLogin(email, 'email');
+            } catch (error) {
+                showError('Login Failed', error.message);
+            } finally {
+                hideLoadingOverlay();
+            }
+        }
+
+        async function emailRegister() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showError('Missing Information', 'Please fill all fields');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('Weak Password', 'Password must be at least 6 characters');
+                return;
+            }
+
+            showLoadingOverlay();
+            try {
+                await demoRegister(email, 'email');
+            } catch (error) {
+                showError('Registration Failed', error.message);
+            } finally {
+                hideLoadingOverlay();
+            }
+        }
+
+        async function googleSignIn() {
+            showLoadingOverlay();
+            try {
+                // In production, use Firebase Auth
+                await demoLogin('demo@google.com', 'google');
+            } catch (error) {
+                showError('Google Sign-in Failed', error.message);
+            } finally {
+                hideLoadingOverlay();
+            }
+        }
+
+        async function sendOtp() {
+            const phone = document.getElementById('phoneNumber').value.trim();
+            const countryCode = document.getElementById('countryCode').value;
+            
+            if (!phone || phone.length !== 10) {
+                showError('Invalid Phone', 'Please enter a valid 10-digit phone number');
+                return;
+            }
+
+            const fullPhone = countryCode + phone;
+            document.getElementById('phoneDisplay').textContent = fullPhone;
+            showAuthForm('otpVerification');
+            startOtpCountdown();
+            showSuccess('OTP Sent', 'Use 123456 for demo');
+        }
+
+        async function verifyOtp() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            let otp = '';
+            otpInputs.forEach(input => otp += input.value);
+            
+            if (otp.length !== 6) {
+                showError('Incomplete OTP', 'Please enter complete 6-digit OTP');
+                return;
+            }
+
+            if (otp === '123456') {
+                showLoadingOverlay();
+                await demoLogin(document.getElementById('phoneDisplay').textContent, 'phone');
+                hideLoadingOverlay();
+            } else {
+                showError('Invalid OTP', 'Use 123456 for demo');
+            }
+        }
+
+        async function demoLogin(identifier, method) {
+            currentUser = {
+                uid: 'demo_' + identifier.replace(/[^a-zA-Z0-9]/g, '_'),
+                email: method === 'email' ? identifier : null,
+                phoneNumber: method === 'phone' ? identifier : null,
+                displayName: method === 'google' ? 'Demo User' : null
+            };
+            
+            await loadUserData();
+            showSuccess('Login Successful', 'Welcome to Jama!');
+        }
+
+        async function demoRegister(identifier, method) {
+            currentUser = {
+                uid: 'demo_' + identifier.replace(/[^a-zA-Z0-9]/g, '_'),
+                email: method === 'email' ? identifier : null,
+                phoneNumber: method === 'phone' ? identifier : null
+            };
+            
+            showPage('registration');
+            showSuccess('Account Created', 'Complete your profile to continue');
+        }
+
+        function checkLocalAuth() {
+            const savedUser = localStorage.getItem('jama_current_user');
+            const savedData = localStorage.getItem('jama_app_data');
+            
+            if (savedUser && savedData) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    appData = JSON.parse(savedData);
+                    loadDashboard();
+                    showPage('dashboard');
+                } catch (error) {
+                    console.error('Error loading saved data:', error);
+                    showPage('auth');
+                }
+            } else {
+                showPage('auth');
+            }
+        }
+
+        async function loadUserData() {
+            const savedData = localStorage.getItem(`jama_data_${currentUser.uid}`);
+            if (savedData) {
+                appData = JSON.parse(savedData);
+                if (appData.profile) {
+                    showPage('dashboard');
+                    loadDashboard();
+                } else {
+                    showPage('registration');
+                }
+            } else {
+                showPage('registration');
+            }
+        }
+
+        async function saveUserData() {
+            if (!currentUser) return;
+
+            try {
+                appData.lastUpdated = new Date().toISOString();
+                localStorage.setItem(`jama_data_${currentUser.uid}`, JSON.stringify(appData));
+                localStorage.setItem('jama_current_user', JSON.stringify(currentUser));
+                localStorage.setItem('jama_app_data', JSON.stringify(appData));
+            } catch (error) {
+                console.error('Error saving user data:', error);
+                showError('Save Failed', 'Failed to save data. Please try again.');
+            }
+        }
+
+        async function completeRegistration() {
+            const firstName = document.getElementById('regFirstName').value.trim();
+            const lastName = document.getElementById('regLastName').value.trim();
+            const farmLocation = document.getElementById('regFarmLocation').value.trim();
+            const farmAcres = document.getElementById('regFarmAcres').value;
+            const farmCents = document.getElementById('regFarmCents').value || '0';
+            
+            if (!firstName || !lastName || !farmLocation || !farmAcres) {
+                showError('Missing Information', 'Please fill all required fields');
+                return;
+            }
+
+            const selectedCrops = Array.from(document.querySelectorAll('#primaryCropsGrid .selectable-item.selected'))
+                .map(item => item.dataset.crop);
+
+            appData.profile = {
+                firstName,
+                lastName,
+                farmLocation,
+                totalFarmSize: {
+                    acres: parseFloat(farmAcres),
+                    cents: parseInt(farmCents)
+                },
+                primaryCrops: selectedCrops,
+                registrationDate: new Date().toISOString(),
+                email: currentUser.email,
+                phone: currentUser.phoneNumber
+            };
+
+            await saveUserData();
+            showPage('dashboard');
+            loadDashboard();
+            showSuccess('Registration Complete', 'Welcome to Jama!');
+            
+            // Request location after successful registration
+            setTimeout(requestLocationPermission, 1000);
+        }
+
+        function loadDashboard() {
+            if (!appData.profile) return;
+
+            updateFinancialSummary();
+            loadUserProfile();
+            loadRecentTransactions();
+            generateSmartSuggestions();
+            loadSavedSettings();
+            
+            if (userLocation) {
+                fetchWeatherData();
+            }
+        }
+
+        function updateFinancialSummary() {
+            const transactions = appData.transactions || [];
+            
+            const totalIncome = transactions
+                .filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const totalExpenses = transactions
+                .filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+            
+            const netProfit = totalIncome - totalExpenses;
+
+            document.getElementById('totalIncome').textContent = `₹${totalIncome.toLocaleString()}`;
+            document.getElementById('totalExpenses').textContent = `₹${totalExpenses.toLocaleString()}`;
+            document.getElementById('netProfit').textContent = `₹${netProfit.toLocaleString()}`;
+            document.getElementById('activeLoans').textContent = '₹0'; // Placeholder
+
+            // Color code net profit
+            const profitElement = document.getElementById('netProfit');
+            profitElement.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+        }
+
+        function loadRecentTransactions() {
+            const container = document.getElementById('recentTransactionsList');
+            const transactions = (appData.transactions || [])
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 5);
+            
+            if (!transactions.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-receipt"></i>
+                        <h3>No transactions yet</h3>
+                        <p>Add your first transaction to start tracking</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = transactions.map(transaction => {
+                const category = [...transactionCategories.income, ...transactionCategories.expense]
+                    .find(c => c.value === transaction.category);
+                const categoryLabel = category ? category.label[currentLanguage] || category.label.en : transaction.category;
+
+                const isIncome = transaction.type === 'income';
+                
+                return `
+                    <div class="transaction-item ${transaction.type}">
+                        <div class="transaction-left" style="display: flex; align-items: center; gap: 1rem;">
+                            <div class="transaction-icon ${transaction.type}" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; background: ${isIncome ? 'rgba(56, 142, 60, 0.1)' : 'rgba(211, 47, 47, 0.1)'}; color: ${isIncome ? 'var(--success)' : 'var(--danger)'};">
+                                <i class="fas fa-${isIncome ? 'arrow-up' : 'arrow-down'}"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <h4>${transaction.description}</h4>
+                                <div class="transaction-meta" style="font-size: 0.8rem; color: var(--gray);">
+                                    ${categoryLabel} • ${new Date(transaction.date).toLocaleDateString()}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="transaction-amount" style="text-align: right;">
+                            <div class="amount-value ${transaction.type}" style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.2rem; color: ${isIncome ? 'var(--success)' : 'var(--danger)'};">
+                                ${isIncome ? '+' : '-'}₹${transaction.amount.toLocaleString()}
+                            </div>
+                            <div class="amount-date" style="font-size: 0.7rem; color: var(--gray);">
+                                ${new Date(transaction.date).toLocaleDateString()}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function loadUserProfile() {
+            if (!appData.profile) return;
+
+            const fullName = `${appData.profile.firstName} ${appData.profile.lastName}`;
+            document.getElementById('userFullName').textContent = fullName;
+            document.getElementById('userEmail').textContent = appData.profile.email || 'Not provided';
+            document.getElementById('userLocation').textContent = appData.profile.farmLocation;
+            
+            // Set avatar
+            const avatar = document.getElementById('userAvatar');
+            avatar.textContent = appData.profile.firstName.charAt(0).toUpperCase();
+        }
+
+        // Enhanced crop functionality
+        function populateCropTypeGrid() {
+            const grids = ['cropTypeGrid', 'primaryCropsGrid'];
+            
+            grids.forEach(gridId => {
+                const grid = document.getElementById(gridId);
+                if (grid) {
+                    grid.innerHTML = cropTypes.map(crop => {
+                        const label = crop.label[currentLanguage] || crop.label.en;
+                        return `
+                            <div class="selectable-item" data-crop="${crop.name}" style="border: 2px solid #e1e5e9; border-radius: var(--border-radius); padding: 1rem; text-align: center; cursor: pointer; transition: var(--transition); background: white;">
+                                <span class="crop-icon" style="font-size: 1.8rem; margin-bottom: 8px; display: block;">${crop.icon}</span>
+                                <span class="crop-name" style="font-weight: 600; color: var(--text-dark); font-size: 0.8rem;">${label}</span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            });
+        }
+
+        function selectCropType(item) {
+            document.querySelectorAll('#cropTypeGrid .selectable-item').forEach(i => {
+                i.classList.remove('selected');
+                i.style.borderColor = '#e1e5e9';
+                i.style.background = 'white';
+            });
+            
+            item.classList.add('selected');
+            item.style.borderColor = 'var(--primary)';
+            item.style.background = 'rgba(46, 125, 50, 0.1)';
+            
+            selectedCrop = item.dataset.crop;
+            
+            // Auto-fill duration
+            const cropData = cropTypes.find(c => c.name === selectedCrop);
+            if (cropData) {
+                document.getElementById('cropDuration').value = cropData.duration;
+            }
+        }
+
+        // Transaction functionality
+        function updateTransactionForm() {
+            const type = document.getElementById('transactionType').value;
+            const categorySelect = document.getElementById('transactionCategory');
+            const cropGroup = document.getElementById('cropSelectionGroup');
+
+            // Show crop selection for crop-related transactions
+            if (cropGroup) {
+                cropGroup.style.display = 'block';
+                updateCropSelection();
+            }
+
+            // Populate categories based on type
+            let categories = [];
+            if (type === 'income') {
+                categories = transactionCategories.income;
+            } else {
+                categories = transactionCategories.expense;
+            }
+
+            if (categorySelect) {
+                categorySelect.innerHTML = categories.map(cat => {
+                    const label = cat.label[currentLanguage] || cat.label.en;
+                    return `<option value="${cat.value}">${label}</option>`;
+                }).join('');
+            }
+        }
+
+        function updateCropSelection() {
+            const cropSelect = document.getElementById('relatedCrop');
+            if (cropSelect) {
+                const cropOptions = (appData.crops || []).map(crop => {
+                    const cropLabel = cropTypes.find(ct => ct.name === crop.type)?.label[currentLanguage] || crop.type;
+                    return `<option value="${crop.id}">${cropLabel} (${(crop.acres + (crop.cents || 0)/100).toFixed(1)} acres)</option>`;
+                }).join('');
+                cropSelect.innerHTML = '<option value="">Select crop (optional)</option>' + cropOptions;
+            }
+        }
+
+        async function saveTransaction() {
+            const type = document.getElementById('transactionType').value;
+            const category = document.getElementById('transactionCategory').value;
+            const description = document.getElementById('transactionDescription').value.trim();
+            const amount = parseFloat(document.getElementById('transactionAmount').value);
+            const date = document.getElementById('transactionDate').value;
+            const cropId = document.getElementById('relatedCrop')?.value || null;
+
+            if (!description || !amount || !date || !category) {
+                showError('Missing Information', 'Please fill all required fields');
+                return;
+            }
+
+            const newTransaction = {
+                id: generateId(),
+                type: type,
+                category: category,
+                description: description,
+                amount: amount,
+                date: date,
+                cropId: cropId,
+                createdAt: new Date().toISOString()
+            };
+
+            if (!appData.transactions) appData.transactions = [];
+            appData.transactions.push(newTransaction);
+
+            await saveUserData();
+            closeModals();
+            updateFinancialSummary();
+            loadRecentTransactions();
+            showSuccess('Transaction Saved', 'Transaction added successfully');
+            resetForms();
+            
+            // Auto-refresh dashboard
+            setTimeout(() => {
+                if (currentTab === 'overview') loadDashboard();
+            }, 500);
+        }
+
+        async function saveCrop() {
+            if (!selectedCrop) {
+                showError('Crop Not Selected', 'Please select a crop type');
+                return;
+            }
+
+            const acres = parseFloat(document.getElementById('cropAcres').value);
+            const cents = parseInt(document.getElementById('cropCents').value || '0');
+            const location = document.getElementById('cropLocation').value.trim();
+            const sowingDate = document.getElementById('sowingDate').value;
+            const duration = parseInt(document.getElementById('cropDuration').value);
+
+            if (!acres || !sowingDate || !duration || !location) {
+                showError('Missing Information', 'Please fill all required fields');
+                return;
+            }
+
+            const cropData = cropTypes.find(c => c.name === selectedCrop);
+            const newCrop = {
+                id: generateId(),
+                type: selectedCrop,
+                acres: acres,
+                cents: cents,
+                location: location,
+                sowingDate: sowingDate,
+                duration: duration,
+                status: 'active',
+                season: cropData?.season || 'unknown',
+                createdAt: new Date().toISOString()
+            };
+
+            if (!appData.crops) appData.crops = [];
+            appData.crops.push(newCrop);
+
+            await saveUserData();
+            closeModals();
+            showSuccess('Crop Added', 'Crop registered successfully');
+            resetForms();
+            
+            // Auto-refresh crops tab
+            setTimeout(() => {
+                if (currentTab === 'crops') loadCropsData();
+            }, 500);
+        }
+
+        async function saveProfile() {
+            const firstName = document.getElementById('editFirstName').value.trim();
+            const lastName = document.getElementById('editLastName').value.trim();
+            const email = document.getElementById('editEmail').value.trim();
+            const farmLocation = document.getElementById('editFarmLocation').value.trim();
+
+            if (!firstName || !lastName || !farmLocation) {
+                showError('Missing Information', 'Please fill all required fields');
+                return;
+            }
+
+            appData.profile.firstName = firstName;
+            appData.profile.lastName = lastName;
+            appData.profile.email = email;
+            appData.profile.farmLocation = farmLocation;
+            appData.profile.updatedAt = new Date().toISOString();
+
+            await saveUserData();
+            closeModals();
+            loadUserProfile();
+            showSuccess('Profile Updated', 'Profile updated successfully');
+        }
+
+        // Navigation functions
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            const targetTab = document.getElementById(`${tabName}-tab`);
+            if (targetTab) {
+                targetTab.classList.add('active');
+            }
+
+            loadTabData();
+        }
+
+        function switchCropTab(tabName) {
+            currentCropTab = tabName;
+            
+            document.querySelectorAll('[data-crop-tab]').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.querySelector(`[data-crop-tab="${tabName}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            document.querySelectorAll('.crop-tab-content').forEach(content => content.classList.remove('active'));
+            const targetContent = document.getElementById(`crop-${tabName}-tab`);
+            if (targetContent) targetContent.classList.add('active');
+            
+            loadCropsData();
+        }
+
+        function switchAssetTab(tabName) {
+            currentAssetTab = tabName;
+            
+            document.querySelectorAll('[data-asset-tab]').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.querySelector(`[data-asset-tab="${tabName}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            document.querySelectorAll('.asset-tab-content').forEach(content => content.classList.remove('active'));
+            const targetContent = document.getElementById(`asset-${tabName}-tab`);
+            if (targetContent) targetContent.classList.add('active');
+            
+            loadAssetsData();
+        }
+
+        function loadTabData() {
+            if (currentTab === 'crops') loadCropsData();
+            else if (currentTab === 'assets') loadAssetsData();
+            else if (currentTab === 'ideas') generateSmartSuggestions();
+        }
+
+        function loadCropsData() {
+            const container = document.getElementById('activeCropsList');
+            const crops = (appData.crops || []).filter(c => c.status === 'active');
+            
+            if (!crops.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-seedling"></i>
+                        <h3>No active crops</h3>
+                        <p>Start by adding your first crop!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = crops.map(crop => {
+                const cropData = cropTypes.find(ct => ct.name === crop.type);
+                const cropLabel = cropData?.label[currentLanguage] || crop.type;
+                const growthStage = getCropGrowthStage(crop);
+
+                return `
+                    <div class="dashboard-card" style="border-left: 4px solid var(--success);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                            <div>
+                                <h4 style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem; color: var(--primary-dark);">
+                                    <span style="font-size: 1.5rem;">${cropData?.icon || '🌱'}</span>
+                                    ${cropLabel}
+                                </h4>
+                                <p style="color: var(--gray); font-size: 0.85rem; margin: 0;">
+                                    ${(crop.acres + (crop.cents || 0)/100).toFixed(1)} acres • ${crop.location}
+                                </p>
+                                <p style="color: var(--gray); font-size: 0.85rem; margin: 0;">
+                                    Sown: ${new Date(crop.sowingDate).toLocaleDateString()}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="crop-growth-stage">
+                            <div class="growth-stage-icon">
+                                <span>${growthStage.icon}</span>
+                            </div>
+                            <div class="growth-stage-info">
+                                <div class="growth-stage-name">${growthStage.name}</div>
+                                <div class="growth-stage-description">${growthStage.description}</div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+                            <button class="btn btn-success btn-small" onclick="addCropTransaction('${crop.id}')">
+                                <i class="fas fa-plus"></i>
+                                Add Transaction
+                            </button>
+                            <button class="btn btn-info btn-small" onclick="viewCropDetails('${crop.id}')">
+                                <i class="fas fa-eye"></i>
+                                View Details
+                            </button>
+                            ${growthStage.stage === 'harvest_ready' ? `
+                                <button class="btn btn-warning btn-small" onclick="harvestCrop('${crop.id}')">
+                                    <i class="fas fa-cut"></i>
+                                    Harvest
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function loadAssetsData() {
+            // Placeholder for assets data
+            const container = document.getElementById('equipmentContent');
+            if (container) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-tractor"></i>
+                        <h3>No equipment added</h3>
+                        <p>Add your farm equipment to track usage and maintenance</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Enhanced smart suggestions
+        function generateSmartSuggestions() {
+            const container = document.getElementById('suggestionsList');
+            const suggestions = generateAISuggestions();
+            
+            if (!suggestions.length) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-lightbulb"></i>
+                        <h3>No suggestions available</h3>
+                        <p>Add more crops and transactions to get AI-powered recommendations</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = suggestions.map(suggestion => `
+                <div class="dashboard-card">
+                    <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1rem;">
+                        <span style="font-size: 2rem; display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; border-radius: 50%; background: rgba(46, 125, 50, 0.1);">
+                            ${suggestion.icon}
+                        </span>
+                        <div style="flex: 1;">
+                            <h4 style="margin-bottom: 0.5rem; color: var(--primary-dark);">${suggestion.title}</h4>
+                            <p style="color: var(--gray); font-size: 0.9rem; line-height: 1.4;">${suggestion.description}</p>
+                        </div>
+                        <span class="priority-badge ${suggestion.priority}" style="padding: 4px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; background: var(--${suggestion.priority === 'high' ? 'danger' : suggestion.priority === 'medium' ? 'warning' : 'info'}); color: white;">
+                            ${suggestion.priority}
+                        </span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 1rem 0; padding: 1rem; background: rgba(0,0,0,0.03); border-radius: var(--border-radius);">
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--gray); margin-bottom: 0.2rem; text-transform: uppercase;">Impact</div>
+                            <div style="font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px; color: var(--success);">
+                                ${suggestion.impact} <i class="fas fa-arrow-up"></i>
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--gray); margin-bottom: 0.2rem; text-transform: uppercase;">Benefit</div>
+                            <div style="font-size: 0.8rem; font-weight: 600;">${suggestion.benefit}</div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-primary btn-small">
+                            ${suggestion.action}
+                        </button>
+                        <button class="btn btn-outline btn-small">
+                            Remind Later
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function generateAISuggestions() {
+            const suggestions = [];
+            const today = new Date();
+            
+            // Weather-based suggestions
+            if (weatherData) {
+                const temp = weatherData.current.temperature;
+                const humidity = weatherData.current.humidity;
+                const rainChance = weatherData.current.precipitationProbability;
+                
+                if (temp > 35) {
+                    suggestions.push({
+                        icon: '🌡️',
+                        title: t('high_temp_alert') || 'High Temperature Alert',
+                        description: t('high_temp_desc') || 'Temperature above 35°C detected. Increase irrigation frequency to protect crops from heat stress.',
+                        priority: 'high',
+                        impact: 'High',
+                        benefit: '₹5,000 - ₹15,000',
+                        action: t('increase_watering') || 'Increase Watering'
+                    });
+                }
+                
+                if (rainChance > 70) {
+                    suggestions.push({
+                        icon: '🌧️',
+                        title: t('rain_expected') || 'Rain Expected',
+                        description: t('rain_desc') || 'High chance of rain today. Consider postponing fertilizer application and pesticide spraying.',
+                        priority: 'medium',
+                        impact: 'Medium',
+                        benefit: '₹2,000 - ₹8,000',
+                        action: t('postpone_spraying') || 'Postpone Spraying'
+                    });
+                }
+            }
+            
+            // Crop-based suggestions
+            (appData.crops || []).forEach(crop => {
+                const growthStage = getCropGrowthStage(crop);
+                
+                if (growthStage.stage === 'vegetative') {
+                    suggestions.push({
+                        icon: '🧪',
+                        title: t('fertilizer_time') || 'Fertilizer Application Time',
+                        description: t('fertilizer_desc') || `Your ${crop.type} is in vegetative growth phase. Apply nitrogen-rich fertilizer for better leaf development.`,
+                        priority: 'medium',
+                        impact: 'High',
+                        benefit: '₹10,000 - ₹25,000',
+                        action: t('apply_fertilizer') || 'Apply Fertilizer'
+                    });
+                }
+                
+                if (growthStage.stage === 'harvest_ready') {
+                    suggestions.push({
+                        icon: '📈',
+                        title: t('market_timing') || 'Market Timing Opportunity',
+                        description: t('market_timing_desc') || `${crop.type} is ready for harvest. Check current market prices for optimal selling time.`,
+                        priority: 'high',
+                        impact: 'High',
+                        benefit: '₹15,000 - ₹40,000',
+                        action: t('check_prices') || 'Check Market Prices'
+                    });
+                }
+            });
+            
+            // Financial suggestions
+            const transactions = appData.transactions || [];
+            const recentExpenses = transactions.filter(t => {
+                const tDate = new Date(t.date);
+                const daysAgo = (today - tDate) / (1000 * 60 * 60 * 24);
+                return t.type === 'expense' && daysAgo <= 30;
+            });
+            
+            if (recentExpenses.length > 10) {
+                suggestions.push({
+                    icon: '📊',
+                    title: t('expense_analysis') || 'Expense Analysis',
+                    description: t('expense_analysis_desc') || 'You have many transactions this month. Consider bulk purchasing for better rates and cost savings.',
+                    priority: 'low',
+                    impact: 'Medium',
+                    benefit: '₹3,000 - ₹12,000',
+                    action: t('analyze_expenses') || 'Analyze Expenses'
+                });
+            }
+            
+            return suggestions;
+        }
+
+        // Crop action functions
+        function addCropTransaction(cropId) {
+            const crop = appData.crops.find(c => c.id === cropId);
+            if (!crop) return;
+            
+            // Pre-fill transaction modal with crop information
+            document.getElementById('relatedCrop').value = cropId;
+            const cropData = cropTypes.find(ct => ct.name === crop.type);
+            const cropLabel = cropData?.label[currentLanguage] || crop.type;
+            document.getElementById('transactionDescription').value = `${cropLabel} - `;
+            
+            updateTransactionForm();
+            openModal('transactionModal');
+        }
+
+        function viewCropDetails(cropId) {
+            showInfo('Crop Details', 'Crop details view will be implemented in the next update');
+        }
+
+        function harvestCrop(cropId) {
+            const crop = appData.crops.find(c => c.id === cropId);
+            if (!crop) return;
+
+            if (confirm(`Mark ${crop.type} as harvested?`)) {
+                crop.status = 'harvested';
+                crop.harvestDate = new Date().toISOString().split('T')[0];
+                
+                saveUserData();
+                loadCropsData();
+                showSuccess('Crop Harvested', `${crop.type} marked as harvested successfully!`);
+            }
+        }
+
+        // Page navigation
+        function showPage(pageName) {
+            currentPage = pageName;
+            
+            document.getElementById('authPage').style.display = pageName === 'auth' ? 'block' : 'none';
+            document.getElementById('registrationPage').style.display = pageName === 'registration' ? 'block' : 'none';
+            document.getElementById('dashboardPage').style.display = pageName === 'dashboard' ? 'block' : 'none';
+        }
+
+        function showAuthForm(formName) {
+            document.querySelectorAll('.auth-form').forEach(form => {
+                form.style.display = 'none';
+                form.classList.remove('active');
+            });
+            
+            const targetForm = document.getElementById(formName);
+            if (targetForm) {
+                targetForm.style.display = 'block';
+                targetForm.classList.add('active');
+            }
+        }
+
+        function switchAuthTab(tabName) {
+            document.querySelectorAll('.auth-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+            
+            const targetTab = document.querySelector(`[data-auth="${tabName}"]`);
+            const targetForm = document.getElementById(`${tabName}Auth`);
+            
+            if (targetTab) targetTab.classList.add('active');
+            if (targetForm) targetForm.classList.add('active');
+        }
+
+        function backToPhone() {
+            showAuthForm('phoneAuth');
+        }
+
+        function updateMobileNav(activeTab) {
+            document.querySelectorAll('.mobile-nav-item').forEach(item => item.classList.remove('active'));
+            const targetItem = document.querySelector(`.mobile-nav-item[data-tab="${activeTab}"]`);
+            if (targetItem) targetItem.classList.add('active');
+        }
+
+        // Modal functions
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+                
+                if (modalId === 'transactionModal') {
+                    updateTransactionForm();
+                } else if (modalId === 'cropModal') {
+                    populateCropTypeGrid();
+                } else if (modalId === 'profileModal') {
+                    loadProfileEditForm();
+                }
+            }
+        }
+
+        function closeModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('active');
+            });
+            document.body.style.overflow = 'auto';
+            resetForms();
+        }
+
+        function loadProfileEditForm() {
+            if (appData.profile) {
+                document.getElementById('editFirstName').value = appData.profile.firstName || '';
+                document.getElementById('editLastName').value = appData.profile.lastName || '';
+                document.getElementById('editEmail').value = appData.profile.email || '';
+                document.getElementById('editFarmLocation').value = appData.profile.farmLocation || '';
+            }
+        }
+
+        function resetForms() {
+            document.querySelectorAll('.modal input, .modal textarea, .modal select').forEach(input => {
+                if (input.type !== 'date') {
+                    input.value = '';
+                }
+            });
+            
+            document.querySelectorAll('.selectable-item').forEach(item => {
+                item.classList.remove('selected');
+                item.style.borderColor = '#e1e5e9';
+                item.style.background = 'white';
+            });
+            
+            selectedCrop = '';
+            
+            // Reset date inputs to today
+            const today = new Date().toISOString().split('T')[0];
+            const dateInputs = ['transactionDate', 'sowingDate'];
+            dateInputs.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.value = today;
+            });
+        }
+
+        // Utility functions
+        function showLoadingOverlay() {
+            document.getElementById('loadingOverlay').classList.add('show');
+        }
+
+        function hideLoadingOverlay() {
+            document.getElementById('loadingOverlay').classList.remove('show');
+        }
+
+        function startOtpCountdown() {
+            let timeLeft = 120;
+            const countdownElement = document.getElementById('countdown');
+            
+            const timer = setInterval(() => {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                countdownElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    countdownElement.textContent = 'OTP Expired';
+                    countdownElement.style.color = 'var(--danger)';
+                }
+                timeLeft--;
+            }, 1000);
+        }
+
+        function setupOfflineDetection() {
+            window.addEventListener('online', () => {
+                showSuccess('Connection Restored', 'You are back online');
+            });
+
+            window.addEventListener('offline', () => {
+                showWarning('Offline Mode', 'You are offline. Data will be saved locally.');
+            });
+        }
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        async function exportAllData() {
+            if (!appData.transactions?.length && !appData.crops?.length) {
+                showError('No Data', 'No data available to export');
+                return;
+            }
+
+            showLoadingOverlay();
+            try {
+                const dataToExport = {
+                    profile: appData.profile,
+                    crops: appData.crops,
+                    transactions: appData.transactions,
+                    exportDate: new Date().toISOString(),
+                    appVersion: '5.0'
+                };
+
+                const dataStr = JSON.stringify(dataToExport, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(dataBlob);
+                link.download = `jama_farm_data_${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                
+                showSuccess('Export Complete', 'Farm data exported successfully');
+            } catch (error) {
+                console.error('Export error:', error);
+                showError('Export Failed', 'Failed to export data. Please try again.');
+            } finally {
+                hideLoadingOverlay();
+            }
+        }
+
+        async function logout() {
+            if (confirm(t('confirm_logout') || 'Are you sure you want to logout?')) {
+                currentUser = null;
+                appData = {
+                    crops: [], transactions: [], equipment: [],
+                    livestock: [], land: [], inventory: [], profile: null,
+                    notifications: [], settings: { theme: 'light', language: 'en', locationEnabled: false }
+                };
+                
+                localStorage.removeItem('jama_current_user');
+                localStorage.removeItem('jama_app_data');
+                showPage('auth');
+                showSuccess('Logged Out', 'You have been logged out successfully');
+            }
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        // Auto-save every 2 minutes
+        setInterval(() => {
+            if (currentUser && appData.profile) {
+                saveUserData();
+            }
+        }, 2 * 60 * 1000);
+
+        // Cleanup function
+        window.addEventListener('beforeunload', () => {
+            if (currentUser && appData.profile) {
+                saveUserData();
+            }
+        });
+    </script>
+</body>
+</html>
