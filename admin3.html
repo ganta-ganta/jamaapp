@@ -1,0 +1,2193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jama Admin Panel - AI-Powered Agricultural Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc, updateDoc, deleteDoc, query, where, orderBy, onSnapshot, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+        // Firebase configuration (same as main app)
+        const firebaseConfig = {
+
+    apiKey: "AIzaSyCdfgtj1gvZ-bkomW1V40h-4tyUPHy_peo",
+
+    authDomain: "jama-3f427.firebaseapp.com",
+
+    projectId: "jama-3f427",
+
+    storageBucket: "jama-3f427.firebasestorage.app",
+
+    messagingSenderId: "897112470741",
+
+    appId: "1:897112470741:web:ee6388f0faae459fcb1e5c",
+
+    measurementId: "G-NN1BRV0QKS"
+
+  };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+
+        window.auth = auth;
+        window.db = db;
+        window.storage = storage;
+        window.firebase = { 
+            signInWithEmailAndPassword, 
+            signOut, 
+            onAuthStateChanged, 
+            doc, 
+            setDoc, 
+            getDoc, 
+            collection, 
+            addDoc, 
+            updateDoc, 
+            deleteDoc, 
+            query, 
+            where, 
+            orderBy, 
+            onSnapshot, 
+            getDocs,
+            ref,
+            uploadBytes,
+            getDownloadURL
+        };
+    </script>
+
+    <style>
+        :root {
+            --primary: #2e7d32;
+            --primary-light: #4caf50;
+            --primary-dark: #1b5e20;
+            --secondary: #ffa000;
+            --secondary-light: #ffc107;
+            --secondary-dark: #ff6f00;
+            --accent: #00acc1;
+            --text-light: #f5f5f5;
+            --text-dark: #333;
+            --bg-light: #f8f9fa;
+            --bg-dark: #1a1a1a;
+            --card-dark: #2d2d2d;
+            --success: #388e3c;
+            --warning: #f57c00;
+            --danger: #d32f2f;
+            --info: #1976d2;
+            --gray: #78909c;
+            --border-radius: 12px;
+            --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .admin-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 1;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .admin-logo {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Admin Header */
+        .admin-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .admin-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .admin-logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .admin-logo-section i {
+            font-size: 2rem;
+        }
+
+        .admin-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .admin-subtitle {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .admin-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+
+        .admin-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .admin-user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: var(--border-radius);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Auth Section */
+        .admin-auth {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .auth-card .logo {
+            color: var(--primary);
+            margin-bottom: 2rem;
+        }
+
+        .auth-card .logo i {
+            font-size: 3rem;
+        }
+
+        .auth-card h1 {
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-card p {
+            color: var(--gray);
+            margin-bottom: 2rem;
+        }
+
+        /* Admin Dashboard */
+        .admin-dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .admin-nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 0.5rem;
+        }
+
+        .admin-nav-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .admin-nav-btn.active {
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .admin-nav-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Admin Cards */
+        .admin-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .admin-card h2 {
+            color: var(--primary-dark);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .admin-card h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+        }
+
+        .form-control.textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        /* Admin Content Sections */
+        .admin-section {
+            display: none;
+        }
+
+        .admin-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Suggestion Manager */
+        .suggestion-item {
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: var(--transition);
+        }
+
+        .suggestion-item:hover {
+            border-color: var(--primary);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .suggestion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .suggestion-content {
+            flex: 1;
+        }
+
+        .suggestion-title {
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .suggestion-meta {
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-bottom: 0.5rem;
+        }
+
+        .suggestion-description {
+            color: var(--text-dark);
+            line-height: 1.5;
+        }
+
+        .suggestion-priority {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .priority-high {
+            background: var(--danger);
+            color: white;
+        }
+
+        .priority-medium {
+            background: var(--warning);
+            color: white;
+        }
+
+        .priority-low {
+            background: var(--info);
+            color: white;
+        }
+
+        /* Users Table */
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+
+        .users-table th,
+        .users-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .users-table th {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+
+        .users-table tr:hover {
+            background: rgba(46, 125, 50, 0.05);
+        }
+
+        .user-avatar-small {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .user-info-cell {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .user-email {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        /* Activity Feed */
+        .activity-feed {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            border-bottom: 1px solid #e1e5e9;
+            transition: var(--transition);
+        }
+
+        .activity-item:hover {
+            background: rgba(46, 125, 50, 0.05);
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .activity-icon.crop {
+            background: var(--success);
+        }
+
+        .activity-icon.transaction {
+            background: var(--secondary);
+        }
+
+        .activity-icon.equipment {
+            background: var(--info);
+        }
+
+        .activity-details {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.2rem;
+        }
+
+        .activity-meta {
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+
+        .activity-time {
+            font-size: 0.7rem;
+            color: var(--gray);
+            margin-left: auto;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 2000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            width: 95%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+            transition: var(--transition);
+            padding: 4px;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: var(--danger);
+            background: rgba(211, 47, 47, 0.1);
+        }
+
+        /* Messages */
+        .message {
+            padding: 12px 16px;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            font-weight: 500;
+            display: none;
+            transition: var(--transition);
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: var(--danger);
+            border-left: 4px solid var(--danger);
+        }
+
+        .success-message {
+            background: #e8f5e9;
+            color: var(--success);
+            border-left: 4px solid var(--success);
+        }
+
+        .info-message {
+            background: #e3f2fd;
+            color: var(--info);
+            border-left: 4px solid var(--info);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .admin-dashboard {
+                padding: 1rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .admin-nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 1.5rem;
+                margin: 1rem;
+            }
+            
+            .auth-card {
+                padding: 2rem;
+                margin: 1rem;
+            }
+
+            .admin-header-content {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+
+            .admin-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+
+        /* Hidden elements */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Priority indicators */
+        .priority-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .priority-high .priority-indicator {
+            background: var(--danger);
+        }
+
+        .priority-medium .priority-indicator {
+            background: var(--warning);
+        }
+
+        .priority-low .priority-indicator {
+            background: var(--info);
+        }
+
+        /* Crop type selector */
+        .crop-types-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .crop-type-item {
+            border: 2px solid #e1e5e9;
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .crop-type-item:hover {
+            border-color: var(--primary);
+            transform: scale(1.02);
+        }
+
+        .crop-type-item.selected {
+            border-color: var(--primary);
+            background: rgba(46, 125, 50, 0.1);
+        }
+
+        .crop-type-item .crop-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .crop-type-item .crop-name {
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        /* Analytics Charts */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 1rem 0;
+        }
+
+        /* Notification styles */
+        .notification-banner {
+            background: var(--info);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .notification-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .notification-icon {
+            font-size: 1.5rem;
+        }
+
+        .notification-text {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+
+        .notification-description {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="admin-logo">
+            <i class="fas fa-cogs"></i>
+        </div>
+        <h1 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">Jama Admin</h1>
+        <p style="font-size: 1.1rem; opacity: 0.9; margin-bottom: 2rem;">AI-Powered Agricultural Management</p>
+        <div class="loading-bar" style="width: 200px; height: 4px; background: rgba(255, 255, 255, 0.3); border-radius: 2px; overflow: hidden;">
+            <div style="width: 100%; height: 100%; background: white; border-radius: 2px; animation: loadingProgress 2s ease-in-out forwards;"></div>
+        </div>
+        <p style="font-size: 0.9rem; opacity: 0.8;">Initializing admin dashboard...</p>
+    </div>
+
+    <div class="admin-container">
+        <!-- Admin Authentication -->
+        <div id="adminAuth" class="admin-auth">
+            <div class="auth-card">
+                <!-- Messages -->
+                <div class="error-message message" id="authErrorMessage"></div>
+                <div class="success-message message" id="authSuccessMessage"></div>
+                <div class="info-message message" id="authInfoMessage"></div>
+
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <h1>Admin Access</h1>
+                    <p>Jama Agricultural Management System</p>
+                </div>
+
+                <div class="notification-banner" style="margin-bottom: 2rem;">
+                    <div class="notification-content">
+                        <i class="fas fa-info-circle notification-icon"></i>
+                        <div class="notification-text">
+                            <div class="notification-title">Admin Access Required</div>
+                            <div class="notification-description">Only authorized administrators can access this panel</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="adminEmail">
+                        <i class="fas fa-envelope"></i>
+                        Administrator Email
+                    </label>
+                    <input type="email" class="form-control" id="adminEmail" placeholder="mohna@jamaapp.in" value="mohna@jamaapp.in" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">
+                        <i class="fas fa-lock"></i>
+                        Password
+                    </label>
+                    <input type="password" class="form-control" id="adminPassword" placeholder="Enter admin password" required>
+                </div>
+                <button class="btn btn-primary btn-full" id="adminLoginBtn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Access Admin Panel
+                </button>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" style="display: none;">
+            <!-- Header -->
+            <div class="admin-header">
+                <div class="admin-header-content">
+                    <div class="admin-logo-section">
+                        <i class="fas fa-cogs"></i>
+                        <div>
+                            <div class="admin-title">Jama Admin Panel</div>
+                            <div class="admin-subtitle">AI-Powered Agricultural Management</div>
+                        </div>
+                    </div>
+                    <div class="admin-actions">
+                        <div class="admin-user-info">
+                            <i class="fas fa-user-shield"></i>
+                            <span>Administrator</span>
+                        </div>
+                        <button class="admin-btn" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i>
+                            Refresh
+                        </button>
+                        <button class="admin-btn" id="adminLogoutBtn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-dashboard">
+                <!-- Messages -->
+                <div class="error-message message" id="errorMessage"></div>
+                <div class="success-message message" id="successMessage"></div>
+                <div class="info-message message" id="infoMessage"></div>
+
+                <!-- Navigation -->
+                <div class="admin-nav">
+                    <button class="admin-nav-btn active" data-section="overview">
+                        <i class="fas fa-dashboard"></i>
+                        Overview
+                    </button>
+                    <button class="admin-nav-btn" data-section="suggestions">
+                        <i class="fas fa-lightbulb"></i>
+                        AI Suggestions
+                    </button>
+                    <button class="admin-nav-btn" data-section="users">
+                        <i class="fas fa-users"></i>
+                        Users
+                    </button>
+                    <button class="admin-nav-btn" data-section="analytics">
+                        <i class="fas fa-chart-line"></i>
+                        Analytics
+                    </button>
+                    <button class="admin-nav-btn" data-section="settings">
+                        <i class="fas fa-cog"></i>
+                        Settings
+                    </button>
+                </div>
+
+                <!-- Overview Section -->
+                <div id="overview" class="admin-section active">
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-value" id="totalUsers">0</div>
+                            <div class="stat-label">Total Farmers</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-seedling"></i>
+                            </div>
+                            <div class="stat-value" id="totalCrops">0</div>
+                            <div class="stat-label">Active Crops</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-receipt"></i>
+                            </div>
+                            <div class="stat-value" id="totalTransactions">0</div>
+                            <div class="stat-label">Transactions</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <div class="stat-value" id="totalSuggestions">0</div>
+                            <div class="stat-label">AI Suggestions</div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="admin-card">
+                        <h2>
+                            <i class="fas fa-clock"></i>
+                            Recent Activity
+                        </h2>
+                        <div class="activity-feed" id="activityFeed">
+                            <!-- Activity items will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- System Analytics -->
+                    <div class="admin-card">
+                        <h2>
+                            <i class="fas fa-chart-bar"></i>
+                            System Analytics
+                        </h2>
+                        <div class="chart-container">
+                            <canvas id="adminAnalyticsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Suggestions Section -->
+                <div id="suggestions" class="admin-section">
+                    <div class="admin-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                            <h2>
+                                <i class="fas fa-lightbulb"></i>
+                                AI Suggestions Management
+                            </h2>
+                            <button class="btn btn-success" onclick="openModal('addSuggestionModal')">
+                                <i class="fas fa-plus"></i>
+                                Add New Suggestion
+                            </button>
+                        </div>
+
+                        <div id="suggestionsList">
+                            <!-- Suggestions will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Section -->
+                <div id="users" class="admin-section">
+                    <div class="admin-card">
+                        <h2>
+                            <i class="fas fa-users"></i>
+                            Registered Farmers
+                        </h2>
+
+                        <div style="overflow-x: auto;">
+                            <table class="users-table">
+                                <thead>
+                                    <tr>
+                                        <th>Farmer</th>
+                                        <th>Location</th>
+                                        <th>Farm Size</th>
+                                        <th>Active Crops</th>
+                                        <th>Total Transactions</th>
+                                        <th>Joined</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usersTableBody">
+                                    <!-- Users will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Section -->
+                <div id="analytics" class="admin-section">
+                    <div class="admin-card">
+                        <h2>
+                            <i class="fas fa-chart-line"></i>
+                            Platform Analytics
+                        </h2>
+
+                        <div class="grid-2" style="margin-bottom: 2rem;">
+                            <div class="chart-container">
+                                <h3>Crop Distribution</h3>
+                                <canvas id="cropDistributionChart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <h3>Monthly Growth</h3>
+                                <canvas id="userGrowthChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="admin-card">
+                            <h3>
+                                <i class="fas fa-map"></i>
+                                Geographic Distribution
+                            </h3>
+                            <div id="geographicStats">
+                                <!-- Geographic data will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="settings" class="admin-section">
+                    <div class="admin-card">
+                        <h2>
+                            <i class="fas fa-cog"></i>
+                            System Settings
+                        </h2>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-cloud"></i>
+                                Weather API Configuration
+                            </label>
+                            <input type="text" class="form-control" id="weatherApiKey" placeholder="Tomorrow.io API Key">
+                            <small style="color: var(--gray); font-size: 0.8rem;">Enter your Tomorrow.io API key for weather integration</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <i class="fas fa-bell"></i>
+                                Notification Settings
+                            </label>
+                            <div class="settings-item">
+                                <span>Enable Weather Alerts</span>
+                                <div class="toggle-switch active" id="weatherAlertsToggle" onclick="toggleSetting(this)">
+                                    <div class="toggle-slider"></div>
+                                </div>
+                            </div>
+                            <div class="settings-item">
+                                <span>Enable Crop Reminders</span>
+                                <div class="toggle-switch active" id="cropRemindersToggle" onclick="toggleSetting(this)">
+                                    <div class="toggle-slider"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button class="btn btn-primary" onclick="saveSettings()">
+                                <i class="fas fa-save"></i>
+                                Save Settings
+                            </button>
+                            <button class="btn btn-danger" onclick="resetSettings()">
+                                <i class="fas fa-undo"></i>
+                                Reset to Default
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Suggestion Modal -->
+        <div class="modal" id="addSuggestionModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>
+                        <i class="fas fa-plus"></i>
+                        <span id="suggestionModalTitle">Add AI Suggestion</span>
+                    </h3>
+                    <button class="modal-close" onclick="closeModals()">&times;</button>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-tag"></i>
+                        Suggestion Title
+                    </label>
+                    <input type="text" class="form-control" id="suggestionTitle" placeholder="Enter suggestion title" required>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-align-left"></i>
+                        Description
+                    </label>
+                    <textarea class="form-control textarea" id="suggestionDescription" placeholder="Enter detailed suggestion description" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Priority Level
+                    </label>
+                    <select class="form-control" id="suggestionPriority" required>
+                        <option value="high">🔴 High Priority</option>
+                        <option value="medium">🟡 Medium Priority</option>
+                        <option value="low">🟢 Low Priority</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-layer-group"></i>
+                        Category
+                    </label>
+                    <select class="form-control" id="suggestionCategory" required>
+                        <option value="weather">🌤️ Weather-based</option>
+                        <option value="crop">🌾 Crop Management</option>
+                        <option value="financial">💰 Financial</option>
+                        <option value="equipment">🚜 Equipment</option>
+                        <option value="livestock">🐄 Livestock</option>
+                        <option value="general">📋 General</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-seedling"></i>
+                        Specific Crop Type (Optional)
+                    </label>
+                    <select class="form-control" id="suggestionCropType">
+                        <option value="">All Crops</option>
+                        <option value="paddy">🌾 Paddy/Rice</option>
+                        <option value="wheat">🌾 Wheat</option>
+                        <option value="cotton">🌿 Cotton</option>
+                        <option value="maize">🌽 Maize</option>
+                        <option value="tomato">🍅 Tomato</option>
+                        <option value="onion">🧅 Onion</option>
+                        <option value="potato">🥔 Potato</option>
+                        <option value="other">🌱 Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-calendar"></i>
+                        Growth Stage (For Crop-specific)
+                    </label>
+                    <select class="form-control" id="suggestionGrowthStage">
+                        <option value="">Any Stage</option>
+                        <option value="germination">🌱 Germination</option>
+                        <option value="vegetative">🌿 Vegetative Growth</option>
+                        <option value="flowering">🌾 Flowering</option>
+                        <option value="maturation">🌽 Fruit Development</option>
+                        <option value="harvest">🏆 Harvest Ready</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <i class="fas fa-smile"></i>
+                        Suggestion Icon
+                    </label>
+                    <input type="text" class="form-control" id="suggestionIcon" placeholder="Enter emoji (e.g., 🌡️)" maxlength="2">
+                </div>
+
+                <button class="btn btn-primary btn-full" id="saveSuggestionBtn">
+                    <i class="fas fa-save"></i>
+                    <span id="saveSuggestionBtnText">Save Suggestion</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global admin state
+        let currentAdmin = null;
+        let activeSection = 'overview';
+        let editingSuggestion = null;
+        let adminData = {
+            users: [],
+            crops: [],
+            transactions: [],
+            equipment: [],
+            livestock: [],
+            land: [],
+            inventory: [],
+            suggestions: [],
+            activities: []
+        };
+
+        // Admin-only email
+        const ADMIN_EMAIL = 'mohna@jamaapp.in';
+
+        // Initialize admin app
+        function initializeAdminApp() {
+            setupAdminEventListeners();
+            setupAdminFirebaseAuth();
+            
+            setTimeout(() => {
+                hideLoadingScreen();
+            }, 2000);
+        }
+
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loadingScreen');
+            loadingScreen.classList.add('hidden');
+            
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 500);
+        }
+
+        function setupAdminFirebaseAuth() {
+            window.firebase.onAuthStateChanged(window.auth, (user) => {
+                if (user && user.email === ADMIN_EMAIL) {
+                    currentAdmin = user;
+                    showAdminDashboard();
+                    loadAllAdminData();
+                } else {
+                    currentAdmin = null;
+                    showAdminAuth();
+                    if (user && user.email !== ADMIN_EMAIL) {
+                        showAuthError('Access denied. Admin privileges required.');
+                        window.firebase.signOut(window.auth);
+                    }
+                }
+            });
+        }
+
+        function setupAdminEventListeners() {
+            // Authentication
+            document.getElementById('adminLoginBtn').addEventListener('click', adminLogin);
+            document.getElementById('adminLogoutBtn').addEventListener('click', adminLogout);
+
+            // Navigation
+            document.querySelectorAll('.admin-nav-btn').forEach(btn => {
+                btn.addEventListener('click', () => switchAdminSection(btn.dataset.section));
+            });
+
+            // Suggestion management
+            document.getElementById('saveSuggestionBtn').addEventListener('click', saveSuggestion);
+
+            // Modal management
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) closeModals();
+                });
+            });
+        }
+
+        async function adminLogin() {
+            const email = document.getElementById('adminEmail').value.trim();
+            const password = document.getElementById('adminPassword').value;
+            
+            if (!email || !password) {
+                showAuthError('Please fill all fields');
+                return;
+            }
+
+            if (email !== ADMIN_EMAIL) {
+                showAuthError('Invalid admin email. Access denied.');
+                return;
+            }
+
+            try {
+                showAuthInfo('Authenticating admin access...');
+                await window.firebase.signInWithEmailAndPassword(window.auth, email, password);
+                showAuthSuccess('Admin access granted!');
+            } catch (error) {
+                console.error('Admin login error:', error);
+                showAuthError('Authentication failed: ' + error.message);
+            }
+        }
+
+        async function adminLogout() {
+            if (confirm('Are you sure you want to logout?')) {
+                try {
+                    await window.firebase.signOut(window.auth);
+                    showAuthSuccess('Logged out successfully!');
+                } catch (error) {
+                    console.error('Logout error:', error);
+                    showAuthError('Logout failed: ' + error.message);
+                }
+            }
+        }
+
+        function showAdminAuth() {
+            document.getElementById('adminAuth').style.display = 'flex';
+            document.getElementById('adminDashboard').style.display = 'none';
+        }
+
+        function showAdminDashboard() {
+            document.getElementById('adminAuth').style.display = 'none';
+            document.getElementById('adminDashboard').style.display = 'block';
+        }
+
+        // Load all admin data
+        async function loadAllAdminData() {
+            try {
+                await Promise.all([
+                    loadUsers(),
+                    loadAllCrops(),
+                    loadAllTransactions(),
+                    loadAllAssets(),
+                    loadSuggestions(),
+                    loadRecentActivity()
+                ]);
+                
+                updateOverviewStats();
+                loadAnalyticsCharts();
+                showInfo('Admin data loaded successfully');
+            } catch (error) {
+                console.error('Error loading admin data:', error);
+                showError('Failed to load admin data: ' + error.message);
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const usersSnapshot = await window.firebase.getDocs(window.firebase.collection(window.db, 'users'));
+                adminData.users = [];
+                usersSnapshot.forEach(doc => {
+                    adminData.users.push({ id: doc.id, ...doc.data() });
+                });
+                displayUsers();
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        }
+
+        async function loadAllCrops() {
+            try {
+                const cropsSnapshot = await window.firebase.getDocs(window.firebase.collection(window.db, 'crops'));
+                adminData.crops = [];
+                cropsSnapshot.forEach(doc => {
+                    adminData.crops.push({ id: doc.id, ...doc.data() });
+                });
+            } catch (error) {
+                console.error('Error loading crops:', error);
+            }
+        }
+
+        async function loadAllTransactions() {
+            try {
+                const transactionsSnapshot = await window.firebase.getDocs(
+                    window.firebase.query(
+                        window.firebase.collection(window.db, 'transactions'),
+                        window.firebase.orderBy('createdAt', 'desc')
+                    )
+                );
+                adminData.transactions = [];
+                transactionsSnapshot.forEach(doc => {
+                    adminData.transactions.push({ id: doc.id, ...doc.data() });
+                });
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+            }
+        }
+
+        async function loadAllAssets() {
+            try {
+                const collections = ['equipment', 'livestock', 'land', 'inventory'];
+                
+                for (const collectionName of collections) {
+                    const snapshot = await window.firebase.getDocs(window.firebase.collection(window.db, collectionName));
+                    adminData[collectionName] = [];
+                    snapshot.forEach(doc => {
+                        adminData[collectionName].push({ id: doc.id, ...doc.data() });
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading assets:', error);
+            }
+        }
+
+        async function loadSuggestions() {
+            try {
+                const suggestionsSnapshot = await window.firebase.getDocs(
+                    window.firebase.query(
+                        window.firebase.collection(window.db, 'suggestions'),
+                        window.firebase.orderBy('createdAt', 'desc')
+                    )
+                );
+                adminData.suggestions = [];
+                suggestionsSnapshot.forEach(doc => {
+                    adminData.suggestions.push({ id: doc.id, ...doc.data() });
+                });
+                displaySuggestions();
+            } catch (error) {
+                console.error('Error loading suggestions:', error);
+            }
+        }
+
+        async function loadRecentActivity() {
+            // Combine recent activities from all collections
+            const activities = [];
+            
+            // Recent crops
+            adminData.crops.slice(0, 5).forEach(crop => {
+                activities.push({
+                    type: 'crop',
+                    title: `New crop added: ${crop.type}`,
+                    user: crop.userId,
+                    time: crop.createdAt,
+                    icon: 'seedling'
+                });
+            });
+
+            // Recent transactions
+            adminData.transactions.slice(0, 5).forEach(transaction => {
+                activities.push({
+                    type: 'transaction',
+                    title: `${transaction.type}: ${transaction.description}`,
+                    user: transaction.userId,
+                    time: transaction.createdAt,
+                    icon: transaction.type === 'income' ? 'arrow-up' : 'arrow-down'
+                });
+            });
+
+            // Sort by time
+            activities.sort((a, b) => new Date(b.time) - new Date(a.time));
+            adminData.activities = activities.slice(0, 10);
+            
+            displayRecentActivity();
+        }
+
+        function updateOverviewStats() {
+            document.getElementById('totalUsers').textContent = adminData.users.length;
+            document.getElementById('totalCrops').textContent = adminData.crops.filter(c => c.status === 'active').length;
+            document.getElementById('totalTransactions').textContent = adminData.transactions.length;
+            document.getElementById('totalSuggestions').textContent = adminData.suggestions.length;
+        }
+
+        function displayUsers() {
+            const tbody = document.getElementById('usersTableBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = adminData.users.map(user => {
+                const userCrops = adminData.crops.filter(c => c.userId === user.id);
+                const userTransactions = adminData.transactions.filter(t => t.userId === user.id);
+                
+                return `
+                    <tr>
+                        <td>
+                            <div class="user-info-cell">
+                                <div class="user-avatar-small">
+                                    ${user.firstName?.charAt(0)?.toUpperCase() || 'U'}
+                                </div>
+                                <div class="user-details">
+                                    <div class="user-name">${user.firstName || ''} ${user.lastName || ''}</div>
+                                    <div class="user-email">${user.email || 'No email'}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${user.farmLocation || 'Not specified'}</td>
+                        <td>${user.totalFarmSize ? `${(user.totalFarmSize.acres + (user.totalFarmSize.cents || 0)/100).toFixed(1)} acres` : 'Not specified'}</td>
+                        <td>
+                            <span style="background: var(--success); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">
+                                ${userCrops.filter(c => c.status === 'active').length}
+                            </span>
+                        </td>
+                        <td>
+                            <span style="background: var(--info); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">
+                                ${userTransactions.length}
+                            </span>
+                        </td>
+                        <td>${user.registrationDate ? new Date(user.registrationDate).toLocaleDateString() : 'Unknown'}</td>
+                        <td>
+                            <button class="btn btn-info" style="padding: 4px 8px; font-size: 0.8rem;" onclick="viewUserDetails('${user.id}')">
+                                <i class="fas fa-eye"></i>
+                                View
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function displaySuggestions() {
+            const container = document.getElementById('suggestionsList');
+            if (!container) return;
+
+            if (!adminData.suggestions.length) {
+                container.innerHTML = `
+                    <div class="empty-state" style="text-align: center; padding: 3rem; color: var(--gray);">
+                        <i class="fas fa-lightbulb" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <h3>No AI suggestions created</h3>
+                        <p>Start by adding your first smart farming suggestion</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = adminData.suggestions.map(suggestion => `
+                <div class="suggestion-item priority-${suggestion.priority}">
+                    <div class="suggestion-header">
+                        <div class="suggestion-content">
+                            <div class="suggestion-title">
+                                <span class="priority-indicator"></span>
+                                ${suggestion.icon || '💡'} ${suggestion.title}
+                            </div>
+                            <div class="suggestion-meta">
+                                ${suggestion.category} ${suggestion.cropType ? `• For: ${suggestion.cropType}` : ''} ${suggestion.growthStage ? `• Stage: ${suggestion.growthStage}` : ''}
+                            </div>
+                            <div class="suggestion-description">
+                                ${suggestion.description}
+                            </div>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-end;">
+                            <span class="suggestion-priority priority-${suggestion.priority}">
+                                ${suggestion.priority}
+                            </span>
+                            <div class="btn-group">
+                                <button class="btn btn-warning" style="padding: 4px 8px; font-size: 0.8rem;" onclick="editSuggestion('${suggestion.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger" style="padding: 4px 8px; font-size: 0.8rem;" onclick="deleteSuggestion('${suggestion.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.7rem; color: var(--gray); margin-top: 1rem;">
+                        Created: ${suggestion.createdAt ? new Date(suggestion.createdAt).toLocaleString() : 'Unknown'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayRecentActivity() {
+            const container = document.getElementById('activityFeed');
+            if (!container) return;
+
+            if (!adminData.activities.length) {
+                container.innerHTML = `
+                    <div class="empty-state" style="text-align: center; padding: 2rem; color: var(--gray);">
+                        <i class="fas fa-clock" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        <h4>No recent activity</h4>
+                        <p>User activities will appear here</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = adminData.activities.map(activity => {
+                const user = adminData.users.find(u => u.id === activity.user);
+                const userName = user ? `${user.firstName} ${user.lastName}` : 'Unknown User';
+                
+                return `
+                    <div class="activity-item">
+                        <div class="activity-icon ${activity.type}">
+                            <i class="fas fa-${activity.icon}"></i>
+                        </div>
+                        <div class="activity-details">
+                            <div class="activity-title">${activity.title}</div>
+                            <div class="activity-meta">by ${userName}</div>
+                        </div>
+                        <div class="activity-time">
+                            ${activity.time ? new Date(activity.time).toLocaleDateString() : 'Unknown'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Suggestion management
+        async function saveSuggestion() {
+            const title = document.getElementById('suggestionTitle').value.trim();
+            const description = document.getElementById('suggestionDescription').value.trim();
+            const priority = document.getElementById('suggestionPriority').value;
+            const category = document.getElementById('suggestionCategory').value;
+            const cropType = document.getElementById('suggestionCropType').value;
+            const growthStage = document.getElementById('suggestionGrowthStage').value;
+            const icon = document.getElementById('suggestionIcon').value.trim();
+
+            if (!title || !description || !priority || !category) {
+                showError('Please fill all required fields');
+                return;
+            }
+
+            const suggestionData = {
+                title: title,
+                description: description,
+                priority: priority,
+                category: category,
+                cropType: cropType || null,
+                growthStage: growthStage || null,
+                icon: icon || '💡',
+                isActive: true,
+                createdAt: editingSuggestion ? editingSuggestion.createdAt : new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                createdBy: currentAdmin.uid
+            };
+
+            try {
+                if (editingSuggestion) {
+                    await window.firebase.updateDoc(window.firebase.doc(window.db, 'suggestions', editingSuggestion.id), suggestionData);
+                    showSuccess('Suggestion updated successfully!');
+                } else {
+                    await window.firebase.addDoc(window.firebase.collection(window.db, 'suggestions'), suggestionData);
+                    showSuccess('New suggestion added successfully!');
+                }
+                
+                closeModals();
+                loadSuggestions();
+                resetSuggestionForm();
+            } catch (error) {
+                console.error('Error saving suggestion:', error);
+                showError('Failed to save suggestion: ' + error.message);
+            }
+        }
+
+        async function editSuggestion(suggestionId) {
+            const suggestion = adminData.suggestions.find(s => s.id === suggestionId);
+            if (!suggestion) return;
+
+            editingSuggestion = suggestion;
+            
+            document.getElementById('suggestionTitle').value = suggestion.title;
+            document.getElementById('suggestionDescription').value = suggestion.description;
+            document.getElementById('suggestionPriority').value = suggestion.priority;
+            document.getElementById('suggestionCategory').value = suggestion.category;
+            document.getElementById('suggestionCropType').value = suggestion.cropType || '';
+            document.getElementById('suggestionGrowthStage').value = suggestion.growthStage || '';
+            document.getElementById('suggestionIcon').value = suggestion.icon || '';
+            
+            document.getElementById('suggestionModalTitle').textContent = 'Edit AI Suggestion';
+            document.getElementById('saveSuggestionBtnText').textContent = 'Update Suggestion';
+            
+            openModal('addSuggestionModal');
+        }
+
+        async function deleteSuggestion(suggestionId) {
+            if (!confirm('Are you sure you want to delete this suggestion?')) return;
+
+            try {
+                await window.firebase.deleteDoc(window.firebase.doc(window.db, 'suggestions', suggestionId));
+                showSuccess('Suggestion deleted successfully!');
+                loadSuggestions();
+            } catch (error) {
+                console.error('Error deleting suggestion:', error);
+                showError('Failed to delete suggestion: ' + error.message);
+            }
+        }
+
+        function resetSuggestionForm() {
+            document.getElementById('suggestionTitle').value = '';
+            document.getElementById('suggestionDescription').value = '';
+            document.getElementById('suggestionPriority').value = 'medium';
+            document.getElementById('suggestionCategory').value = 'general';
+            document.getElementById('suggestionCropType').value = '';
+            document.getElementById('suggestionGrowthStage').value = '';
+            document.getElementById('suggestionIcon').value = '';
+            
+            editingSuggestion = null;
+            document.getElementById('suggestionModalTitle').textContent = 'Add AI Suggestion';
+            document.getElementById('saveSuggestionBtnText').textContent = 'Save Suggestion';
+        }
+
+        // Analytics and charts
+        function loadAnalyticsCharts() {
+            loadAdminAnalyticsChart();
+            loadCropDistributionChart();
+            loadUserGrowthChart();
+            loadGeographicStats();
+        }
+
+        function loadAdminAnalyticsChart() {
+            const canvas = document.getElementById('adminAnalyticsChart');
+            if (!canvas || !window.Chart) return;
+
+            const ctx = canvas.getContext('2d');
+            
+            // Calculate monthly data
+            const last6Months = [];
+            for (let i = 5; i >= 0; i--) {
+                const date = new Date();
+                date.setMonth(date.getMonth() - i);
+                
+                const monthUsers = adminData.users.filter(u => {
+                    const regDate = new Date(u.registrationDate);
+                    return regDate.getFullYear() === date.getFullYear() && regDate.getMonth() === date.getMonth();
+                }).length;
+                
+                const monthTransactions = adminData.transactions.filter(t => {
+                    const tDate = new Date(t.createdAt);
+                    return tDate.getFullYear() === date.getFullYear() && tDate.getMonth() === date.getMonth();
+                }).length;
+                
+                last6Months.push({
+                    month: date.toLocaleDateString('en-US', { month: 'short' }),
+                    users: monthUsers,
+                    transactions: monthTransactions
+                });
+            }
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: last6Months.map(m => m.month),
+                    datasets: [
+                        {
+                            label: 'New Users',
+                            data: last6Months.map(m => m.users),
+                            borderColor: '#4caf50',
+                            backgroundColor: '#4caf5020',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Transactions',
+                            data: last6Months.map(m => m.transactions),
+                            borderColor: '#ffa000',
+                            backgroundColor: '#ffa00020',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadCropDistributionChart() {
+            const canvas = document.getElementById('cropDistributionChart');
+            if (!canvas || !window.Chart) return;
+
+            const ctx = canvas.getContext('2d');
+            
+            // Count crops by type
+            const cropCounts = {};
+            adminData.crops.forEach(crop => {
+                cropCounts[crop.type] = (cropCounts[crop.type] || 0) + 1;
+            });
+
+            const labels = Object.keys(cropCounts);
+            const data = Object.values(cropCounts);
+            const colors = ['#4caf50', '#ffa000', '#2196f3', '#ff5722', '#9c27b0', '#607d8b', '#795548', '#ff9800'];
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels.map(label => label.charAt(0).toUpperCase() + label.slice(1)),
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadUserGrowthChart() {
+            const canvas = document.getElementById('userGrowthChart');
+            if (!canvas || !window.Chart) return;
+
+            const ctx = canvas.getContext('2d');
+            
+            // Calculate cumulative user growth
+            const monthlyGrowth = [];
+            let cumulativeUsers = 0;
+            
+            for (let i = 11; i >= 0; i--) {
+                const date = new Date();
+                date.setMonth(date.getMonth() - i);
+                
+                const monthUsers = adminData.users.filter(u => {
+                    const regDate = new Date(u.registrationDate);
+                    return regDate <= date;
+                }).length;
+                
+                monthlyGrowth.push({
+                    month: date.toLocaleDateString('en-US', { month: 'short' }),
+                    users: monthUsers
+                });
+            }
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: monthlyGrowth.map(m => m.month),
+                    datasets: [{
+                        label: 'Total Users',
+                        data: monthlyGrowth.map(m => m.users),
+                        backgroundColor: '#4caf50',
+                        borderColor: '#2e7d32',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadGeographicStats() {
+            const container = document.getElementById('geographicStats');
+            if (!container) return;
+
+            // Count users by location
+            const locationCounts = {};
+            adminData.users.forEach(user => {
+                if (user.farmLocation) {
+                    const location = user.farmLocation.split(',').pop().trim(); // Get state/last part
+                    locationCounts[location] = (locationCounts[location] || 0) + 1;
+                }
+            });
+
+            const sortedLocations = Object.entries(locationCounts)
+                .sort(([,a], [,b]) => b - a)
+                .slice(0, 10);
+
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    ${sortedLocations.map(([location, count]) => `
+                        <div style="background: rgba(46, 125, 50, 0.1); padding: 1rem; border-radius: var(--border-radius); text-align: center;">
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">${count}</div>
+                            <div style="font-size: 0.9rem; color: var(--gray);">${location}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        // Navigation
+        function switchAdminSection(sectionName) {
+            activeSection = sectionName;
+            
+            // Update navigation
+            document.querySelectorAll('.admin-nav-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.querySelector(`[data-section="${sectionName}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+            
+            // Update content
+            document.querySelectorAll('.admin-section').forEach(section => section.classList.remove('active'));
+            const targetSection = document.getElementById(sectionName);
+            if (targetSection) targetSection.classList.add('active');
+            
+            // Load section-specific data
+            if (sectionName === 'analytics') {
+                setTimeout(loadAnalyticsCharts, 100);
+            }
+        }
+
+        // Modal functions
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closeModals() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('active');
+            });
+            document.body.style.overflow = 'auto';
+            resetSuggestionForm();
+        }
+
+        // Settings management
+        function toggleSetting(toggle) {
+            toggle.classList.toggle('active');
+        }
+
+        async function saveSettings() {
+            const weatherApiKey = document.getElementById('weatherApiKey').value.trim();
+            const weatherAlerts = document.getElementById('weatherAlertsToggle').classList.contains('active');
+            const cropReminders = document.getElementById('cropRemindersToggle').classList.contains('active');
+
+            const settingsData = {
+                weatherApiKey: weatherApiKey,
+                weatherAlerts: weatherAlerts,
+                cropReminders: cropReminders,
+                updatedAt: new Date().toISOString(),
+                updatedBy: currentAdmin.uid
+            };
+
+            try {
+                await window.firebase.setDoc(window.firebase.doc(window.db, 'settings', 'app-config'), settingsData);
+                showSuccess('Settings saved successfully!');
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showError('Failed to save settings: ' + error.message);
+            }
+        }
+
+        function resetSettings() {
+            if (confirm('Reset all settings to default values?')) {
+                document.getElementById('weatherApiKey').value = '';
+                document.getElementById('weatherAlertsToggle').classList.add('active');
+                document.getElementById('cropRemindersToggle').classList.add('active');
+                showSuccess('Settings reset to default values');
+            }
+        }
+
+        // User management
+        function viewUserDetails(userId) {
+            const user = adminData.users.find(u => u.id === userId);
+            if (!user) return;
+
+            const userCrops = adminData.crops.filter(c => c.userId === userId);
+            const userTransactions = adminData.transactions.filter(t => t.userId === userId);
+            const userEquipment = adminData.equipment.filter(e => e.userId === userId);
+            const userLivestock = adminData.livestock.filter(l => l.userId === userId);
+
+            const totalIncome = userTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const totalExpenses = userTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+
+            alert(`
+User Details:
+Name: ${user.firstName} ${user.lastName}
+Email: ${user.email}
+Location: ${user.farmLocation}
+Farm Size: ${user.totalFarmSize ? (user.totalFarmSize.acres + (user.totalFarmSize.cents || 0)/100).toFixed(1) + ' acres' : 'Not specified'}
+Joined: ${new Date(user.registrationDate).toLocaleDateString()}
+
+Farm Statistics:
+Active Crops: ${userCrops.filter(c => c.status === 'active').length}
+Total Transactions: ${userTransactions.length}
+Equipment: ${userEquipment.length}
+Livestock: ${userLivestock.length}
+
+Financial Summary:
+Total Income: ₹${totalIncome.toLocaleString()}
+Total Expenses: ₹${totalExpenses.toLocaleString()}
+Net Profit: ₹${(totalIncome - totalExpenses).toLocaleString()}
+            `);
+        }
+
+        // Utility functions
+        async function refreshData() {
+            showInfo('Refreshing admin data...');
+            await loadAllAdminData();
+        }
+
+        function showError(message) {
+            showMessage('error', message);
+        }
+
+        function showSuccess(message) {
+            showMessage('success', message);
+        }
+
+        function showInfo(message) {
+            showMessage('info', message);
+        }
+
+        function showAuthError(message) {
+            showAuthMessage('error', message);
+        }
+
+        function showAuthSuccess(message) {
+            showAuthMessage('success', message);
+        }
+
+        function showAuthInfo(message) {
+            showAuthMessage('info', message);
+        }
+
+        function showMessage(type, message) {
+            hideAllMessages();
+            const messageElement = document.getElementById(`${type}Message`);
+            if (messageElement) {
+                messageElement.textContent = message;
+                messageElement.style.display = 'block';
+                
+                setTimeout(() => {
+                    messageElement.style.display = 'none';
+                }, 4000);
+            }
+        }
+
+        function showAuthMessage(type, message) {
+            hideAllAuthMessages();
+            const messageElement = document.getElementById(`auth${type.charAt(0).toUpperCase() + type.slice(1)}Message`);
+            if (messageElement) {
+                messageElement.textContent = message;
+                messageElement.style.display = 'block';
+                
+                setTimeout(() => {
+                    messageElement.style.display = 'none';
+                }, 4000);
+            }
+        }
+
+        function hideAllMessages() {
+            ['errorMessage', 'successMessage', 'infoMessage'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.style.display = 'none';
+            });
+        }
+
+        function hideAllAuthMessages() {
+            ['authErrorMessage', 'authSuccessMessage', 'authInfoMessage'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.style.display = 'none';
+            });
+        }
+
+        // Initialize admin app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAdminApp();
+        });
+
+        // Auto-refresh data every 5 minutes
+        setInterval(() => {
+            if (currentAdmin) {
+                refreshData();
+            }
+        }, 5 * 60 * 1000);
+    </script>
+</body>
+</html>
