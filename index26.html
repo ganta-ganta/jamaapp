@@ -1,0 +1,2551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>जामा - Agricultural Management System</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #16a34a;
+            --secondary-color: #0ea5e9;
+            --accent-color: #f59e0b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --background: #ffffff;
+            --surface: #f8fafc;
+            --on-surface: #1e293b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark {
+            --background: #0f172a;
+            --surface: #1e293b;
+            --on-surface: #f8fafc;
+            --border: #334155;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background);
+            color: var(--on-surface);
+            transition: all 0.3s ease;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        
+        .card {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #15803d;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 0.875rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: var(--background);
+            color: var(--on-surface);
+            transition: border-color 0.2s ease;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: var(--surface);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+        
+        .grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-4 { grid-template-columns: repeat(4, 1fr); }
+        
+        @media (max-width: 768px) {
+            .grid-2, .grid-3, .grid-4 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 2rem;
+        }
+        
+        .progress-bar {
+            width: 300px;
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: white;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .nav-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 0.75rem 0;
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.5rem;
+            color: #6b7280;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        
+        .nav-item.active,
+        .nav-item:hover {
+            color: var(--primary-color);
+        }
+        
+        .nav-item i {
+            font-size: 1.25rem;
+        }
+        
+        .nav-item span {
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .fab {
+            position: fixed;
+            bottom: 80px;
+            right: 1rem;
+            width: 56px;
+            height: 56px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 50;
+        }
+        
+        .fab:hover {
+            transform: scale(1.1);
+        }
+        
+        .otp-container {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            margin: 1.5rem 0;
+        }
+        
+        .otp-input {
+            width: 3rem;
+            height: 3rem;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--background);
+        }
+        
+        .otp-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+        }
+        
+        .weather-card {
+            background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+            color: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .weather-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary-color), #15803d);
+            color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(30px, -30px);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success { background-color: var(--success-color); }
+        .notification.error { background-color: var(--danger-color); }
+        .notification.warning { background-color: var(--warning-color); }
+        
+        .hidden { display: none !important; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mt-4 { margin-top: 1rem; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+        .text-sm { font-size: 0.875rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-xl { font-size: 1.25rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .text-3xl { font-size: 1.875rem; }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .crop-progress {
+            background-color: var(--border);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+        
+        .crop-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .language-selector {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 100;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 100;
+        }
+        
+        .theme-toggle:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <h2 class="text-2xl font-bold text-white mb-4">जामा - Jama</h2>
+        <p class="text-white mb-6" id="loadingText">Initializing Agricultural System...</p>
+        <div class="progress-bar">
+            <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+        </div>
+    </div>
+
+    <!-- Theme Toggle -->
+    <button id="themeToggle" class="theme-toggle">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <!-- Language Selector -->
+    <div class="language-selector">
+        <select id="languageSelect" class="input-field" style="width: auto; padding: 0.5rem;">
+            <option value="en">English</option>
+            <option value="hi">हिंदी</option>
+            <option value="te">తెలుగు</option>
+        </select>
+    </div>
+
+    <!-- Authentication Screen -->
+    <div id="authScreen" class="hidden">
+        <div class="container">
+            <div class="max-w-md mx-auto mt-20">
+                <div class="card text-center">
+                    <h1 class="text-3xl font-bold text-green-600 mb-2">🌾 जामा</h1>
+                    <h2 class="text-xl font-semibold mb-6" data-translate="welcome">Welcome to Agricultural Management</h2>
+                    
+                    <!-- Login Form -->
+                    <div id="loginForm">
+                        <div class="mb-4">
+                            <input type="email" id="loginEmail" class="input-field" placeholder="Email Address" data-translate-placeholder="email">
+                        </div>
+                        <div class="mb-4">
+                            <input type="password" id="loginPassword" class="input-field" placeholder="Password" data-translate-placeholder="password">
+                        </div>
+                        <button id="loginBtn" class="btn btn-primary w-full mb-4" data-translate="login">Login</button>
+                        
+                        <div class="mb-4">
+                            <button id="googleLoginBtn" class="btn btn-outline w-full">
+                                <i class="fab fa-google"></i>
+                                <span data-translate="loginWithGoogle">Login with Google</span>
+                            </button>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <button id="phoneLoginBtn" class="btn btn-secondary w-full">
+                                <i class="fas fa-phone"></i>
+                                <span data-translate="loginWithPhone">Login with Phone</span>
+                            </button>
+                        </div>
+                        
+                        <p class="text-sm">
+                            <span data-translate="noAccount">Don't have an account?</span>
+                            <button id="showRegister" class="text-green-600 font-semibold" data-translate="register">Register</button>
+                        </p>
+                    </div>
+                    
+                    <!-- Register Form -->
+                    <div id="registerForm" class="hidden">
+                        <div class="grid grid-2 gap-4 mb-4">
+                            <input type="text" id="registerName" class="input-field" placeholder="Full Name" data-translate-placeholder="fullName">
+                            <input type="email" id="registerEmail" class="input-field" placeholder="Email" data-translate-placeholder="email">
+                        </div>
+                        <div class="grid grid-2 gap-4 mb-4">
+                            <input type="password" id="registerPassword" class="input-field" placeholder="Password" data-translate-placeholder="password">
+                            <input type="tel" id="registerPhone" class="input-field" placeholder="Phone Number" data-translate-placeholder="phone">
+                        </div>
+                        <div class="grid grid-2 gap-4 mb-4">
+                            <input type="text" id="registerLocation" class="input-field" placeholder="Location" data-translate-placeholder="location">
+                            <input type="number" id="registerFarmSize" class="input-field" placeholder="Farm Size (Acres)" data-translate-placeholder="farmSize">
+                        </div>
+                        <div class="mb-4">
+                            <input type="text" id="registerCrops" class="input-field" placeholder="Primary Crops" data-translate-placeholder="primaryCrops">
+                        </div>
+                        <button id="registerBtn" class="btn btn-primary w-full mb-4" data-translate="createAccount">Create Account</button>
+                        <p class="text-sm">
+                            <span data-translate="haveAccount">Already have an account?</span>
+                            <button id="showLogin" class="text-green-600 font-semibold" data-translate="login">Login</button>
+                        </p>
+                    </div>
+                    
+                    <!-- Phone Login Form -->
+                    <div id="phoneForm" class="hidden">
+                        <div class="mb-4">
+                            <input type="tel" id="phoneNumber" class="input-field" placeholder="+91 9876543210" data-translate-placeholder="phoneNumber">
+                        </div>
+                        <button id="sendOtpBtn" class="btn btn-primary w-full mb-4" data-translate="sendOtp">Send OTP</button>
+                        <button id="backToLogin" class="btn btn-outline w-full" data-translate="back">Back to Login</button>
+                    </div>
+                    
+                    <!-- OTP Verification -->
+                    <div id="otpForm" class="hidden">
+                        <p class="mb-4" data-translate="enterOtp">Enter the 6-digit code sent to your phone</p>
+                        <div class="otp-container">
+                            <input type="text" class="otp-input" maxlength="1" id="otp1">
+                            <input type="text" class="otp-input" maxlength="1" id="otp2">
+                            <input type="text" class="otp-input" maxlength="1" id="otp3">
+                            <input type="text" class="otp-input" maxlength="1" id="otp4">
+                            <input type="text" class="otp-input" maxlength="1" id="otp5">
+                            <input type="text" class="otp-input" maxlength="1" id="otp6">
+                        </div>
+                        <button id="verifyOtpBtn" class="btn btn-primary w-full mb-4" data-translate="verifyOtp">Verify OTP</button>
+                        <p class="text-sm">
+                            <span data-translate="didntReceive">Didn't receive the code?</span>
+                            <button id="resendOtp" class="text-green-600 font-semibold" data-translate="resend">Resend</button>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="hidden">
+        <!-- Dashboard -->
+        <div id="dashboard" class="container mb-20">
+            <!-- Header -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-bold" data-translate="dashboard">Dashboard</h1>
+                        <p class="text-sm text-gray-600" id="welcomeUser">Welcome back, Farmer!</p>
+                    </div>
+                    <button id="logoutBtn" class="btn btn-outline">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span data-translate="logout">Logout</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Weather Card -->
+            <div class="weather-card mb-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2" data-translate="weather">Today's Weather</h3>
+                        <div id="weatherInfo">
+                            <p class="text-2xl font-bold" id="temperature">--°C</p>
+                            <p id="weatherDescription">Loading...</p>
+                            <p class="text-sm" id="weatherLocation">--</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <i id="weatherIcon" class="fas fa-cloud text-4xl opacity-75"></i>
+                        <p class="text-sm mt-2" id="humidity">Humidity: --%</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Summary -->
+            <div class="grid grid-4 mb-6">
+                <div class="stat-card">
+                    <h3 class="text-sm font-semibold mb-1" data-translate="totalIncome">Total Income</h3>
+                    <p class="text-2xl font-bold" id="totalIncome">₹0</p>
+                    <p class="text-sm opacity-80" data-translate="thisMonth">This Month</p>
+                </div>
+                <div class="stat-card">
+                    <h3 class="text-sm font-semibold mb-1" data-translate="totalExpenses">Total Expenses</h3>
+                    <p class="text-2xl font-bold" id="totalExpenses">₹0</p>
+                    <p class="text-sm opacity-80" data-translate="thisMonth">This Month</p>
+                </div>
+                <div class="stat-card">
+                    <h3 class="text-sm font-semibold mb-1" data-translate="netProfit">Net Profit</h3>
+                    <p class="text-2xl font-bold" id="netProfit">₹0</p>
+                    <p class="text-sm opacity-80" data-translate="thisMonth">This Month</p>
+                </div>
+                <div class="stat-card">
+                    <h3 class="text-sm font-semibold mb-1" data-translate="activeCrops">Active Crops</h3>
+                    <p class="text-2xl font-bold" id="activeCrops">0</p>
+                    <p class="text-sm opacity-80" data-translate="growing">Growing</p>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold" data-translate="recentActivity">Recent Activity</h3>
+                    <button class="btn btn-outline btn-sm" onclick="showSection('money')" data-translate="viewAll">View All</button>
+                </div>
+                <div id="recentTransactions">
+                    <p class="text-center text-gray-500" data-translate="noTransactions">No transactions yet</p>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="grid grid-3">
+                <button class="card text-center hover:bg-green-50 cursor-pointer" onclick="showModal('addCropModal')">
+                    <i class="fas fa-plus-circle text-3xl text-green-600 mb-2"></i>
+                    <p class="font-semibold" data-translate="addCrop">Add Crop</p>
+                </button>
+                <button class="card text-center hover:bg-blue-50 cursor-pointer" onclick="showModal('addTransactionModal')">
+                    <i class="fas fa-coins text-3xl text-blue-600 mb-2"></i>
+                    <p class="font-semibold" data-translate="addTransaction">Add Transaction</p>
+                </button>
+                <button class="card text-center hover:bg-yellow-50 cursor-pointer" onclick="showSection('smart-ideas')">
+                    <i class="fas fa-lightbulb text-3xl text-yellow-600 mb-2"></i>
+                    <p class="font-semibold" data-translate="smartIdeas">Smart Ideas</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- Crops Section -->
+        <div id="crops" class="container mb-20 hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold" data-translate="crops">Crops</h1>
+                <button class="btn btn-primary" onclick="showModal('addCropModal')">
+                    <i class="fas fa-plus"></i>
+                    <span data-translate="addCrop">Add Crop</span>
+                </button>
+            </div>
+            <div id="cropsList" class="grid gap-4">
+                <p class="text-center text-gray-500" data-translate="noCrops">No crops added yet</p>
+            </div>
+        </div>
+
+        <!-- Money Section -->
+        <div id="money" class="container mb-20 hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold" data-translate="finance">Finance</h1>
+                <button class="btn btn-primary" onclick="showModal('addTransactionModal')">
+                    <i class="fas fa-plus"></i>
+                    <span data-translate="addTransaction">Add Transaction</span>
+                </button>
+            </div>
+            
+            <!-- Financial Summary Chart -->
+            <div class="card mb-6">
+                <h3 class="text-lg font-semibold mb-4" data-translate="monthlyOverview">Monthly Overview</h3>
+                <canvas id="financeChart" height="200"></canvas>
+            </div>
+            
+            <!-- Calculator -->
+            <div class="card mb-6">
+                <h3 class="text-lg font-semibold mb-4" data-translate="calculator">Loan Calculator</h3>
+                <div class="grid grid-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="principal">Principal Amount</label>
+                        <input type="number" id="principal" class="input-field" placeholder="₹100000">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="interestRate">Interest Rate (%)</label>
+                        <input type="number" id="interestRate" class="input-field" placeholder="12">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="time">Time (Years)</label>
+                        <input type="number" id="time" class="input-field" placeholder="5">
+                    </div>
+                </div>
+                <div class="mt-4 flex gap-4">
+                    <button class="btn btn-primary" onclick="calculateSimpleInterest()" data-translate="simpleInterest">Simple Interest</button>
+                    <button class="btn btn-secondary" onclick="calculateCompoundInterest()" data-translate="compoundInterest">Compound Interest</button>
+                </div>
+                <div id="calculatorResult" class="mt-4 p-4 bg-gray-100 rounded-lg hidden">
+                    <p class="font-semibold" data-translate="result">Result:</p>
+                    <p id="resultText"></p>
+                </div>
+            </div>
+            
+            <!-- Transactions List -->
+            <div class="card">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold" data-translate="transactions">Transactions</h3>
+                    <div class="flex gap-2">
+                        <select id="filterPeriod" class="input-field" style="width: auto;">
+                            <option value="all" data-translate="allTime">All Time</option>
+                            <option value="month" data-translate="thisMonth">This Month</option>
+                            <option value="quarter" data-translate="thisQuarter">This Quarter</option>
+                            <option value="year" data-translate="thisYear">This Year</option>
+                        </select>
+                        <input type="text" id="searchTransactions" class="input-field" placeholder="Search transactions..." data-translate-placeholder="searchTransactions">
+                    </div>
+                </div>
+                <div id="transactionsList">
+                    <p class="text-center text-gray-500" data-translate="noTransactions">No transactions yet</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assets Section -->
+        <div id="assets" class="container mb-20 hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold" data-translate="assets">Assets</h1>
+                <button class="btn btn-primary" onclick="showModal('addAssetModal')">
+                    <i class="fas fa-plus"></i>
+                    <span data-translate="addAsset">Add Asset</span>
+                </button>
+            </div>
+            
+            <div class="grid grid-4 mb-6">
+                <div class="card text-center" onclick="showAssetType('equipment')">
+                    <i class="fas fa-tractor text-3xl text-blue-600 mb-2"></i>
+                    <h3 class="font-semibold" data-translate="equipment">Equipment</h3>
+                    <p class="text-sm text-gray-600" id="equipmentCount">0 items</p>
+                </div>
+                <div class="card text-center" onclick="showAssetType('livestock')">
+                    <i class="fas fa-cow text-3xl text-green-600 mb-2"></i>
+                    <h3 class="font-semibold" data-translate="livestock">Livestock</h3>
+                    <p class="text-sm text-gray-600" id="livestockCount">0 items</p>
+                </div>
+                <div class="card text-center" onclick="showAssetType('land')">
+                    <i class="fas fa-mountain text-3xl text-yellow-600 mb-2"></i>
+                    <h3 class="font-semibold" data-translate="land">Land</h3>
+                    <p class="text-sm text-gray-600" id="landCount">0 items</p>
+                </div>
+                <div class="card text-center" onclick="showAssetType('inventory')">
+                    <i class="fas fa-warehouse text-3xl text-purple-600 mb-2"></i>
+                    <h3 class="font-semibold" data-translate="inventory">Inventory</h3>
+                    <p class="text-sm text-gray-600" id="inventoryCount">0 items</p>
+                </div>
+            </div>
+            
+            <div id="assetsList" class="grid gap-4">
+                <p class="text-center text-gray-500" data-translate="noAssets">No assets added yet</p>
+            </div>
+        </div>
+
+        <!-- Smart Ideas Section -->
+        <div id="smart-ideas" class="container mb-20 hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold" data-translate="smartIdeas">Smart Farming Ideas</h1>
+                <button class="btn btn-primary" onclick="generateIdeas()">
+                    <i class="fas fa-refresh"></i>
+                    <span data-translate="refresh">Refresh Ideas</span>
+                </button>
+            </div>
+            
+            <div id="ideasList" class="grid gap-4">
+                <!-- Ideas will be populated here -->
+            </div>
+        </div>
+
+        <!-- Profile Section -->
+        <div id="profile" class="container mb-20 hidden">
+            <h1 class="text-2xl font-bold mb-6" data-translate="profile">Profile</h1>
+            
+            <div class="grid grid-2 gap-6">
+                <div class="card">
+                    <h3 class="text-lg font-semibold mb-4" data-translate="personalInfo">Personal Information</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" data-translate="fullName">Full Name</label>
+                            <input type="text" id="profileName" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" data-translate="email">Email</label>
+                            <input type="email" id="profileEmail" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" data-translate="phone">Phone</label>
+                            <input type="tel" id="profilePhone" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" data-translate="location">Location</label>
+                            <input type="text" id="profileLocation" class="input-field">
+                        </div>
+                        <button class="btn btn-primary" onclick="updateProfile()" data-translate="updateProfile">Update Profile</button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3 class="text-lg font-semibold mb-4" data-translate="farmInfo">Farm Information</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" data-translate="farmSize">Farm Size (Acres)</label>
+                            <input type="number" id="profileFarmSize" class="input-field">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold mb-2" data-translate="primaryCrops">Primary Crops</label>
+                            <input type="text" id="profileCrops" class="input-field">
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-semibold" data-translate="statistics">Statistics</h4>
+                            <div class="grid grid-2 gap-4 mt-2">
+                                <div class="bg-green-100 p-3 rounded-lg text-center">
+                                    <p class="text-2xl font-bold text-green-600" id="totalCropsCount">0</p>
+                                    <p class="text-sm" data-translate="totalCrops">Total Crops</p>
+                                </div>
+                                <div class="bg-blue-100 p-3 rounded-lg text-center">
+                                    <p class="text-2xl font-bold text-blue-600" id="totalTransactionsCount">0</p>
+                                    <p class="text-sm" data-translate="totalTransactions">Total Transactions</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-6">
+                <h3 class="text-lg font-semibold mb-4" data-translate="settings">Settings</h3>
+                <div class="flex gap-4">
+                    <button class="btn btn-outline" onclick="exportData()" data-translate="exportData">Export Data as PDF</button>
+                    <button class="btn btn-outline" onclick="clearData()" data-translate="clearData">Clear All Data</button>
+                    <button class="btn btn-outline" onclick="contactSupport()" data-translate="contact">Contact Support</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floating Action Button -->
+        <button class="fab" onclick="showQuickAdd()">
+            <i class="fas fa-plus text-xl"></i>
+        </button>
+
+        <!-- Bottom Navigation -->
+        <div class="nav-bottom">
+            <div class="nav-item active" onclick="showSection('dashboard')" data-section="dashboard">
+                <i class="fas fa-home"></i>
+                <span data-translate="home">Home</span>
+            </div>
+            <div class="nav-item" onclick="showSection('crops')" data-section="crops">
+                <i class="fas fa-seedling"></i>
+                <span data-translate="crops">Crops</span>
+            </div>
+            <div class="nav-item" onclick="showSection('money')" data-section="money">
+                <i class="fas fa-coins"></i>
+                <span data-translate="money">Money</span>
+            </div>
+            <div class="nav-item" onclick="showSection('assets')" data-section="assets">
+                <i class="fas fa-warehouse"></i>
+                <span data-translate="assets">Assets</span>
+            </div>
+            <div class="nav-item" onclick="showSection('profile')" data-section="profile">
+                <i class="fas fa-user"></i>
+                <span data-translate="profile">Profile</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    
+    <!-- Add Crop Modal -->
+    <div id="addCropModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold" data-translate="addCrop">Add New Crop</h2>
+                <button onclick="hideModal('addCropModal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="addCropForm">
+                <div class="grid grid-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="cropName">Crop Name</label>
+                        <select id="cropName" class="input-field" required>
+                            <option value="">Select Crop</option>
+                            <option value="rice">Rice</option>
+                            <option value="wheat">Wheat</option>
+                            <option value="tomato">Tomato</option>
+                            <option value="potato">Potato</option>
+                            <option value="onion">Onion</option>
+                            <option value="cotton">Cotton</option>
+                            <option value="sugarcane">Sugarcane</option>
+                            <option value="groundnut">Groundnut</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="variety">Variety</label>
+                        <input type="text" id="cropVariety" class="input-field" required>
+                    </div>
+                </div>
+                
+                <div class="grid grid-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="area">Area (Acres)</label>
+                        <input type="number" id="cropArea" class="input-field" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="season">Season</label>
+                        <select id="cropSeason" class="input-field" required>
+                            <option value="">Select Season</option>
+                            <option value="kharif">Kharif</option>
+                            <option value="rabi">Rabi</option>
+                            <option value="zaid">Zaid</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="sowingDate">Sowing Date</label>
+                        <input type="date" id="cropSowingDate" class="input-field" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="expectedHarvest">Expected Harvest Date</label>
+                        <input type="date" id="cropHarvestDate" class="input-field" required>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2" data-translate="location">Location/Field</label>
+                    <input type="text" id="cropLocation" class="input-field" required>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-semibold mb-2" data-translate="investment">Initial Investment</label>
+                    <input type="number" id="cropInvestment" class="input-field" required>
+                </div>
+                
+                <div class="flex gap-4">
+                    <button type="button" class="btn btn-outline flex-1" onclick="hideModal('addCropModal')" data-translate="cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary flex-1" data-translate="addCrop">Add Crop</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div id="addTransactionModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold" data-translate="addTransaction">Add Transaction</h2>
+                <button onclick="hideModal('addTransactionModal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="addTransactionForm">
+                <div class="grid grid-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="type">Type</label>
+                        <select id="transactionType" class="input-field" required>
+                            <option value="">Select Type</option>
+                            <option value="income" data-translate="income">Income</option>
+                            <option value="expense" data-translate="expense">Expense</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="amount">Amount (₹)</label>
+                        <input type="number" id="transactionAmount" class="input-field" required>
+                    </div>
+                </div>
+                
+                <div class="grid grid-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="category">Category</label>
+                        <select id="transactionCategory" class="input-field" required>
+                            <option value="">Select Category</option>
+                            <option value="seeds">Seeds</option>
+                            <option value="fertilizers">Fertilizers</option>
+                            <option value="pesticides">Pesticides</option>
+                            <option value="labor">Labor</option>
+                            <option value="machinery">Machinery</option>
+                            <option value="fuel">Fuel</option>
+                            <option value="sale">Crop Sale</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="date">Date</label>
+                        <input type="date" id="transactionDate" class="input-field" required>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2" data-translate="description">Description</label>
+                    <textarea id="transactionDescription" class="input-field" rows="3"></textarea>
+                </div>
+                
+                <div class="flex gap-4">
+                    <button type="button" class="btn btn-outline flex-1" onclick="hideModal('addTransactionModal')" data-translate="cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary flex-1" data-translate="add">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Asset Modal -->
+    <div id="addAssetModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold" data-translate="addAsset">Add Asset</h2>
+                <button onclick="hideModal('addAssetModal')" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="addAssetForm">
+                <div class="grid grid-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="assetType">Asset Type</label>
+                        <select id="assetType" class="input-field" required onchange="updateAssetFields()">
+                            <option value="">Select Type</option>
+                            <option value="equipment">Equipment</option>
+                            <option value="livestock">Livestock</option>
+                            <option value="land">Land</option>
+                            <option value="inventory">Inventory</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="name">Name</label>
+                        <input type="text" id="assetName" class="input-field" required>
+                    </div>
+                </div>
+                
+                <div class="grid grid-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="purchaseValue">Purchase Value (₹)</label>
+                        <input type="number" id="assetValue" class="input-field" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-2" data-translate="purchaseDate">Purchase Date</label>
+                        <input type="date" id="assetDate" class="input-field" required>
+                    </div>
+                </div>
+                
+                <div id="dynamicFields"></div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-2" data-translate="description">Description</label>
+                    <textarea id="assetDescription" class="input-field" rows="3"></textarea>
+                </div>
+                
+                <div class="flex gap-4">
+                    <button type="button" class="btn btn-outline flex-1" onclick="hideModal('addAssetModal')" data-translate="cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary flex-1" data-translate="add">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <span id="notificationText"></span>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCdfgtj1gvZ-bkomW1V40h-4tyUPHy_peo",
+            authDomain: "jama-3f427.firebaseapp.com",
+            projectId: "jama-3f427",
+            storageBucket: "jama-3f427.firebasestorage.app",
+            messagingSenderId: "897112470741",
+            appId: "1:897112470741:web:ee6388f0faae459fcb1e5c",
+            measurementId: "G-NN1BRV0QKS"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // Weather API Configuration
+        const WEATHER_API_KEY = '1G7YyF7MlPU3v0bx8oAL36JWwDziEgH5';
+        const WEATHER_API_URL = 'https://api.tomorrow.io/v4/weather/forecast';
+
+        // Global Variables
+        let currentUser = null;
+        let currentLanguage = 'en';
+        let appData = {
+            crops: [],
+            transactions: [],
+            assets: [],
+            profile: {}
+        };
+
+        // Language Translations
+        const translations = {
+            en: {
+                welcome: "Welcome to Agricultural Management",
+                email: "Email Address",
+                password: "Password",
+                login: "Login",
+                loginWithGoogle: "Login with Google",
+                loginWithPhone: "Login with Phone",
+                noAccount: "Don't have an account?",
+                register: "Register",
+                fullName: "Full Name",
+                phone: "Phone Number",
+                location: "Location",
+                farmSize: "Farm Size (Acres)",
+                primaryCrops: "Primary Crops",
+                createAccount: "Create Account",
+                haveAccount: "Already have an account?",
+                phoneNumber: "Phone Number",
+                sendOtp: "Send OTP",
+                back: "Back to Login",
+                enterOtp: "Enter the 6-digit code sent to your phone",
+                verifyOtp: "Verify OTP",
+                didntReceive: "Didn't receive the code?",
+                resend: "Resend",
+                dashboard: "Dashboard",
+                logout: "Logout",
+                weather: "Today's Weather",
+                totalIncome: "Total Income",
+                totalExpenses: "Total Expenses",
+                netProfit: "Net Profit",
+                activeCrops: "Active Crops",
+                thisMonth: "This Month",
+                growing: "Growing",
+                recentActivity: "Recent Activity",
+                viewAll: "View All",
+                noTransactions: "No transactions yet",
+                addCrop: "Add Crop",
+                addTransaction: "Add Transaction",
+                smartIdeas: "Smart Ideas",
+                crops: "Crops",
+                noCrops: "No crops added yet",
+                finance: "Finance",
+                monthlyOverview: "Monthly Overview",
+                calculator: "Loan Calculator",
+                principal: "Principal Amount",
+                interestRate: "Interest Rate (%)",
+                time: "Time (Years)",
+                simpleInterest: "Simple Interest",
+                compoundInterest: "Compound Interest",
+                result: "Result",
+                transactions: "Transactions",
+                allTime: "All Time",
+                thisQuarter: "This Quarter",
+                thisYear: "This Year",
+                searchTransactions: "Search transactions...",
+                assets: "Assets",
+                addAsset: "Add Asset",
+                equipment: "Equipment",
+                livestock: "Livestock",
+                land: "Land",
+                inventory: "Inventory",
+                noAssets: "No assets added yet",
+                refresh: "Refresh Ideas",
+                profile: "Profile",
+                personalInfo: "Personal Information",
+                farmInfo: "Farm Information",
+                statistics: "Statistics",
+                totalCrops: "Total Crops",
+                totalTransactions: "Total Transactions",
+                settings: "Settings",
+                exportData: "Export Data as PDF",
+                clearData: "Clear All Data",
+                contact: "Contact Support",
+                home: "Home",
+                money: "Money",
+                cancel: "Cancel",
+                add: "Add",
+                cropName: "Crop Name",
+                variety: "Variety",
+                area: "Area (Acres)",
+                season: "Season",
+                sowingDate: "Sowing Date",
+                expectedHarvest: "Expected Harvest Date",
+                investment: "Initial Investment",
+                type: "Type",
+                amount: "Amount (₹)",
+                category: "Category",
+                date: "Date",
+                description: "Description",
+                income: "Income",
+                expense: "Expense",
+                assetType: "Asset Type",
+                name: "Name",
+                purchaseValue: "Purchase Value (₹)",
+                purchaseDate: "Purchase Date",
+                updateProfile: "Update Profile"
+            },
+            hi: {
+                welcome: "कृषि प्रबंधन में आपका स्वागत है",
+                email: "ईमेल पता",
+                password: "पासवर्ड",
+                login: "लॉगिन",
+                loginWithGoogle: "गूगल से लॉगिन करें",
+                loginWithPhone: "फोन से लॉगिन करें",
+                noAccount: "खाता नहीं है?",
+                register: "रजिस्टर करें",
+                fullName: "पूरा नाम",
+                phone: "फोन नंबर",
+                location: "स्थान",
+                farmSize: "खेत का आकार (एकड़)",
+                primaryCrops: "मुख्य फसलें",
+                createAccount: "खाता बनाएं",
+                haveAccount: "पहले से खाता है?",
+                phoneNumber: "फोन नंबर",
+                sendOtp: "OTP भेजें",
+                back: "लॉगिन पर वापस",
+                enterOtp: "आपके फोन पर भेजा गया 6-अंकीय कोड दर्ज करें",
+                verifyOtp: "OTP सत्यापित करें",
+                didntReceive: "कोड नहीं मिला?",
+                resend: "पुनः भेजें",
+                dashboard: "डैशबोर्ड",
+                logout: "लॉग आउट",
+                weather: "आज का मौसम",
+                totalIncome: "कुल आय",
+                totalExpenses: "कुल खर्च",
+                netProfit: "शुद्ध लाभ",
+                activeCrops: "सक्रिय फसलें",
+                thisMonth: "इस महीने",
+                growing: "बढ़ रही",
+                recentActivity: "हाल की गतिविधि",
+                viewAll: "सभी देखें",
+                noTransactions: "अभी तक कोई लेन-देन नहीं",
+                addCrop: "फसल जोड़ें",
+                addTransaction: "लेन-देन जोड़ें",
+                smartIdeas: "स्मार्ट आइडिया",
+                crops: "फसलें",
+                noCrops: "अभी तक कोई फसल नहीं जोड़ी गई",
+                finance: "वित्त",
+                monthlyOverview: "मासिक अवलोकन",
+                calculator: "ऋण कैलकुलेटर",
+                principal: "मूल राशि",
+                interestRate: "ब्याज दर (%)",
+                time: "समय (वर्ष)",
+                simpleInterest: "सरल ब्याज",
+                compoundInterest: "चक्रवृद्धि ब्याज",
+                result: "परिणाम",
+                transactions: "लेन-देन",
+                allTime: "सभी समय",
+                thisQuarter: "इस तिमाही",
+                thisYear: "इस वर्ष",
+                searchTransactions: "लेन-देन खोजें...",
+                assets: "संपत्ति",
+                addAsset: "संपत्ति जोड़ें",
+                equipment: "उपकरण",
+                livestock: "पशुधन",
+                land: "भूमि",
+                inventory: "इन्वेंटरी",
+                noAssets: "अभी तक कोई संपत्ति नहीं जोड़ी गई",
+                refresh: "आइडिया रीफ्रेश करें",
+                profile: "प्रोफ़ाइल",
+                personalInfo: "व्यक्तिगत जानकारी",
+                farmInfo: "खेत की जानकारी",
+                statistics: "आंकड़े",
+                totalCrops: "कुल फसलें",
+                totalTransactions: "कुल लेन-देन",
+                settings: "सेटिंग्स",
+                exportData: "डेटा को PDF के रूप में निर्यात करें",
+                clearData: "सभी डेटा साफ़ करें",
+                contact: "सहायता से संपर्क करें",
+                home: "होम",
+                money: "पैसा",
+                cancel: "रद्द करें",
+                add: "जोड़ें",
+                cropName: "फसल का नाम",
+                variety: "किस्म",
+                area: "क्षेत्र (एकड़)",
+                season: "मौसम",
+                sowingDate: "बुआई की तारीख",
+                expectedHarvest: "अपेक्षित कटाई की तारीख",
+                investment: "प्रारंभिक निवेश",
+                type: "प्रकार",
+                amount: "राशि (₹)",
+                category: "श्रेणी",
+                date: "तारीख",
+                description: "विवरण",
+                income: "आय",
+                expense: "खर्च",
+                assetType: "संपत्ति प्रकार",
+                name: "नाम",
+                purchaseValue: "खरीद मूल्य (₹)",
+                purchaseDate: "खरीद की तारीख",
+                updateProfile: "प्रोफ़ाइल अपडेट करें"
+            },
+            te: {
+                welcome: "వ్యవసాయ నిర్వహణకు స్వాగతం",
+                email: "ఇమెయిల్ చిరునామా",
+                password: "పాస్‌వర్డ్",
+                login: "లాగిన్",
+                loginWithGoogle: "గూగుల్‌తో లాగిన్",
+                loginWithPhone: "ఫోన్‌తో లాగిన్",
+                noAccount: "ఖాతా లేదా?",
+                register: "నమోదు చేసుకోండి",
+                fullName: "పూర్తి పేరు",
+                phone: "ఫోన్ నంబర్",
+                location: "స్థానం",
+                farmSize: "వ్యవసాయ భూమి (ఎకరాలు)",
+                primaryCrops: "ప్రధాన పంటలు",
+                createAccount: "ఖాతా సృష్టించండి",
+                haveAccount: "ఇప్పటికే ఖాతా ఉందా?",
+                phoneNumber: "ఫోన్ నంబర్",
+                sendOtp: "OTP పంపండి",
+                back: "లాగిన్‌కు తిరిగి",
+                enterOtp: "మీ ఫోన్‌కు పంపిన 6-అంకెల కోడ్‌ను నమోదు చేయండి",
+                verifyOtp: "OTP ధృవీకరించండి",
+                didntReceive: "కోడ్ రాలేదా?",
+                resend: "మళ్లీ పంపండి",
+                dashboard: "డ్యాష్‌బోర్డ్",
+                logout: "లాగ్ అవుట్",
+                weather: "నేటి వాతావరణం",
+                totalIncome: "మొత్తం ఆదాయం",
+                totalExpenses: "మొత్తం ఖర్చులు",
+                netProfit: "నిట్ లాభం",
+                activeCrops: "సక్రియ పంటలు",
+                thisMonth: "ఈ నెల",
+                growing: "పెరుగుతున్న",
+                recentActivity: "ఇటీవలి కార్యకలాపం",
+                viewAll: "అన్నీ చూడండి",
+                noTransactions: "ఇంకా లావాదేవీలు లేవు",
+                addCrop: "పంట జోడించండి",
+                addTransaction: "లావాదేవీ జోడించండి",
+                smartIdeas: "స్మార్ట్ ఆలోచనలు",
+                crops: "పంటలు",
+                noCrops: "ఇంకా పంటలు జోడించబడలేదు",
+                finance: "ఆర్థిక",
+                monthlyOverview: "నెలవారీ అవలోకనం",
+                calculator: "రుణ కాలిక్యులేటర్",
+                principal: "ప్రధాన మొత్తం",
+                interestRate: "వడ్డీ రేటు (%)",
+                time: "సమయం (సంవత్సరాలు)",
+                simpleInterest: "సరళ వడ్డీ",
+                compoundInterest: "చక్రవడ్డీ",
+                result: "ఫలితం",
+                transactions: "లావాదేవీలు",
+                allTime: "అన్ని సమయాలు",
+                thisQuarter: "ఈ త్రైమాసికం",
+                thisYear: "ఈ సంవత్సరం",
+                searchTransactions: "లావాదేవీలు వెతకండి...",
+                assets: "ఆస్తులు",
+                addAsset: "ఆస్తి జోడించండి",
+                equipment: "పరికరాలు",
+                livestock: "పశువులు",
+                land: "భూమి",
+                inventory: "ఇన్వెంటరీ",
+                noAssets: "ఇంకా ఆస్తులు జోడించబడలేదు",
+                refresh: "ఆలోచనలు రీఫ్రెష్ చేయండి",
+                profile: "ప్రొఫైల్",
+                personalInfo: "వ్యక్తిగత సమాచారం",
+                farmInfo: "వ్యవసాయ సమాచారం",
+                statistics: "గణాంకాలు",
+                totalCrops: "మొత్తం పంటలు",
+                totalTransactions: "మొత్తం లావాదేవీలు",
+                settings: "సెట్టింగులు",
+                exportData: "డేటాను PDF గా ఎగుమతి చేయండి",
+                clearData: "అన్ని డేటా క్లియర్ చేయండి",
+                contact: "మద్దతును సంప్రదించండి",
+                home: "హోమ్",
+                money: "డబ్బు",
+                cancel: "రద్దు చేయండి",
+                add: "జోడించండి",
+                cropName: "పంట పేరు",
+                variety: "రకం",
+                area: "ప్రాంతం (ఎకరాలు)",
+                season: "సీజన్",
+                sowingDate: "విత్తిన తేదీ",
+                expectedHarvest: "ఊహించిన పంట తేదీ",
+                investment: "ప్రారంభ పెట్టుబడి",
+                type: "రకం",
+                amount: "మొత్తం (₹)",
+                category: "వర్గం",
+                date: "తేదీ",
+                description: "వివరణ",
+                income: "ఆదాయం",
+                expense: "ఖర్చు",
+                assetType: "ఆస్తి రకం",
+                name: "పేరు",
+                purchaseValue: "కొనుగోలు విలువ (₹)",
+                purchaseDate: "కొనుగోలు తేదీ",
+                updateProfile: "ప్రొఫైల్ అప్డేట్ చేయండి"
+            }
+        };
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            // Initialize loading screen
+            showLoadingScreen();
+            
+            // Load saved language
+            const savedLanguage = localStorage.getItem('language') || 'en';
+            changeLanguage(savedLanguage);
+            
+            // Initialize theme
+            initializeTheme();
+            
+            // Load user data
+            loadUserData();
+            
+            // Check authentication state
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    currentUser = user;
+                    hideElement('authScreen');
+                    showElement('mainApp');
+                    initializeMainApp();
+                } else {
+                    showElement('authScreen');
+                    hideElement('mainApp');
+                }
+                hideLoadingScreen();
+            });
+            
+            // Initialize event listeners
+            initializeEventListeners();
+        }
+
+        function showLoadingScreen() {
+            const loadingTexts = [
+                'Initializing Agricultural System...',
+                'Loading Components...',
+                'Fetching Data...',
+                'Setting up Dashboard...',
+                'Almost Ready...'
+            ];
+            
+            let progress = 0;
+            const progressFill = document.getElementById('progressFill');
+            const loadingText = document.getElementById('loadingText');
+            
+            const interval = setInterval(() => {
+                progress += 20;
+                progressFill.style.width = progress + '%';
+                
+                const textIndex = Math.floor(progress / 20) - 1;
+                if (textIndex >= 0 && textIndex < loadingTexts.length) {
+                    loadingText.textContent = loadingTexts[textIndex];
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                }
+            }, 300);
+        }
+
+        function hideLoadingScreen() {
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.display = 'none';
+            }, 1500);
+        }
+
+        function initializeEventListeners() {
+            // Authentication
+            document.getElementById('showRegister').onclick = () => {
+                hideElement('loginForm');
+                showElement('registerForm');
+            };
+            
+            document.getElementById('showLogin').onclick = () => {
+                hideElement('registerForm');
+                showElement('loginForm');
+            };
+            
+            document.getElementById('phoneLoginBtn').onclick = () => {
+                hideElement('loginForm');
+                showElement('phoneForm');
+            };
+            
+            document.getElementById('backToLogin').onclick = () => {
+                hideElement('phoneForm');
+                showElement('loginForm');
+            };
+            
+            // Forms
+            document.getElementById('loginBtn').onclick = handleEmailLogin;
+            document.getElementById('registerBtn').onclick = handleRegister;
+            document.getElementById('googleLoginBtn').onclick = handleGoogleLogin;
+            document.getElementById('sendOtpBtn').onclick = handlePhoneLogin;
+            document.getElementById('verifyOtpBtn').onclick = handleOtpVerification;
+            
+            document.getElementById('addCropForm').onsubmit = handleAddCrop;
+            document.getElementById('addTransactionForm').onsubmit = handleAddTransaction;
+            document.getElementById('addAssetForm').onsubmit = handleAddAsset;
+            
+            // Theme toggle
+            document.getElementById('themeToggle').onclick = toggleTheme;
+            
+            // Language selector
+            document.getElementById('languageSelect').onchange = (e) => changeLanguage(e.target.value);
+            
+            // OTP input navigation
+            setupOtpInputs();
+            
+            // Logout
+            document.getElementById('logoutBtn').onclick = handleLogout;
+        }
+
+        // Authentication Functions
+        async function handleEmailLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!email || !password) {
+                showNotification('Please fill in all fields', 'error');
+                return;
+            }
+            
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                showNotification('Login successful!', 'success');
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        async function handleRegister() {
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const phone = document.getElementById('registerPhone').value;
+            const location = document.getElementById('registerLocation').value;
+            const farmSize = document.getElementById('registerFarmSize').value;
+            const crops = document.getElementById('registerCrops').value;
+            
+            if (!name || !email || !password || !phone || !location || !farmSize || !crops) {
+                showNotification('Please fill in all fields', 'error');
+                return;
+            }
+            
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                
+                // Save user profile
+                await db.collection('users').doc(userCredential.user.uid).set({
+                    name,
+                    email,
+                    phone,
+                    location,
+                    farmSize: parseFloat(farmSize),
+                    primaryCrops: crops,
+                    createdAt: new Date()
+                });
+                
+                showNotification('Registration successful!', 'success');
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        async function handleGoogleLogin() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            
+            try {
+                await auth.signInWithPopup(provider);
+                showNotification('Google login successful!', 'success');
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        function handlePhoneLogin() {
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            
+            if (!phoneNumber) {
+                showNotification('Please enter phone number', 'error');
+                return;
+            }
+            
+            // For demo purposes, show OTP form immediately
+            hideElement('phoneForm');
+            showElement('otpForm');
+            showNotification('OTP sent to your phone!', 'success');
+        }
+
+        function handleOtpVerification() {
+            const otp = Array.from({length: 6}, (_, i) => 
+                document.getElementById(`otp${i + 1}`).value
+            ).join('');
+            
+            if (otp.length !== 6) {
+                showNotification('Please enter complete OTP', 'error');
+                return;
+            }
+            
+            // For demo purposes, accept any 6-digit OTP
+            showNotification('Phone verification successful!', 'success');
+            // Simulate successful login
+            setTimeout(() => {
+                hideElement('authScreen');
+                showElement('mainApp');
+                initializeMainApp();
+            }, 1000);
+        }
+
+        function handleLogout() {
+            auth.signOut();
+            showNotification('Logged out successfully', 'success');
+        }
+
+        // Main App Functions
+        function initializeMainApp() {
+            loadWeatherData();
+            updateDashboard();
+            generateIdeas();
+            setupChart();
+        }
+
+        async function loadWeatherData() {
+            try {
+                // Get user location (demo coordinates)
+                const lat = 42.3478;
+                const lng = -71.0466;
+                
+                const response = await fetch(`${WEATHER_API_URL}?location=${lat},${lng}&apikey=${WEATHER_API_KEY}`);
+                const data = await response.json();
+                
+                if (data.timelines && data.timelines.minutely) {
+                    const current = data.timelines.minutely[0].values;
+                    
+                    document.getElementById('temperature').textContent = `${Math.round(current.temperature)}°C`;
+                    document.getElementById('weatherDescription').textContent = getWeatherDescription(current.weatherCode);
+                    document.getElementById('humidity').textContent = `Humidity: ${Math.round(current.humidity)}%`;
+                    document.getElementById('weatherLocation').textContent = 'Current Location';
+                    
+                    updateWeatherIcon(current.weatherCode);
+                }
+            } catch (error) {
+                console.error('Weather API error:', error);
+                // Show demo weather data
+                document.getElementById('temperature').textContent = '28°C';
+                document.getElementById('weatherDescription').textContent = 'Partly Cloudy';
+                document.getElementById('humidity').textContent = 'Humidity: 65%';
+                document.getElementById('weatherLocation').textContent = 'Your Location';
+            }
+        }
+
+        function getWeatherDescription(code) {
+            const weatherCodes = {
+                0: 'Unknown',
+                1000: 'Clear',
+                1100: 'Mostly Clear',
+                1101: 'Partly Cloudy',
+                1102: 'Mostly Cloudy',
+                1001: 'Cloudy',
+                2000: 'Fog',
+                2100: 'Light Fog',
+                4000: 'Drizzle',
+                4001: 'Rain',
+                4200: 'Light Rain',
+                4201: 'Heavy Rain',
+                5000: 'Snow',
+                5001: 'Flurries',
+                5100: 'Light Snow',
+                5101: 'Heavy Snow',
+                6000: 'Freezing Drizzle',
+                6001: 'Freezing Rain',
+                6200: 'Light Freezing Rain',
+                6201: 'Heavy Freezing Rain',
+                7000: 'Ice Pellets',
+                7101: 'Heavy Ice Pellets',
+                7102: 'Light Ice Pellets',
+                8000: 'Thunderstorm'
+            };
+            return weatherCodes[code] || 'Unknown';
+        }
+
+        function updateWeatherIcon(code) {
+            const iconElement = document.getElementById('weatherIcon');
+            let iconClass = 'fas fa-cloud';
+            
+            if (code === 1000 || code === 1100) iconClass = 'fas fa-sun';
+            else if (code === 1101 || code === 1102) iconClass = 'fas fa-cloud-sun';
+            else if (code === 1001) iconClass = 'fas fa-cloud';
+            else if (code === 4000 || code === 4001 || code === 4200 || code === 4201) iconClass = 'fas fa-cloud-rain';
+            else if (code === 5000 || code === 5001 || code === 5100 || code === 5101) iconClass = 'fas fa-snowflake';
+            else if (code === 8000) iconClass = 'fas fa-bolt';
+            
+            iconElement.className = iconClass + ' text-4xl opacity-75';
+        }
+
+        function updateDashboard() {
+            const data = getAppData();
+            
+            // Calculate financial summary
+            const income = data.transactions.filter(t => t.type === 'income')
+                .reduce((sum, t) => sum + t.amount, 0);
+            const expenses = data.transactions.filter(t => t.type === 'expense')
+                .reduce((sum, t) => sum + t.amount, 0);
+            const profit = income - expenses;
+            const activeCrops = data.crops.filter(c => c.status === 'active').length;
+            
+            document.getElementById('totalIncome').textContent = `₹${income.toLocaleString()}`;
+            document.getElementById('totalExpenses').textContent = `₹${expenses.toLocaleString()}`;
+            document.getElementById('netProfit').textContent = `₹${profit.toLocaleString()}`;
+            document.getElementById('activeCrops').textContent = activeCrops;
+            
+            // Update recent transactions
+            updateRecentTransactions(data.transactions.slice(-3));
+            
+            // Update profile statistics
+            document.getElementById('totalCropsCount').textContent = data.crops.length;
+            document.getElementById('totalTransactionsCount').textContent = data.transactions.length;
+        }
+
+        function updateRecentTransactions(transactions) {
+            const container = document.getElementById('recentTransactions');
+            
+            if (transactions.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500" data-translate="noTransactions">No transactions yet</p>';
+                return;
+            }
+            
+            container.innerHTML = transactions.map(t => `
+                <div class="flex justify-between items-center p-3 border-b border-gray-200 last:border-b-0">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center ${t.type === 'income' ? 'bg-green-100' : 'bg-red-100'}">
+                            <i class="fas fa-${t.type === 'income' ? 'arrow-up text-green-600' : 'arrow-down text-red-600'} text-sm"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-sm">${t.category}</p>
+                            <p class="text-xs text-gray-500">${new Date(t.date).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <p class="font-semibold ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
+                        ${t.type === 'income' ? '+' : '-'}₹${t.amount.toLocaleString()}
+                    </p>
+                </div>
+            `).join('');
+        }
+
+        // Form Handlers
+        function handleAddCrop(e) {
+            e.preventDefault();
+            
+            const cropData = {
+                id: Date.now().toString(),
+                name: document.getElementById('cropName').value,
+                variety: document.getElementById('cropVariety').value,
+                area: parseFloat(document.getElementById('cropArea').value),
+                season: document.getElementById('cropSeason').value,
+                sowingDate: document.getElementById('cropSowingDate').value,
+                harvestDate: document.getElementById('cropHarvestDate').value,
+                location: document.getElementById('cropLocation').value,
+                investment: parseFloat(document.getElementById('cropInvestment').value),
+                status: 'active',
+                createdAt: new Date().toISOString()
+            };
+            
+            const data = getAppData();
+            data.crops.push(cropData);
+            saveAppData(data);
+            
+            hideModal('addCropModal');
+            document.getElementById('addCropForm').reset();
+            showNotification('Crop added successfully!', 'success');
+            updateDashboard();
+            updateCropsList();
+        }
+
+        function handleAddTransaction(e) {
+            e.preventDefault();
+            
+            const transactionData = {
+                id: Date.now().toString(),
+                type: document.getElementById('transactionType').value,
+                amount: parseFloat(document.getElementById('transactionAmount').value),
+                category: document.getElementById('transactionCategory').value,
+                date: document.getElementById('transactionDate').value,
+                description: document.getElementById('transactionDescription').value,
+                createdAt: new Date().toISOString()
+            };
+            
+            const data = getAppData();
+            data.transactions.push(transactionData);
+            saveAppData(data);
+            
+            hideModal('addTransactionModal');
+            document.getElementById('addTransactionForm').reset();
+            showNotification('Transaction added successfully!', 'success');
+            updateDashboard();
+            updateTransactionsList();
+            setupChart();
+        }
+
+        function handleAddAsset(e) {
+            e.preventDefault();
+            
+            const assetData = {
+                id: Date.now().toString(),
+                type: document.getElementById('assetType').value,
+                name: document.getElementById('assetName').value,
+                value: parseFloat(document.getElementById('assetValue').value),
+                date: document.getElementById('assetDate').value,
+                description: document.getElementById('assetDescription').value,
+                createdAt: new Date().toISOString()
+            };
+            
+            // Add dynamic fields based on asset type
+            const dynamicFields = document.getElementById('dynamicFields');
+            const inputs = dynamicFields.querySelectorAll('input, select');
+            inputs.forEach(input => {
+                assetData[input.id] = input.value;
+            });
+            
+            const data = getAppData();
+            data.assets.push(assetData);
+            saveAppData(data);
+            
+            hideModal('addAssetModal');
+            document.getElementById('addAssetForm').reset();
+            showNotification('Asset added successfully!', 'success');
+            updateAssetsList();
+        }
+
+        // Utility Functions
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('#mainApp > div[id]').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.remove('hidden');
+            
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`.nav-item[data-section="${sectionId}"]`).classList.add('active');
+            
+            // Section-specific updates
+            if (sectionId === 'crops') updateCropsList();
+            if (sectionId === 'money') updateTransactionsList();
+            if (sectionId === 'assets') updateAssetsList();
+        }
+
+        function updateCropsList() {
+            const data = getAppData();
+            const container = document.getElementById('cropsList');
+            
+            if (data.crops.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500" data-translate="noCrops">No crops added yet</p>';
+                return;
+            }
+            
+            container.innerHTML = data.crops.map(crop => `
+                <div class="card">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold">${crop.name} - ${crop.variety}</h3>
+                            <p class="text-sm text-gray-600">${crop.location} • ${crop.area} acres</p>
+                        </div>
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full ${crop.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                            ${crop.status}
+                        </span>
+                    </div>
+                    
+                    <div class="grid grid-2 gap-4 mb-4">
+                        <div>
+                            <p class="text-sm text-gray-600" data-translate="sowingDate">Sowing Date</p>
+                            <p class="font-semibold">${new Date(crop.sowingDate).toLocaleDateString()}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600" data-translate="expectedHarvest">Expected Harvest</p>
+                            <p class="font-semibold">${new Date(crop.harvestDate).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-gray-600">Growth Progress</span>
+                            <span class="text-sm font-semibold">${calculateCropProgress(crop)}%</span>
+                        </div>
+                        <div class="crop-progress">
+                            <div class="crop-progress-fill" style="width: ${calculateCropProgress(crop)}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-sm text-gray-600" data-translate="investment">Investment</p>
+                            <p class="font-semibold text-lg">₹${crop.investment.toLocaleString()}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="btn btn-outline btn-sm" onclick="editCrop('${crop.id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-outline btn-sm" onclick="deleteCrop('${crop.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function calculateCropProgress(crop) {
+            const sowingDate = new Date(crop.sowingDate);
+            const harvestDate = new Date(crop.harvestDate);
+            const currentDate = new Date();
+            
+            const totalDays = Math.ceil((harvestDate - sowingDate) / (1000 * 60 * 60 * 24));
+            const elapsedDays = Math.ceil((currentDate - sowingDate) / (1000 * 60 * 60 * 24));
+            
+            const progress = Math.min(100, Math.max(0, (elapsedDays / totalDays) * 100));
+            return Math.round(progress);
+        }
+
+        function updateTransactionsList() {
+            const data = getAppData();
+            const container = document.getElementById('transactionsList');
+            
+            if (data.transactions.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500" data-translate="noTransactions">No transactions yet</p>';
+                return;
+            }
+            
+            // Sort transactions by date (newest first)
+            const sortedTransactions = data.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            container.innerHTML = sortedTransactions.map(t => `
+                <div class="flex justify-between items-center p-4 border-b border-gray-200 last:border-b-0">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full flex items-center justify-center ${t.type === 'income' ? 'bg-green-100' : 'bg-red-100'}">
+                            <i class="fas fa-${t.type === 'income' ? 'arrow-up text-green-600' : 'arrow-down text-red-600'}"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold">${t.category}</p>
+                            <p class="text-sm text-gray-600">${t.description || ''}</p>
+                            <p class="text-xs text-gray-500">${new Date(t.date).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="font-semibold text-lg ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
+                            ${t.type === 'income' ? '+' : '-'}₹${t.amount.toLocaleString()}
+                        </p>
+                        <p class="text-xs text-gray-500 capitalize">${t.type}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateAssetsList() {
+            const data = getAppData();
+            const container = document.getElementById('assetsList');
+            
+            if (data.assets.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500" data-translate="noAssets">No assets added yet</p>';
+                return;
+            }
+            
+            container.innerHTML = data.assets.map(asset => `
+                <div class="card">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold">${asset.name}</h3>
+                            <p class="text-sm text-gray-600 capitalize">${asset.type}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-semibold text-lg">₹${asset.value.toLocaleString()}</p>
+                            <p class="text-xs text-gray-500">${new Date(asset.date).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+                    
+                    <p class="text-sm text-gray-600 mb-4">${asset.description || ''}</p>
+                    
+                    <div class="flex justify-end gap-2">
+                        <button class="btn btn-outline btn-sm" onclick="editAsset('${asset.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="deleteAsset('${asset.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Update asset counts
+            const assetCounts = data.assets.reduce((counts, asset) => {
+                counts[asset.type] = (counts[asset.type] || 0) + 1;
+                return counts;
+            }, {});
+            
+            document.getElementById('equipmentCount').textContent = `${assetCounts.equipment || 0} items`;
+            document.getElementById('livestockCount').textContent = `${assetCounts.livestock || 0} items`;
+            document.getElementById('landCount').textContent = `${assetCounts.land || 0} items`;
+            document.getElementById('inventoryCount').textContent = `${assetCounts.inventory || 0} items`;
+        }
+
+        function setupChart() {
+            const ctx = document.getElementById('financeChart');
+            if (!ctx) return;
+            
+            const data = getAppData();
+            
+            // Prepare chart data for last 6 months
+            const months = [];
+            const incomeData = [];
+            const expenseData = [];
+            
+            for (let i = 5; i >= 0; i--) {
+                const date = new Date();
+                date.setMonth(date.getMonth() - i);
+                months.push(date.toLocaleDateString('en', { month: 'short' }));
+                
+                const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+                const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+                
+                const monthIncome = data.transactions
+                    .filter(t => t.type === 'income' && new Date(t.date) >= monthStart && new Date(t.date) <= monthEnd)
+                    .reduce((sum, t) => sum + t.amount, 0);
+                
+                const monthExpense = data.transactions
+                    .filter(t => t.type === 'expense' && new Date(t.date) >= monthStart && new Date(t.date) <= monthEnd)
+                    .reduce((sum, t) => sum + t.amount, 0);
+                
+                incomeData.push(monthIncome);
+                expenseData.push(monthExpense);
+            }
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [{
+                        label: 'Income',
+                        data: incomeData,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Expenses',
+                        data: expenseData,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generateIdeas() {
+            const ideas = [
+                {
+                    title: 'Drip Irrigation System',
+                    description: 'Install drip irrigation to save 40-50% water and increase crop yield',
+                    category: 'Technology',
+                    priority: 'High',
+                    impact: '₹50,000 savings annually',
+                    icon: 'fas fa-tint'
+                },
+                {
+                    title: 'Crop Rotation Planning',
+                    description: 'Implement strategic crop rotation to improve soil health and reduce pest issues',
+                    category: 'Crop',
+                    priority: 'Medium',
+                    impact: '20% yield increase',
+                    icon: 'fas fa-sync-alt'
+                },
+                {
+                    title: 'Organic Farming Transition',
+                    description: 'Gradually transition to organic farming for premium pricing and sustainability',
+                    category: 'Financial',
+                    priority: 'Medium',
+                    impact: '30% price premium',
+                    icon: 'fas fa-leaf'
+                },
+                {
+                    title: 'Weather-based Insurance',
+                    description: 'Get crop insurance to protect against weather-related losses',
+                    category: 'Financial',
+                    priority: 'High',
+                    impact: 'Risk mitigation',
+                    icon: 'fas fa-shield-alt'
+                },
+                {
+                    title: 'Direct Market Sales',
+                    description: 'Sell directly to consumers through farmers markets or online platforms',
+                    category: 'Market',
+                    priority: 'Medium',
+                    impact: '25% higher profits',
+                    icon: 'fas fa-store'
+                }
+            ];
+            
+            const container = document.getElementById('ideasList');
+            if (!container) return;
+            
+            container.innerHTML = ideas.map(idea => `
+                <div class="card">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                            <i class="${idea.icon} text-green-600 text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start mb-2">
+                                <h3 class="text-lg font-semibold">${idea.title}</h3>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full ${
+                                    idea.priority === 'High' ? 'bg-red-100 text-red-800' :
+                                    idea.priority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-green-100 text-green-800'
+                                }">${idea.priority}</span>
+                            </div>
+                            <p class="text-gray-600 mb-3">${idea.description}</p>
+                            <div class="flex justify-between items-center">
+                                <div class="flex gap-4">
+                                    <span class="text-sm text-gray-500">Category: ${idea.category}</span>
+                                    <span class="text-sm text-green-600 font-semibold">${idea.impact}</span>
+                                </div>
+                                <button class="btn btn-outline btn-sm">
+                                    <i class="fas fa-bookmark"></i>
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Calculator Functions
+        function calculateSimpleInterest() {
+            const principal = parseFloat(document.getElementById('principal').value);
+            const rate = parseFloat(document.getElementById('interestRate').value);
+            const time = parseFloat(document.getElementById('time').value);
+            
+            if (!principal || !rate || !time) {
+                showNotification('Please fill all fields', 'error');
+                return;
+            }
+            
+            const interest = (principal * rate * time) / 100;
+            const amount = principal + interest;
+            
+            document.getElementById('calculatorResult').classList.remove('hidden');
+            document.getElementById('resultText').innerHTML = `
+                <div class="grid grid-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-600">Simple Interest:</p>
+                        <p class="text-lg font-bold text-green-600">₹${interest.toLocaleString()}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Total Amount:</p>
+                        <p class="text-lg font-bold text-blue-600">₹${amount.toLocaleString()}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function calculateCompoundInterest() {
+            const principal = parseFloat(document.getElementById('principal').value);
+            const rate = parseFloat(document.getElementById('interestRate').value);
+            const time = parseFloat(document.getElementById('time').value);
+            
+            if (!principal || !rate || !time) {
+                showNotification('Please fill all fields', 'error');
+                return;
+            }
+            
+            const amount = principal * Math.pow((1 + rate / 100), time);
+            const interest = amount - principal;
+            
+            document.getElementById('calculatorResult').classList.remove('hidden');
+            document.getElementById('resultText').innerHTML = `
+                <div class="grid grid-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-600">Compound Interest:</p>
+                        <p class="text-lg font-bold text-green-600">₹${interest.toLocaleString()}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Total Amount:</p>
+                        <p class="text-lg font-bold text-blue-600">₹${amount.toLocaleString()}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Modal Functions
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+            
+            // Auto-fill current date for forms
+            if (modalId === 'addTransactionModal') {
+                document.getElementById('transactionDate').value = new Date().toISOString().split('T')[0];
+            }
+            if (modalId === 'addCropModal') {
+                document.getElementById('cropSowingDate').value = new Date().toISOString().split('T')[0];
+            }
+            if (modalId === 'addAssetModal') {
+                document.getElementById('assetDate').value = new Date().toISOString().split('T')[0];
+            }
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        function updateAssetFields() {
+            const assetType = document.getElementById('assetType').value;
+            const dynamicFields = document.getElementById('dynamicFields');
+            
+            let fieldsHtml = '';
+            
+            switch (assetType) {
+                case 'equipment':
+                    fieldsHtml = `
+                        <div class="grid grid-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Brand</label>
+                                <input type="text" id="equipmentBrand" class="input-field">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Condition</label>
+                                <select id="equipmentCondition" class="input-field">
+                                    <option value="new">New</option>
+                                    <option value="good">Good</option>
+                                    <option value="fair">Fair</option>
+                                    <option value="poor">Poor</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'livestock':
+                    fieldsHtml = `
+                        <div class="grid grid-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Animal Type</label>
+                                <select id="animalType" class="input-field">
+                                    <option value="cow">Cow</option>
+                                    <option value="buffalo">Buffalo</option>
+                                    <option value="goat">Goat</option>
+                                    <option value="chicken">Chicken</option>
+                                    <option value="sheep">Sheep</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Count</label>
+                                <input type="number" id="animalCount" class="input-field" value="1">
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'land':
+                    fieldsHtml = `
+                        <div class="grid grid-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Area (Acres)</label>
+                                <input type="number" id="landArea" class="input-field" step="0.01">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Land Type</label>
+                                <select id="landType" class="input-field">
+                                    <option value="agricultural">Agricultural</option>
+                                    <option value="residential">Residential</option>
+                                    <option value="commercial">Commercial</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'inventory':
+                    fieldsHtml = `
+                        <div class="grid grid-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Quantity</label>
+                                <input type="number" id="inventoryQuantity" class="input-field">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Unit</label>
+                                <select id="inventoryUnit" class="input-field">
+                                    <option value="kg">Kilogram</option>
+                                    <option value="liter">Liter</option>
+                                    <option value="bag">Bag</option>
+                                    <option value="piece">Piece</option>
+                                </select>
+                            </div>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            dynamicFields.innerHTML = fieldsHtml;
+        }
+
+        // OTP Input Functions
+        function setupOtpInputs() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            
+            otpInputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1 && index < otpInputs.length - 1) {
+                        otpInputs[index + 1].focus();
+                    }
+                    
+                    // Check if all inputs are filled
+                    const allFilled = Array.from(otpInputs).every(inp => inp.value.length === 1);
+                    if (allFilled) {
+                        // Auto-verify after short delay
+                        setTimeout(() => {
+                            handleOtpVerification();
+                        }, 500);
+                    }
+                });
+                
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && input.value === '' && index > 0) {
+                        otpInputs[index - 1].focus();
+                    }
+                });
+            });
+        }
+
+        // Theme Functions
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                document.body.classList.add('dark');
+                document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            
+            document.getElementById('themeToggle').innerHTML = isDark ? 
+                '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+
+        // Language Functions
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('language', lang);
+            document.getElementById('languageSelect').value = lang;
+            
+            // Update all translatable elements
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (translations[lang] && translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+            
+            // Update placeholders
+            document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
+                const key = element.getAttribute('data-translate-placeholder');
+                if (translations[lang] && translations[lang][key]) {
+                    element.placeholder = translations[lang][key];
+                }
+            });
+        }
+
+        // Data Management Functions
+        function getAppData() {
+            const data = localStorage.getItem('farmerAppData');
+            return data ? JSON.parse(data) : { crops: [], transactions: [], assets: [], profile: {} };
+        }
+
+        function saveAppData(data) {
+            localStorage.setItem('farmerAppData', JSON.stringify(data));
+            appData = data;
+        }
+
+        function loadUserData() {
+            const data = getAppData();
+            appData = data;
+            
+            // Load profile data
+            if (data.profile) {
+                const fields = ['profileName', 'profileEmail', 'profilePhone', 'profileLocation', 'profileFarmSize', 'profileCrops'];
+                fields.forEach(field => {
+                    const element = document.getElementById(field);
+                    if (element && data.profile[field]) {
+                        element.value = data.profile[field];
+                    }
+                });
+            }
+        }
+
+        function updateProfile() {
+            const profileData = {
+                profileName: document.getElementById('profileName').value,
+                profileEmail: document.getElementById('profileEmail').value,
+                profilePhone: document.getElementById('profilePhone').value,
+                profileLocation: document.getElementById('profileLocation').value,
+                profileFarmSize: document.getElementById('profileFarmSize').value,
+                profileCrops: document.getElementById('profileCrops').value
+            };
+            
+            const data = getAppData();
+            data.profile = { ...data.profile, ...profileData };
+            saveAppData(data);
+            
+            showNotification('Profile updated successfully!', 'success');
+        }
+
+        function exportData() {
+            const data = getAppData();
+            const dataStr = JSON.stringify(data, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'farm-data.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('Data exported successfully!', 'success');
+        }
+
+        function clearData() {
+            if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+                localStorage.removeItem('farmerAppData');
+                appData = { crops: [], transactions: [], assets: [], profile: {} };
+                updateDashboard();
+                showNotification('All data cleared successfully!', 'success');
+            }
+        }
+
+        function contactSupport() {
+            const subject = encodeURIComponent('Jama App Support Request');
+            const body = encodeURIComponent('Hi, I need help with the Jama agricultural management app. Please assist me.');
+            window.open(`mailto:support@jama-app.com?subject=${subject}&body=${body}`);
+        }
+
+        // Utility Functions
+        function showElement(elementId) {
+            document.getElementById(elementId).classList.remove('hidden');
+        }
+
+        function hideElement(elementId) {
+            document.getElementById(elementId).classList.add('hidden');
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            
+            notification.className = `notification ${type}`;
+            notificationText.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        function showQuickAdd() {
+            // Show quick add menu or modal
+            const actions = [
+                { icon: 'fas fa-seedling', text: 'Add Crop', action: () => showModal('addCropModal') },
+                { icon: 'fas fa-coins', text: 'Add Transaction', action: () => showModal('addTransactionModal') },
+                { icon: 'fas fa-warehouse', text: 'Add Asset', action: () => showModal('addAssetModal') }
+            ];
+            
+            // Create temporary menu (you can implement a proper menu component)
+            const menu = document.createElement('div');
+            menu.className = 'fixed bottom-20 right-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 z-50';
+            menu.innerHTML = actions.map(action => `
+                <button class="flex items-center gap-3 w-full p-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg" onclick="(${action.action})(); this.parentElement.remove();">
+                    <i class="${action.icon}"></i>
+                    <span>${action.text}</span>
+                </button>
+            `).join('');
+            
+            document.body.appendChild(menu);
+            
+            // Remove menu after 5 seconds
+            setTimeout(() => {
+                if (menu.parentElement) {
+                    menu.remove();
+                }
+            }, 5000);
+        }
+
+        // Delete functions
+        function deleteCrop(id) {
+            if (confirm('Are you sure you want to delete this crop?')) {
+                const data = getAppData();
+                data.crops = data.crops.filter(crop => crop.id !== id);
+                saveAppData(data);
+                updateCropsList();
+                updateDashboard();
+                showNotification('Crop deleted successfully!', 'success');
+            }
+        }
+
+        function deleteAsset(id) {
+            if (confirm('Are you sure you want to delete this asset?')) {
+                const data = getAppData();
+                data.assets = data.assets.filter(asset => asset.id !== id);
+                saveAppData(data);
+                updateAssetsList();
+                showNotification('Asset deleted successfully!', 'success');
+            }
+        }
+
+        // Edit functions (placeholder - would open modals with pre-filled data)
+        function editCrop(id) {
+            showNotification('Edit crop functionality coming soon!', 'warning');
+        }
+
+        function editAsset(id) {
+            showNotification('Edit asset functionality coming soon!', 'warning');
+        }
+
+        function showAssetType(type) {
+            showSection('assets');
+            // Filter assets by type (you can implement filtering logic here)
+            showNotification(`Showing ${type} assets`, 'success');
+        }
+    </script>
+</body>
+</html>
