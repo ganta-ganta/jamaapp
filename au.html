@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase SMS Authentication</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <!-- Bootstrap for styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --success-color: #1cc88a;
+            --danger-color: #e74a3b;
+            --warning-color: #f6c23e;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .auth-container {
+            max-width: 450px;
+            width: 100%;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .auth-container:hover {
+            transform: translateY(-5px);
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .logo h2 {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        
+        .phone-input {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .country-code {
+            background-color: #f8f9fa;
+            border: 1px solid #ced4da;
+            border-right: none;
+            padding: 10px 15px;
+            border-radius: 8px 0 0 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .phone-field {
+            border-radius: 0 8px 8px 0;
+            border-left: none;
+            padding: 10px 15px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 12px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2e59d9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            border: none;
+            padding: 12px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .btn-success:hover {
+            background-color: #17a673;
+            transform: translateY(-2px);
+        }
+        
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background-color: rgba(28, 200, 138, 0.1);
+            color: #1cc88a;
+        }
+        
+        .alert-danger {
+            background-color: rgba(231, 74, 59, 0.1);
+            color: #e74a3b;
+        }
+        
+        .index-container {
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .user-card {
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        
+        .user-card-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #2e59d9 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 35px;
+        }
+        
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(78, 115, 223, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: var(--primary-color);
+            font-size: 24px;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            transition: all 0.3s;
+        }
+        
+        .feature-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+        
+        .resend-code {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .resend-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: 600;
+            color: #6c757d;
+        }
+        
+        .step.active {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .step-line {
+            width: 40px;
+            height: 2px;
+            background: #e9ecef;
+            margin: 0 5px;
+            align-self: center;
+        }
+        
+        .btn-loading .btn-text {
+            display: none;
+        }
+        
+        .btn-loading .btn-loader {
+            display: inline-block;
+        }
+        
+        .btn-loader {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        #recaptcha-container {
+            margin: 15px 0;
+            display: flex;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="auth-container">
+        <div class="logo">
+            <h2>🔐 SecureAuth</h2>
+            <p class="text-muted">Login with your Indian phone number</p>
+        </div>
+        
+        <div class="step-indicator">
+            <div class="step active">1</div>
+            <div class="step-line"></div>
+            <div class="step">2</div>
+            <div class="step-line"></div>
+            <div class="step">3</div>
+        </div>
+        
+        <div id="loginAlert" class="alert hidden"></div>
+        
+        <div class="mb-4">
+            <label for="phoneNumber" class="form-label fw-bold">Indian Phone Number</label>
+            <div class="phone-input">
+                <span class="country-code">+91</span>
+                <input type="tel" id="phoneNumber" class="form-control phone-field" placeholder="Enter 10-digit phone number" maxlength="10">
+            </div>
+            <div class="form-text">We'll send an SMS verification code to this number.</div>
+        </div>
+        
+        <!-- Visible reCAPTCHA container -->
+        <div id="recaptcha-container"></div>
+        
+        <button id="sendCodeBtn" class="btn btn-primary w-100 py-2">
+            <span class="btn-text">Send Verification Code</span>
+            <div class="btn-loader"></div>
+        </button>
+        
+        <div class="mt-4 text-center">
+            <small class="text-muted">By continuing, you agree to our Terms of Service and Privacy Policy</small>
+        </div>
+    </div>
+
+    <!-- Verification Page -->
+    <div id="verificationPage" class="auth-container hidden">
+        <div class="logo">
+            <h2>✅ Verify Code</h2>
+            <p class="text-muted">Enter the code sent to your phone</p>
+        </div>
+        
+        <div class="step-indicator">
+            <div class="step">1</div>
+            <div class="step-line"></div>
+            <div class="step active">2</div>
+            <div class="step-line"></div>
+            <div class="step">3</div>
+        </div>
+        
+        <div id="verificationAlert" class="alert hidden"></div>
+        
+        <div class="mb-4">
+            <label for="verificationCode" class="form-label fw-bold">6-digit Verification Code</label>
+            <input type="text" id="verificationCode" class="form-control py-3 text-center" placeholder="Enter 6-digit code" maxlength="6" style="font-size: 18px; letter-spacing: 5px;">
+        </div>
+        
+        <button id="verifyCodeBtn" class="btn btn-success w-100 py-2 mb-3">
+            <span class="btn-text">Verify Code</span>
+            <div class="btn-loader"></div>
+        </button>
+        
+        <div class="resend-code">
+            <p class="text-muted">Didn't receive the code? <button id="resendCodeBtn" class="resend-btn">Resend Code</button></p>
+            <p id="resendTimer" class="text-muted small hidden">You can resend code in <span id="timerCount">60</span> seconds</p>
+        </div>
+        
+        <button id="backToLoginBtn" class="btn btn-outline-secondary w-100 py-2">Back to Login</button>
+    </div>
+
+    <!-- Index Page (Redirected after login) -->
+    <div id="indexPage" class="index-container hidden">
+        <div class="user-card">
+            <div class="user-card-header">
+                <div class="user-avatar">👤</div>
+                <h3 id="userPhone">Welcome!</h3>
+                <p class="mb-0">You have successfully logged in</p>
+            </div>
+            
+            <div class="card-body p-4">
+                <div class="alert alert-success">
+                    <h4 class="alert-heading">Authentication Successful!</h4>
+                    <p class="mb-0">Your phone number has been verified successfully.</p>
+                </div>
+                
+                <h5 class="mb-3">User Information</h5>
+                <div class="mb-4 p-3 border rounded">
+                    <p class="mb-2" id="userInfo">Loading user details...</p>
+                </div>
+                
+                <h5 class="mb-3">Account Features</h5>
+                <div class="feature-item">
+                    <div class="feature-icon">📱</div>
+                    <div>
+                        <h6 class="mb-1">Phone Verification</h6>
+                        <p class="mb-0 text-muted">Your phone number is verified and secure</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">🔒</div>
+                    <div>
+                        <h6 class="mb-1">Secure Account</h6>
+                        <p class="mb-0 text-muted">Two-factor authentication is enabled</p>
+                    </div>
+                </div>
+                
+                <div class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <div>
+                        <h6 class="mb-1">Fast Access</h6>
+                        <p class="mb-0 text-muted">Quick login with SMS verification</p>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 mt-4">
+                    <button id="logoutBtn" class="btn btn-warning py-2">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Configuration and App Logic -->
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCdfgtj1gvZ-bkomW1V40h-4tyUPHy_peo",
+            authDomain: "jama-3f427.firebaseapp.com",
+            projectId: "jama-3f427",
+            storageBucket: "jama-3f427.firebasestorage.app",
+            messagingSenderId: "897112470741",
+            appId: "1:897112470741:web:ee6388f0faae459fcb1e5c",
+            measurementId: "G-NN1BRV0QKS"
+        };
+
+        // Initialize Firebase
+        try {
+            // Check if Firebase app already exists
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            } else {
+                firebase.app(); // Use existing app
+            }
+            console.log("Firebase initialized successfully");
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+            showAlert(loginAlert, "Firebase initialization failed. Please refresh the page.", "danger");
+        }
+
+        // DOM Elements
+        const loginPage = document.getElementById('loginPage');
+        const verificationPage = document.getElementById('verificationPage');
+        const indexPage = document.getElementById('indexPage');
+        const recaptchaContainer = document.getElementById('recaptcha-container');
+        
+        const phoneNumberInput = document.getElementById('phoneNumber');
+        const verificationCodeInput = document.getElementById('verificationCode');
+        
+        const sendCodeBtn = document.getElementById('sendCodeBtn');
+        const verifyCodeBtn = document.getElementById('verifyCodeBtn');
+        const backToLoginBtn = document.getElementById('backToLoginBtn');
+        const resendCodeBtn = document.getElementById('resendCodeBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        const loginAlert = document.getElementById('loginAlert');
+        const verificationAlert = document.getElementById('verificationAlert');
+        const resendTimer = document.getElementById('resendTimer');
+        const timerCount = document.getElementById('timerCount');
+        
+        const userInfo = document.getElementById('userInfo');
+        const userPhone = document.getElementById('userPhone');
+
+        // Global variables
+        let verificationId = null;
+        let recaptchaVerifier = null;
+        let recaptchaWidgetId = null;
+        let resendTimerInterval = null;
+        let resendTimeLeft = 60;
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if Firebase auth is available
+            if (!firebase.auth) {
+                showAlert(loginAlert, "Firebase Auth not loaded. Please check your connection.", "danger");
+                return;
+            }
+            
+            sendCodeBtn.addEventListener('click', sendVerificationCode);
+            verifyCodeBtn.addEventListener('click', verifyCode);
+            backToLoginBtn.addEventListener('click', backToLogin);
+            resendCodeBtn.addEventListener('click', resendCode);
+            logoutBtn.addEventListener('click', logout);
+            
+            // Input validation
+            phoneNumberInput.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '').slice(0, 10);
+                hideAlert(loginAlert);
+            });
+
+            verificationCodeInput.addEventListener('input', function() {
+                this.value = this.value.replace(/\D/g, '').slice(0, 6);
+                hideAlert(verificationAlert);
+            });
+            
+            // Initialize recaptcha with visible widget
+            initializeRecaptcha();
+            
+            // Check if user is already logged in
+            checkAuthState();
+        });
+
+        // Initialize recaptcha with visible widget (fixes the internal error)
+        function initializeRecaptcha() {
+            try {
+                // Clear any existing recaptcha
+                if (recaptchaVerifier) {
+                    recaptchaVerifier.clear();
+                    recaptchaContainer.innerHTML = '';
+                }
+                
+                // Create a visible reCAPTCHA verifier
+                recaptchaVerifier = new firebase.auth.RecaptchaVerifier(recaptchaContainer, {
+                    size: 'normal', // Use 'normal' instead of 'invisible'
+                    callback: function(response) {
+                        console.log("reCAPTCHA solved successfully");
+                        // This will be called when reCAPTCHA is solved
+                    },
+                    'expired-callback': function() {
+                        console.log("reCAPTCHA expired");
+                        showAlert(loginAlert, 'Security verification expired. Please verify again.', 'danger');
+                        resetRecaptcha();
+                    },
+                    'error-callback': function() {
+                        console.log("reCAPTCHA error");
+                        showAlert(loginAlert, 'Security verification failed. Please try again.', 'danger');
+                        resetRecaptcha();
+                    }
+                });
+                
+                // Render the reCAPTCHA widget
+                recaptchaVerifier.render().then(function(widgetId) {
+                    recaptchaWidgetId = widgetId;
+                    console.log("reCAPTCHA widget rendered successfully with ID:", widgetId);
+                }).catch(function(error) {
+                    console.error("reCAPTCHA rendering error:", error);
+                    showAlert(loginAlert, "Security verification failed to load. Please refresh the page.", "danger");
+                });
+                
+            } catch (error) {
+                console.error("reCAPTCHA initialization error:", error);
+                showAlert(loginAlert, "Error initializing security verification. Please refresh the page.", "danger");
+            }
+        }
+
+        // Reset recaptcha
+        function resetRecaptcha() {
+            try {
+                if (recaptchaVerifier) {
+                    recaptchaVerifier.clear();
+                }
+                recaptchaContainer.innerHTML = '';
+                initializeRecaptcha();
+            } catch (error) {
+                console.error("Error resetting reCAPTCHA:", error);
+            }
+        }
+
+        // Send verification code
+        function sendVerificationCode() {
+            const phoneNumber = phoneNumberInput.value.trim();
+            
+            // Validate phone number
+            if (!phoneNumber || phoneNumber.length !== 10) {
+                showAlert(loginAlert, 'Please enter a valid 10-digit Indian phone number', 'danger');
+                return;
+            }
+
+            // Check if reCAPTCHA is ready
+            if (!recaptchaVerifier) {
+                showAlert(loginAlert, 'Security verification is not ready. Please wait or refresh the page.', 'danger');
+                return;
+            }
+
+            showButtonLoading(sendCodeBtn);
+            
+            const fullPhoneNumber = '+91' + phoneNumber;
+            
+            // Send verification code
+            firebase.auth().signInWithPhoneNumber(fullPhoneNumber, recaptchaVerifier)
+                .then((confirmationResult) => {
+                    hideButtonLoading(sendCodeBtn);
+                    verificationId = confirmationResult.verificationId;
+                    showVerificationPage();
+                    startResendTimer();
+                    showAlert(verificationAlert, 'Verification code sent successfully!', 'success');
+                })
+                .catch((error) => {
+                    hideButtonLoading(sendCodeBtn);
+                    console.error('Error sending verification code:', error);
+                    
+                    let errorMessage = 'Error sending verification code. Please try again.';
+                    
+                    // Handle specific error cases
+                    switch (error.code) {
+                        case 'auth/invalid-phone-number':
+                            errorMessage = 'Invalid phone number format. Please check and try again.';
+                            break;
+                        case 'auth/quota-exceeded':
+                            errorMessage = 'SMS quota exceeded. Please try again later.';
+                            break;
+                        case 'auth/user-disabled':
+                            errorMessage = 'This account has been disabled.';
+                            break;
+                        case 'auth/operation-not-allowed':
+                            errorMessage = 'Phone authentication is not enabled. Please contact support.';
+                            break;
+                        case 'auth/internal-error':
+                            errorMessage = 'Security verification failed. Please refresh the page and try again.';
+                            resetRecaptcha();
+                            break;
+                        case 'auth/recaptcha-not-enabled':
+                            errorMessage = 'Security verification is not enabled. Please contact support.';
+                            break;
+                    }
+                    
+                    showAlert(loginAlert, errorMessage, 'danger');
+                });
+        }
+
+        // Verify code
+        function verifyCode() {
+            const code = verificationCodeInput.value.trim();
+            
+            if (!code || code.length !== 6) {
+                showAlert(verificationAlert, 'Please enter the 6-digit verification code', 'danger');
+                return;
+            }
+
+            showButtonLoading(verifyCodeBtn);
+            
+            const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, code);
+            
+            firebase.auth().signInWithCredential(credential)
+                .then((result) => {
+                    hideButtonLoading(verifyCodeBtn);
+                    showIndexPage(result.user);
+                    clearInterval(resendTimerInterval);
+                    resendTimer.classList.add('hidden');
+                })
+                .catch((error) => {
+                    hideButtonLoading(verifyCodeBtn);
+                    console.error('Error verifying code:', error);
+                    
+                    let errorMessage = 'Error verifying code. Please try again.';
+                    
+                    // Handle specific error cases
+                    switch (error.code) {
+                        case 'auth/invalid-verification-code':
+                            errorMessage = 'Invalid verification code. Please check and try again.';
+                            break;
+                        case 'auth/code-expired':
+                            errorMessage = 'Verification code has expired. Please request a new one.';
+                            break;
+                        case 'auth/credential-already-in-use':
+                            errorMessage = 'This credential is already associated with another account.';
+                            break;
+                    }
+                    
+                    showAlert(verificationAlert, errorMessage, 'danger');
+                });
+        }
+
+        // Resend code
+        function resendCode() {
+            if (resendTimeLeft > 0) return;
+            
+            const phoneNumber = phoneNumberInput.value.trim();
+            const fullPhoneNumber = '+91' + phoneNumber;
+            
+            showButtonLoading(verifyCodeBtn);
+            
+            // Reset recaptcha for resend
+            resetRecaptcha();
+            
+            firebase.auth().signInWithPhoneNumber(fullPhoneNumber, recaptchaVerifier)
+                .then((confirmationResult) => {
+                    hideButtonLoading(verifyCodeBtn);
+                    verificationId = confirmationResult.verificationId;
+                    showAlert(verificationAlert, 'New verification code sent successfully!', 'success');
+                    startResendTimer();
+                })
+                .catch((error) => {
+                    hideButtonLoading(verifyCodeBtn);
+                    console.error('Error resending verification code:', error);
+                    showAlert(verificationAlert, 'Error resending code. Please try again.', 'danger');
+                });
+        }
+
+        // Start resend timer
+        function startResendTimer() {
+            resendTimeLeft = 60;
+            resendCodeBtn.disabled = true;
+            resendTimer.classList.remove('hidden');
+            timerCount.textContent = resendTimeLeft;
+            
+            resendTimerInterval = setInterval(() => {
+                resendTimeLeft--;
+                timerCount.textContent = resendTimeLeft;
+                
+                if (resendTimeLeft <= 0) {
+                    clearInterval(resendTimerInterval);
+                    resendCodeBtn.disabled = false;
+                    resendTimer.classList.add('hidden');
+                }
+            }, 1000);
+        }
+
+        // Back to login
+        function backToLogin() {
+            verificationPage.classList.add('hidden');
+            loginPage.classList.remove('hidden');
+            verificationCodeInput.value = '';
+            hideAlert(verificationAlert);
+            clearInterval(resendTimerInterval);
+            resendTimer.classList.add('hidden');
+            resendCodeBtn.disabled = false;
+            resetRecaptcha();
+        }
+
+        // Logout
+        function logout() {
+            firebase.auth().signOut().then(() => {
+                indexPage.classList.add('hidden');
+                loginPage.classList.remove('hidden');
+                phoneNumberInput.value = '';
+                userInfo.textContent = 'Loading user details...';
+                hideAlert(loginAlert);
+                clearInterval(resendTimerInterval);
+                resetRecaptcha();
+            }).catch((error) => {
+                console.error('Error signing out:', error);
+            });
+        }
+
+        // Show verification page
+        function showVerificationPage() {
+            loginPage.classList.add('hidden');
+            verificationPage.classList.remove('hidden');
+            hideAlert(loginAlert);
+        }
+
+        // Show index page after successful authentication
+        function showIndexPage(user) {
+            verificationPage.classList.add('hidden');
+            indexPage.classList.remove('hidden');
+            
+            // Display user information
+            const phoneNumber = user.phoneNumber || 'Not available';
+            userPhone.textContent = phoneNumber;
+            
+            userInfo.innerHTML = `
+                <strong>Phone Number:</strong> ${phoneNumber}<br>
+                <strong>User ID:</strong> ${user.uid}<br>
+                <strong>Last Sign-in:</strong> ${new Date(user.metadata.lastSignInTime).toLocaleString()}<br>
+                <strong>Account Created:</strong> ${new Date(user.metadata.creationTime).toLocaleString()}
+            `;
+        }
+
+        // Check authentication state
+        function checkAuthState() {
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user) {
+                    // User is signed in
+                    showIndexPage(user);
+                } else {
+                    // User is signed out
+                    loginPage.classList.remove('hidden');
+                    verificationPage.classList.add('hidden');
+                    indexPage.classList.add('hidden');
+                }
+            }, (error) => {
+                console.error("Auth state change error:", error);
+            });
+        }
+
+        // Show alert
+        function showAlert(alertElement, message, type) {
+            alertElement.textContent = message;
+            alertElement.className = `alert alert-${type}`;
+            alertElement.classList.remove('hidden');
+        }
+
+        // Hide alert
+        function hideAlert(alertElement) {
+            alertElement.classList.add('hidden');
+        }
+
+        // Show button loading state
+        function showButtonLoading(button) {
+            button.classList.add('btn-loading');
+            button.disabled = true;
+        }
+
+        // Hide button loading state
+        function hideButtonLoading(button) {
+            button.classList.remove('btn-loading');
+            button.disabled = false;
+        }
+    </script>
+</body>
+</html>
