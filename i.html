@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jama App - Empowering Farmers for Viksit Bharat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Base Styles */
+        :root {
+            --primary: #2E7D32;
+            --primary-light: #4CAF50;
+            --primary-dark: #1B5E20;
+            --secondary: #FF9800;
+            --accent: #FFC107;
+            --light: #F5F5F5;
+            --dark: #333333;
+            --text: #424242;
+            --white: #FFFFFF;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            line-height: 1.6;
+            color: var(--text);
+            background-color: var(--light);
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        section {
+            padding: 80px 0;
+        }
+        
+        h1, h2, h3, h4 {
+            color: var(--dark);
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+        }
+        
+        h2 {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+        
+        h2:after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background-color: var(--secondary);
+        }
+        
+        p {
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: var(--primary);
+            color: var(--white);
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+        }
+        
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #F57C00;
+        }
+        
+        /* Header Styles */
+        header {
+            background-color: var(--white);
+            box-shadow: var(--shadow);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+        
+        .logo-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-right: 10px;
+        }
+        
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+        
+        .nav-links li {
+            margin-left: 30px;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+        
+        .mobile-menu {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover;
+            background-position: center;
+            color: var(--white);
+            text-align: center;
+            padding: 180px 0 100px;
+            margin-top: 70px;
+        }
+        
+        .hero h1 {
+            color: var(--white);
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+        }
+        
+        /* Problem Section */
+        .problem {
+            background-color: var(--white);
+        }
+        
+        .problem-content {
+            display: flex;
+            align-items: center;
+            gap: 50px;
+        }
+        
+        .problem-text {
+            flex: 1;
+        }
+        
+        .problem-image {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .problem-image img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+        
+        .challenges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .challenge-item {
+            flex: 1 1 200px;
+            background-color: var(--light);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            transition: var(--transition);
+        }
+        
+        .challenge-item:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+        
+        .challenge-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        /* Solution Section */
+        .solution {
+            background-color: var(--light);
+        }
+        
+        .solution-content {
+            display: flex;
+            align-items: center;
+            gap: 50px;
+        }
+        
+        .solution-text {
+            flex: 1;
+        }
+        
+        .solution-image {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .solution-image img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+        
+        /* Features Section */
+        .features {
+            background-color: var(--white);
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature-card {
+            background-color: var(--light);
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            transition: var(--transition);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        /* About Section */
+        .about {
+            background-color: var(--light);
+        }
+        
+        .about-content {
+            display: flex;
+            align-items: center;
+            gap: 50px;
+        }
+        
+        .about-text {
+            flex: 1;
+        }
+        
+        .about-image {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .about-image img {
+            max-width: 100%;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+        }
+        
+        .founders {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .founder-card {
+            text-align: center;
+            max-width: 250px;
+        }
+        
+        .founder-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 auto 15px;
+            border: 4px solid var(--primary);
+        }
+        
+        /* CTA Section */
+        .cta {
+            background: linear-gradient(to right, var(--primary), var(--primary-light));
+            color: var(--white);
+            text-align: center;
+            padding: 80px 0;
+        }
+        
+        .cta h2 {
+            color: var(--white);
+        }
+        
+        .cta h2:after {
+            background-color: var(--accent);
+        }
+        
+        .cta p {
+            max-width: 700px;
+            margin: 0 auto 30px;
+            font-size: 1.1rem;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        /* Footer */
+        footer {
+            background-color: var(--dark);
+            color: var(--white);
+            padding: 60px 0 30px;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-column h3 {
+            color: var(--white);
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-links a {
+            color: #ccc;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        
+        .footer-links a:hover {
+            color: var(--white);
+            padding-left: 5px;
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .social-links a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: var(--white);
+            transition: var(--transition);
+        }
+        
+        .social-links a:hover {
+            background-color: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+        
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .problem-content, .solution-content, .about-content {
+                flex-direction: column;
+            }
+            
+            .problem-image, .solution-image, .about-image {
+                order: -1;
+            }
+            
+            .founders {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background-color: var(--white);
+                flex-direction: column;
+                padding: 20px;
+                box-shadow: var(--shadow);
+            }
+            
+            .nav-links.active {
+                display: flex;
+            }
+            
+            .nav-links li {
+                margin: 10px 0;
+            }
+            
+            .mobile-menu {
+                display: block;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <a href="#" class="logo">
+                    <i class="fas fa-seedling logo-icon"></i>
+                    <span class="logo-text">Jama App</span>
+                </a>
+                
+                <ul class="nav-links">
+                    <li><a href="#problem">The Problem</a></li>
+                    <li><a href="#solution">Our Solution</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#cta" class="btn">Download App</a></li>
+                </ul>
+                
+                <div class="mobile-menu">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Empowering Farmers for Viksit Bharat</h1>
+            <p>Jama App brings farming knowledge — weather, prices, crop science, and government schemes — accessible to every farmer in their own language.</p>
+            <a href="#cta" class="btn">Download Now</a>
+            <a href="#features" class="btn btn-secondary">Learn More</a>
+        </div>
+    </section>
+
+    <!-- Problem Section -->
+    <section id="problem" class="problem">
+        <div class="container">
+            <h2>The Farmer's Struggle</h2>
+            <div class="problem-content">
+                <div class="problem-text">
+                    <p>For many farmers in India, the cycle of debt begins even before the crop is sown. Ramu, a small farmer in Andhra Pradesh, borrows money at high interest rates every season just to buy seeds and fertilizers.</p>
+                    <p>He struggles to decide which crop or seed variety to choose. Once the crops are in the ground, unpredictable weather, pests, and volatile markets put his family's livelihood at risk. One bad season is enough to trap him in debt.</p>
+                    
+                    <div class="challenges">
+                        <div class="challenge-item">
+                            <i class="fas fa-cloud-rain challenge-icon"></i>
+                            <h3>Unpredictable Weather</h3>
+                            <p>Climate uncertainties affect crop yield</p>
+                        </div>
+                        <div class="challenge-item">
+                            <i class="fas fa-bug challenge-icon"></i>
+                            <h3>Pests & Diseases</h3>
+                            <p>Crop damage leads to financial losses</p>
+                        </div>
+                        <div class="challenge-item">
+                            <i class="fas fa-chart-line challenge-icon"></i>
+                            <h3>Market Volatility</h3>
+                            <p>Unstable prices impact profitability</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="problem-image">
+                    <img src="https://images.unsplash.com/photo-1558698512-86c7d6aa1b76?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Farmer in field">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solution Section -->
+    <section id="solution" class="solution">
+        <div class="container">
+            <h2>Our Solution - Jama App</h2>
+            <div class="solution-content">
+                <div class="solution-image">
+                    <img src="https://images.unsplash.com/photo-1558655146-d09347e92766?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Jama App on smartphone">
+                </div>
+                <div class="solution-text">
+                    <p>Jama App is a humble attempt to make farming knowledge — weather, prices, crop science, and government schemes — accessible to every farmer in their own language.</p>
+                    <p>Aided by visuals and audio to bridge education gaps, our app empowers farmers with information that was previously difficult to access.</p>
+                    
+                    <div class="features-preview">
+                        <div style="display: flex; align-items: center; margin: 20px 0;">
+                            <i class="fas fa-language" style="font-size: 2rem; color: var(--primary); margin-right: 15px;"></i>
+                            <div>
+                                <h3>Multi-language Support</h3>
+                                <p>Available in regional languages for better understanding</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; margin: 20px 0;">
+                            <i class="fas fa-volume-up" style="font-size: 2rem; color: var(--primary); margin-right: 15px;"></i>
+                            <div>
+                                <h3>Audio Assistance</h3>
+                                <p>Voice-guided information for farmers with literacy challenges</p>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; margin: 20px 0;">
+                            <i class="fas fa-mobile-alt" style="font-size: 2rem; color: var(--primary); margin-right: 15px;"></i>
+                            <div>
+                                <h3>Simple Interface</h3>
+                                <p>Easy-to-use design for all age groups</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2>App Features</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-cloud-sun feature-icon"></i>
+                    <h3>Weather Forecast</h3>
+                    <p>Accurate local weather predictions to help plan farming activities</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-rupee-sign feature-icon"></i>
+                    <h3>Market Prices</h3>
+                    <p>Real-time crop prices from local and national markets</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-seedling feature-icon"></i>
+                    <h3>Crop Advisory</h3>
+                    <p>Expert advice on crop selection, planting, and management</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-shield-alt feature-icon"></i>
+                    <h3>Pest Management</h3>
+                    <p>Identification and treatment solutions for common pests</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-file-invoice-dollar feature-icon"></i>
+                    <h3>Govt. Schemes</h3>
+                    <p>Information on relevant government subsidies and programs</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-video feature-icon"></i>
+                    <h3>Visual Guides</h3>
+                    <p>Step-by-step video tutorials for various farming techniques</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2>About UruVada Innovations</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>We, Mohan Kantamaneni and Rama Krishna Ganta, come from farming families in a small village in Andhra Pradesh. Growing up, we saw firsthand how uncertainty defined agriculture.</p>
+                    <p>These experiences shaped our belief that farming must change if our villages, and ultimately our country, are to progress. With this in mind, we founded UruVada Innovations.</p>
+                    <p>Uru meaning village or town, and Vada meaning street or neighborhood. Our mission is to empower farmers with technology that's accessible and easy to use.</p>
+                    
+                    <div class="founders">
+                        <div class="founder-card">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Mohan Kantamaneni" class="founder-image">
+                            <h3>Mohan Kantamaneni</h3>
+                            <p>Co-Founder</p>
+                        </div>
+                        <div class="founder-card">
+                            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Rama Krishna Ganta" class="founder-image">
+                            <h3>Rama Krishna Ganta</h3>
+                            <p>Co-Founder</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="about-image">
+                    <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Team collaboration">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section id="cta" class="cta">
+        <div class="container">
+            <h2>Join the Farming Revolution</h2>
+            <p>Download Jama App today and take the first step towards informed and profitable farming. Together, let's build a Viksit Bharat.</p>
+            <div class="cta-buttons">
+                <a href="#" class="btn btn-secondary">
+                    <i class="fab fa-google-play"></i> Google Play
+                </a>
+                <a href="#" class="btn btn-secondary">
+                    <i class="fab fa-apple"></i> App Store
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Jama App</h3>
+                    <p>Empowering farmers with accessible information for a prosperous Viksit Bharat.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="#problem">The Problem</a></li>
+                        <li><a href="#solution">Our Solution</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#about">About Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">FAQs</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact Us</h3>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-envelope"></i> info@jamapp.com</li>
+                        <li><i class="fas fa-phone"></i> +91 98765 43210</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Andhra Pradesh, India</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 UruVada Innovations. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        document.querySelector('.mobile-menu').addEventListener('click', function() {
+            document.querySelector('.nav-links').classList.toggle('active');
+        });
+        
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if(targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if(targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+                    
+                    // Close mobile menu if open
+                    document.querySelector('.nav-links').classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
