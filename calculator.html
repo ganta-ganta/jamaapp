@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jama - Interest Calculator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: var(--surface);
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        /* Header */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .app-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .app-logo i {
+            font-size: 2rem;
+        }
+
+        .app-logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .app-subtitle {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        /* Main Content */
+        .app-content {
+            padding: 20px;
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .card-header i {
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .card-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Input Groups */
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        .input-label i {
+            font-size: 1rem;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--background);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+        }
+
+        /* Toggle Switch */
+        .toggle-group {
+            display: flex;
+            background: var(--background);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+
+        .toggle-option {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .toggle-option.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Date Group */
+        .date-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* Button Styles */
+        .btn {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--secondary), #059669);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        /* Results Section */
+        .results-section {
+            display: none;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .result-item {
+            background: var(--background);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .result-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .summary-box {
+            background: var(--background);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            line-height: 1.8;
+            white-space: pre-line;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .action-btn:hover {
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        /* Footer */
+        .app-footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-light);
+            font-size: 0.8rem;
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .app-container {
+                max-width: 100%;
+            }
+            
+            .app-content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="app-header">
+            <div class="app-logo">
+                <i class="fas fa-calculator"></i>
+                <h1>Jama</h1>
+            </div>
+            <p class="app-subtitle">Smart Interest Calculator</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="app-content">
+            <!-- Input Card -->
+            <div class="card fade-in">
+                <div class="card-header">
+                    <i class="fas fa-edit"></i>
+                    <h3>Transaction Details</h3>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-label">
+                        <i class="fas fa-user"></i>
+                        <span>Person Name</span>
+                    </div>
+                    <input type="text" class="input-field" id="personName" placeholder="Enter name">
+                </div>
+
+                <div class="input-group">
+                    <div class="input-label">
+                        <i class="fas fa-rupee-sign"></i>
+                        <span>Loan Amount</span>
+                    </div>
+                    <input type="number" class="input-field" id="loanAmount" placeholder="Enter amount">
+                </div>
+
+                <div class="input-group">
+                    <div class="input-label">
+                        <i class="fas fa-percentage"></i>
+                        <span>Interest Rate</span>
+                    </div>
+                    <select class="input-field" id="interestType">
+                        <option value="2">2 Rs Interest (2% per month)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-label">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Calculate By</span>
+                    </div>
+                    <div class="toggle-group">
+                        <div class="toggle-option active" onclick="setCalculationType('months')">
+                            <i class="fas fa-clock"></i> Months
+                        </div>
+                        <div class="toggle-option" onclick="setCalculationType('dates')">
+                            <i class="fas fa-calendar"></i> Dates
+                        </div>
+                    </div>
+                </div>
+
+                <div class="input-group" id="monthsGroup">
+                    <div class="input-label">
+                        <i class="fas fa-calendar"></i>
+                        <span>Number of Months</span>
+                    </div>
+                    <input type="number" class="input-field" id="months" placeholder="Enter months">
+                </div>
+
+                <div class="input-group" id="datesGroup" style="display: none;">
+                    <div class="input-label">
+                        <i class="fas fa-calendar-day"></i>
+                        <span>Date Range</span>
+                    </div>
+                    <div class="date-group">
+                        <div>
+                            <input type="date" class="input-field" id="fromDate">
+                        </div>
+                        <div>
+                            <input type="date" class="input-field" id="toDate">
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="calculateInterest()">
+                    <i class="fas fa-calculator"></i>
+                    Calculate Interest
+                </button>
+            </div>
+
+            <!-- Results Card -->
+            <div class="card results-section fade-in" id="resultsSection">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar"></i>
+                    <h3>Calculation Results</h3>
+                </div>
+
+                <div class="result-grid">
+                    <div class="result-item">
+                        <div class="result-value" id="resultMonthlyInterest">-</div>
+                        <div class="result-label">Monthly Interest</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-value" id="resultTotalInterest">-</div>
+                        <div class="result-label">Total Interest</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-value" id="resultLoanAmount">-</div>
+                        <div class="result-label">Loan Amount</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-value" id="resultTotalAmount">-</div>
+                        <div class="result-label">Total Payable</div>
+                    </div>
+                </div>
+
+                <div class="summary-box" id="summaryText">
+                    <!-- Summary will appear here -->
+                </div>
+
+                <div class="quick-actions">
+                    <button class="action-btn" onclick="copySummary()">
+                        <i class="fas fa-copy"></i>
+                        Copy
+                    </button>
+                    <button class="action-btn" onclick="shareOnWhatsApp()">
+                        <i class="fab fa-whatsapp"></i>
+                        WhatsApp
+                    </button>
+                </div>
+
+                <button class="btn btn-success" onclick="newCalculation()">
+                    <i class="fas fa-plus"></i>
+                    New Calculation
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="app-footer">
+            <p>Jama App • Easy Interest Calculations</p>
+        </div>
+    </div>
+
+    <script>
+        // Set default dates
+        document.getElementById('fromDate').valueAsDate = new Date();
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 30);
+        document.getElementById('toDate').valueAsDate = tomorrow;
+
+        let currentCalculationType = 'months';
+
+        // Set calculation type
+        function setCalculationType(type) {
+            currentCalculationType = type;
+            const monthsGroup = document.getElementById('monthsGroup');
+            const datesGroup = document.getElementById('datesGroup');
+            const toggleOptions = document.querySelectorAll('.toggle-option');
+            
+            toggleOptions.forEach(option => option.classList.remove('active'));
+            
+            if (type === 'months') {
+                monthsGroup.style.display = 'block';
+                datesGroup.style.display = 'none';
+                toggleOptions[0].classList.add('active');
+            } else {
+                monthsGroup.style.display = 'none';
+                datesGroup.style.display = 'block';
+                toggleOptions[1].classList.add('active');
+            }
+        }
+
+        // Calculate months from dates
+        function calculateMonthsFromDates(fromDate, toDate) {
+            const start = new Date(fromDate);
+            const end = new Date(toDate);
+            const months = (end.getFullYear() - start.getFullYear()) * 12 + 
+                          (end.getMonth() - start.getMonth());
+            const days = end.getDate() - start.getDate();
+            
+            return Math.max(0, months + (days / 30));
+        }
+
+        // Calculate interest
+        function calculateInterest() {
+            // Get input values
+            const personName = document.getElementById('personName').value.trim();
+            const loanAmount = parseFloat(document.getElementById('loanAmount').value) || 0;
+            
+            let months = 0;
+            let periodText = '';
+
+            if (currentCalculationType === 'months') {
+                months = parseFloat(document.getElementById('months').value) || 0;
+                periodText = `${months} month${months !== 1 ? 's' : ''}`;
+            } else {
+                const fromDate = document.getElementById('fromDate').value;
+                const toDate = document.getElementById('toDate').value;
+                
+                if (!fromDate || !toDate) {
+                    showNotification('Please select both from and to dates', 'warning');
+                    return;
+                }
+
+                months = calculateMonthsFromDates(fromDate, toDate);
+                const fromDateObj = new Date(fromDate);
+                const toDateObj = new Date(toDate);
+                
+                periodText = `${fromDateObj.toLocaleDateString()} to ${toDateObj.toLocaleDateString()}`;
+            }
+
+            // Validation
+            if (!personName) {
+                showNotification('Please enter person name', 'warning');
+                return;
+            }
+
+            if (loanAmount <= 0) {
+                showNotification('Please enter valid loan amount', 'warning');
+                return;
+            }
+
+            if (months <= 0) {
+                showNotification('Please enter valid period', 'warning');
+                return;
+            }
+
+            // Calculate interest (2% per month)
+            const monthlyRate = 2;
+            const monthlyInterest = (loanAmount * monthlyRate) / 100;
+            const totalInterest = monthlyInterest * months;
+            const totalAmount = loanAmount + totalInterest;
+
+            // Display results
+            document.getElementById('resultMonthlyInterest').textContent = `₹${monthlyInterest.toLocaleString('en-IN')}`;
+            document.getElementById('resultTotalInterest').textContent = `₹${totalInterest.toLocaleString('en-IN')}`;
+            document.getElementById('resultLoanAmount').textContent = `₹${loanAmount.toLocaleString('en-IN')}`;
+            document.getElementById('resultTotalAmount').textContent = `₹${totalAmount.toLocaleString('en-IN')}`;
+
+            // Create summary
+            const summary = `💰 *Interest Calculation - Jama App*
+
+👤 Person: ${personName}
+💵 Amount: ₹${loanAmount.toLocaleString('en-IN')}
+📊 Rate: 2% per month (2 Rs)
+📅 Period: ${periodText}
+
+📈 Results:
+• Monthly Interest: ₹${monthlyInterest.toLocaleString('en-IN')}
+• Total Interest: ₹${totalInterest.toLocaleString('en-IN')}
+• Total Payable: ₹${totalAmount.toLocaleString('en-IN')}
+
+_Generated by Jama Interest Calculator_`;
+
+            document.getElementById('summaryText').textContent = summary;
+            
+            // Show results section with animation
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.style.display = 'block';
+            resultsSection.classList.add('fade-in');
+            
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Copy summary
+        function copySummary() {
+            const summaryText = document.getElementById('summaryText').textContent;
+            navigator.clipboard.writeText(summaryText).then(() => {
+                showNotification('Summary copied to clipboard!', 'success');
+            });
+        }
+
+        // Share on WhatsApp
+        function shareOnWhatsApp() {
+            const summaryText = document.getElementById('summaryText').textContent;
+            const encodedMessage = encodeURIComponent(summaryText);
+            const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        // New calculation
+        function newCalculation() {
+            document.getElementById('personName').value = '';
+            document.getElementById('loanAmount').value = '';
+            document.getElementById('months').value = '';
+            
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.style.display = 'none';
+            
+            // Scroll to top
+            document.querySelector('.app-content').scrollIntoView({ behavior: 'smooth' });
+            
+            showNotification('Ready for new calculation', 'info');
+        }
+
+        // Show notification (simplified)
+        function showNotification(message, type) {
+            alert(message); // In real app, you'd use a proper toast notification
+        }
+
+        // Enter key support
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                calculateInterest();
+            }
+        });
+    </script>
+</body>
+</html>
